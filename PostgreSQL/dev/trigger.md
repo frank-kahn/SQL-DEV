@@ -1,0 +1,72 @@
+# 触发器案例
+
+## PostgreSQL利用事件触发器记录表的创建和删除时间
+
+~~~sql
+在postgresql中有一种触发器，叫做事件触发器，我们可以通过这个来记录表的创建和删除时间等。
+
+1.创建一个事件触发器，记录所有的drop table操作用于事后审计
+
+记录删除的事件触发器，利用到了一个系统函数pg_event_trigger_dropped_objects()
+
+1)创建表，用于记录drop操作
+create table drop_audit(
+classid     	oid,
+objid	   		oid,
+objsubid	 	int,
+object_type  	text,
+schema_name  	text,
+object_name  	text,
+object_identity  text,
+ddl_tag 	 	text,
+op_time 		timestamp
+);
+2)创建触发器函数
+create or replace function event_trigger_drop_function()
+	returns event_trigger
+	language plpgsql
+AS $$
+	declare
+		obj record;
+	begin
+		insert into drop_audit
+		select classid,objid,objsubid,object_type,schema_name,
+		object_name,object_identity,tg_tag,now()
+		from pg_event_trigger_dropped_objects();
+	end;
+$$;
+
+3)创建触发器
+create event trigger drop_event_trigger on sql_drop  when tag in ('drop table')
+execute procedure event_trigger_drop_function();
+----------------------------------------------------------
+2.接下来创建一个触发器，用户记录create table操作
+记录create table的触发器用到了pg_event_trigger_ddl_commands()函数
+1)为了方便，还是直接使用上面的drop_audit这个表
+2)创建触发器函数
+create or replace function event_trigger_ddl_commands_function()
+	returns event_trigger
+	language plpgsql
+AS $$
+	declare
+		obj record;
+	begin
+		insert into drop_audit
+		select classid,objid,objsubid,object_type,schema_name,
+		'',object_identity,tg_tag,now()
+		from pg_event_trigger_ddl_commands();
+	end;
+$$;
+3)创建触发器
+create event trigger ddl_event_trigger on ddl_command_end  when tag in ('create table')
+execute procedure event_trigger_ddl_commands_function();
+4)测试
+同样，create table的操作也会记录进去
+
+---------------------------------------------------------------------------------
+3.记录alter table操作日志
+1)创建触发器
+create event trigger ddl_event_trigger_alter on ddl_command_end  when tag in ('alter table')
+execute procedure event_trigger_ddl_commands_function();
+~~~
+

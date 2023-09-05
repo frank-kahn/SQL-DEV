@@ -1,0 +1,161 @@
+# 函数案例
+
+## 打印1-10
+
+~~~sql
+create or replace function loop_test_01() returns void
+as $$
+declare
+	n numeric := 0;
+begin
+	loop
+    	n := n + 1;
+    	raise notice 'n 的当前值为: %',n;
+    	exit when n >= 10;
+    	-- return;
+  	end loop;
+end;
+$$ language plpgsql;
+~~~
+
+
+
+## 获取最新的序列值，并组装成更新序列值的语句
+
+~~~sql
+drop table init_sequence_table;
+ 
+create table init_sequence_table(
+   sequence_name   varchar(300) null,
+	 seq_curr_val   int8 null,
+	 seq_sql        varchar(300) null 
+);
+ 
+ 
+ 
+-- 创建 函数
+create or replace function init_sequence()
+returns void as 
+$$
+   declare 
+	    seq_record record;
+			seq_curr_val int8;
+			sql1  varchar;
+			seqSql varchar;
+	 begin 
+		  execute 'delete from init_sequence_table;';
+	    for seq_record in (select relname from pg_class where relkind='S') loop 
+					   sql1:='select last_value from '|| seq_record.relname;
+						 execute sql1 into seq_curr_val;
+						 seqSql:= 'alter sequence ' || seq_record.relname || ' restart with '||seq_curr_val;
+             execute 'insert into init_sequence_table (sequence_name,seq_curr_val,seq_sql) values ('||'''' ||seq_record.relname|| ''''||','|| seq_curr_val ||','|| '''' || seqSql || ''''||');';
+		  end loop;
+		end;
+$$
+LANGUAGE plpgsql;
+ 
+-- 调用函数
+select init_sequence(); 
+ 
+select * from init_sequence_table;
+~~~
+
+## 判断字符串是否为数字
+
+~~~sql
+create or replace function is_number(txtStr varchar) returns BOOLEAN
+as
+$$
+BEGIN
+return txtStr ~ '^([0-9]+[.]?[0-9]*|[.][0-9]+)$';
+end;
+$$
+language 'plpgsql';
+~~~
+
+## 查看表的创建时间、修改时间、vacuum、analyze时间
+
+~~~sql
+-- 创建记录DDL语句的表
+CREATE TABLE pg_stat_last_operation (
+    id serial PRIMARY KEY,
+    object_type text,
+    schema_name VARCHAR(50),
+    action_name name NOT NULL,
+    object_identity text,
+    statime timestamp with time zone
+);
+
+-- 创建记录DDL语句的函数get_object_time_func
+CREATE OR REPLACE FUNCTION get_object_time_func()
+RETURNS event_trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    obj record;
+BEGIN
+    FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands  () 
+    LOOP
+        INSERT INTO public.pg_stat_last_operation (object_type, schema_name,action_name,object_identity,statime) SELECT obj.object_type, obj.schema_name, obj.command_tag,obj.object_identity,now();
+    END LOOP;
+END;
+$$;
+
+-- 创建触发器，在执行DDL语句时将记录写到函数中的表中
+CREATE EVENT TRIGGER get_object__history_trigger ON ddl_command_end
+EXECUTE PROCEDURE get_object_time_func();
+
+
+CREATE FUNCTION get_object_for_drops()
+        RETURNS event_trigger LANGUAGE plpgsql AS $$
+DECLARE
+    obj record;
+BEGIN
+    FOR obj IN SELECT * FROM pg_event_trigger_dropped_objects()
+    LOOP
+    INSERT INTO public.pg_stat_last_operation (object_type, schema_name,action_name,object_identity,statime) SELECT obj.object_type, obj.schema_name,tg_tag,obj.object_identity,now();
+    END LOOP;
+END;
+$$;
+
+
+CREATE EVENT TRIGGER get_object_trigger_for_drops
+   ON sql_drop
+   EXECUTE PROCEDURE get_object_for_drops();
+~~~
+
+参考：
+
+https://pgfans.cn/a/2063
+
+
+
+## 查看用户的schema权限
+
+~~~shell
+#创建函数查看用户的schema权限
+CREATE OR REPLACE FUNCTION schema_privs(text)
+RETURNS table(username text, schemaname name, privileges text[])
+AS
+$$
+SELECT $1,
+       c.nspname,
+	   array(select privs from unnest(ARRAY[(CASE WHEN has_schema_privilege($1,c.oid,'CREATE') 
+	                                              THEN 'CREATE' ELSE NULL END),
+                                             (CASE WHEN has_schema_privilege($1,c.oid,'USAGE')
+											      THEN 'USAGE' ELSE NULL END)])foo(privs) WHERE privs IS NOT NULL)
+FROM pg_namespace c 
+where has_schema_privilege($1,c.oid,'CREATE,USAGE');
+$$ language sql;
+
+
+#使用案例，如下test为用户名
+testdb=> select schema_privs('test');
+           schema_privs            
+-----------------------------------
+ (test,pg_catalog,{USAGE})
+ (test,information_schema,{USAGE})
+ (test,test,"{CREATE,USAGE}")
+(3 rows)
+~~~
+

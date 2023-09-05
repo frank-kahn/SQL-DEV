@@ -1,0 +1,42 @@
+1.卸载mariadb
+yum -y erase mariadb mariadb-server mariadb-libs mariadb-devel
+2.安装依赖
+yum -y install ncurses ncurses-devel openssl-devel bison gcc gcc-c++ libaio 
+3.创建mysql用户
+groupadd mysql
+useradd -r -g mysql -s /bin/false mysql
+4.解压数据库
+tar -zxvf mysql-5.7.37-linux-glibc2.12-x86_64.tar.gz -C /opt
+cd /usr/local/
+ln -s /opt/mysql-5.7.37-linux-glibc2.12-x86_64 /usr/local/mysql
+chown -R mysql.mysql  /usr/local/mysql  /opt/mysql-5.7.37-linux-glibc2.12-x86_64
+5.初始化数据库
+mkdir /data
+chown mysql:mysql /data
+chmod 750 /data
+6.配置OS环境
+[root@mysql57 ~]# cat .bash_profile 
+# .bash_profile
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+	. ~/.bashrc
+fi
+
+# User specific environment and startup programs
+
+PATH=$PATH:$HOME/bin
+
+export PATH
+
+export PATH=$PATH:/usr/local/mysql/bin
+export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:/usr/local/mysql/lib
+
+sourec .bash_profile
+7.配置
+[root@mysql57 soft]# cat setServer.ini 
+# ip  软件目录softdir  实例根目录instance_base_dir  实例前缀instance_name_prefix  实例名instance_name  端口port ServerID  supuser  password  INNODB_BUFFER_POOL_SIZE
+# 192.168.100.1   /usr/local/mysql  /data/mysql db  mysql  3306  330601  root  root  2g
+
+8.执行脚本
+[root@mysql57 soft]# ./setServer_57.sh

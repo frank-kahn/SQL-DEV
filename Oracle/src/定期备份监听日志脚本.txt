@@ -1,0 +1,5 @@
+rq=` date +"%d" ` 
+cp $ORACLE_HOME/network/log/listener.log $ORACLE_BACKUP/network/log/listener_$rq.log 
+su - oracle -c "lsnrctl set log_status off" 
+cp /dev/null $ORACLE_HOME/network/log/listener.log 
+su - oracle -c "lsnrctl set log_status on"

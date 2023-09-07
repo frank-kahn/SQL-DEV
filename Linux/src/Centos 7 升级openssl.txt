@@ -1,0 +1,18 @@
+#需要升级openssl版本
+1.卸载以前的openssl
+[root@demo01 ~]# yum remove openssl
+2.安装基础组件
+[root@demo01 ~]# yum install gcc gcc-c++ autoconf automake zlib zlib-devel pcre-devel -y
+3.下载解压编译安装openssl 可到官网查看最新版本
+[root@demo01 ~]# wget https://www.openssl.org/source/openssl-1.1.1k.tar.gz
+[root@demo01 ~]# tar -zxvf openssl-1.1.1k.tar.gz
+[root@demo01 ~]# cd openssl-1.1.1k
+[[root@demo01 openssl-1.1.1k]# ./config shared --openssldir=/usr/local/openssl --prefix=/usr/local/openssl
+[[root@demo01 openssl-1.1.1k]# make && make install
+ 
+[[root@demo01 openssl-1.1.1k]# ln -s /usr/local/openssl/bin/openssl /usr/bin/openssl
+配置lib库
+[[root@demo01 openssl-1.1.1k]# echo "/usr/local/openssl/lib/" >> /etc/ld.so.conf [[root@demo01 openssl-1.1.1k]# ldconfig
+查看版本
+[[root@demo01 openssl-1.1.1k]# openssl version
+OpenSSL 1.1.1k  25 Mar 2021

@@ -1,0 +1,186 @@
+#mkdir -p /u01/app/oracle/admin/gnnt2/{adump,bdump,cdump,dpdump,pfile,udump}
+#mkdir -p /u01/app/oracle/oradata/$ORACLE_SID
+
+
+rman备份脚本 二节点创建备份脚本
+[oracle@swnode2 /]$ crontab -l
+10 0 * * 0 /bin/sh /home/oracle/rmanbackup0.sh
+10 0 * * 1 /bin/sh /home/oracle/rmanbackup1.sh
+10 0 * * 2 /bin/sh /home/oracle/rmanbackup1.sh
+10 0 * * 3 /bin/sh /home/oracle/rmanbackup2.sh
+10 0 * * 4 /bin/sh /home/oracle/rmanbackup1.sh
+10 0 * * 5 /bin/sh /home/oracle/rmanbackup1.sh
+10 0 * * 6 /bin/sh /home/oracle/rmanbackup1.sh
+
+说明： 每周日凌晨执行0级全量备份，
+       每周三凌晨执行一次累计增量备份，其他时间都为差异增量备份
+
+如果星期二需要恢复的话，只需要1+2,
+如果星期四需要恢复的话，只需要1+4,
+如果星期五需要恢复的话，只需要1+4+5,
+如果星期六需要恢复的话，只需要1+4+5+6. 
+ 
+ 
+0级备份       
+cat rmanbackup0.sh
+#!/bin/bash
+#Creation: --
+#Version: 1.0.
+export ORACLE_SID=sxigov1
+export ORACLE_BASE=/u01/app/oracle
+export ORACLE_HOME=$ORACLE_BASE/product/12.1/db_1
+export PATH=$ORACLE_HOME/bin:$PATH
+ 
+DATE=`date +%Y-%m-%d`
+LOG=/backup/SXIGOV/log/log_rman_0_$DATE
+ 
+echo "================================================================================="
+>>$LOG
+echo "Begin backup at : `date`" >> $LOG
+rman target / <<EOF >> $LOG
+ 
+run
+{
+allocate channel c1 device type disk;
+CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
+CONFIGURE CONTROLFILE AUTOBACKUP ON;
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '/backup/SXIGOV/%d.%F.conf';
+backup as compressed backupset incremental level 0 database format '/backup/SXIGOV/0_%d_pdb_shwjs_%T_%s_%p.DBFILE';
+crosscheck backup;
+sql 'alter system archive log current';
+sql 'alter system archive log current';
+sql 'alter system archive log current';
+sql 'alter system archive log current';
+backup as compressed backupset archivelog all not backed up format '/backup/SXIGOV/arch/arch_%d_%T_%s_%p.ACR';
+crosscheck archivelog all;
+report obsolete;
+delete noprompt expired backup;
+delete noprompt obsolete;
+DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-8';
+delete noprompt backup of archivelog all completed before 'sysdate-8';
+release channel c1;
+}
+exit
+EOF
+echo "End backup at : `date`" >>$LOG
+ 
+#echo "Begin scp at : `date`" >>$LOG
+#scp ${}/*`date +%Y%m%d`* oracle@192.168.1.61:/tmp/
+#echo "End scp at : `date`" >>$LOG
+echo "=================================================================================" >>$LOG
+ 
+exit 0
+
+
+1级备份(差异备份)
+cat rmanbackup1.sh
+#!/bin/bash
+#Creation: --
+#Version: 1.0.
+export ORACLE_SID=sxigov1
+export ORACLE_BASE=/u01/app/oracle
+export ORACLE_HOME=$ORACLE_BASE/product/12.1/db_1
+export PATH=$ORACLE_HOME/bin:$PATH
+ 
+DATE=`date +%Y-%m-%d`
+LOG=/backup/SXIGOV/log/log_rman_1_$DATE
+ 
+echo "================================================================================="
+>>$LOG
+echo "Begin backup at : `date`" >> $LOG
+rman target / <<EOF >> $LOG
+ 
+run
+{
+allocate channel c1 device type disk;
+CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
+CONFIGURE CONTROLFILE AUTOBACKUP ON;
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '/backup/SXIGOV/%d.%F.conf';
+backup as compressed backupset incremental level 1 database format '/backup/SXIGOV/1_%d_pdb_shwjs_%T_%s_%p.DBFILE';
+crosscheck backup;
+sql 'alter system archive log current';
+sql 'alter system archive log current';
+sql 'alter system archive log current';
+sql 'alter system archive log current';
+backup as compressed backupset archivelog all not backed up format '/backup/SXIGOV/arch/arch_bak/arch_%d_%T_%s_%p.ACR';
+crosscheck archivelog all;
+report obsolete;
+delete noprompt expired backup;
+delete noprompt obsolete;
+DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-8';
+delete noprompt backup of archivelog all completed before 'sysdate-8';
+release channel c1;
+}
+exit
+EOF
+echo "End backup at : `date`" >>$LOG
+ 
+#echo "Begin scp at : `date`" >>$LOG
+#scp ${}/*`date +%Y%m%d`* oracle@192.168.1.61:/tmp/
+#echo "End scp at : `date`" >>$LOG
+echo "=================================================================================" >>$LOG
+ 
+exit 0
+
+2级备份(累计增量)
+cat rmanbackup2.sh
+#!/bin/bash
+#Creation: --
+#Version: 1.0.
+export ORACLE_SID=sxigov1
+export ORACLE_BASE=/u01/app/oracle
+export ORACLE_HOME=$ORACLE_BASE/product/12.1/db_1
+export PATH=$ORACLE_HOME/bin:$PATH
+ 
+DATE=`date +%Y-%m-%d`
+LOG=/backup/SXIGOV/log/log_rman_2_$DATE
+ 
+echo "================================================================================="
+>>$LOG
+echo "Begin backup at : `date`" >> $LOG
+rman target / <<EOF >> $LOG
+ 
+run
+{
+allocate channel c1 device type disk;
+CONFIGURE RETENTION POLICY TO RECOVERY WINDOW OF 7 DAYS;
+CONFIGURE CONTROLFILE AUTOBACKUP ON;
+CONFIGURE CONTROLFILE AUTOBACKUP FORMAT FOR DEVICE TYPE DISK TO '/backup/SXIGOV/%d.%F.conf';
+backup as compressed backupset incremental level 1 cumulative database format '/backup/SXIGOV/2_%d_pdb_shwjs_%T_%s_%p.DBFILE';
+crosscheck backup;
+sql 'alter system archive log current';
+sql 'alter system archive log current';
+sql 'alter system archive log current';
+sql 'alter system archive log current';
+backup as compressed backupset archivelog all not backed up format '/backup/SXIGOV/arch/arch_%d_%T_%s_%p.ACR';
+crosscheck archivelog all;
+report obsolete;
+delete noprompt expired backup;
+delete noprompt obsolete;
+DELETE NOPROMPT ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-8';
+delete noprompt backup of archivelog all completed before 'sysdate-8';
+release channel c1;
+}
+exit
+EOF
+echo "End backup at : `date`" >>$LOG
+ 
+#echo "Begin scp at : `date`" >>$LOG
+#scp ${}/*`date +%Y%m%d`* oracle@192.168.1.61:/tmp/
+#echo "End scp at : `date`" >>$LOG
+echo "=================================================================================" >>$LOG
+ 
+exit 0
+
+
+查询rman备份进度的SQL
+备份过程百分比（rman执行进度查看sql）：
+SELECT SID,
+        SERIAL#,
+        CONTEXT,
+        SOFAR,
+        TOTALWORK,
+        ROUND(SOFAR / TOTALWORK * 100, 2) "%_COMPLETE"
+   FROM gV$SESSION_LONGOPS
+ WHERE OPNAME LIKE 'RMAN%' AND OPNAME NOT LIKE '%aggregate%' AND
+        TOTALWORK != 0 AND SOFAR <> TOTALWORK;

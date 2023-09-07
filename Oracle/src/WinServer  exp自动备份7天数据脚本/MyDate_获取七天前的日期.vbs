@@ -1,0 +1,1 @@
+CreateObject("Scripting.FileSystemObject").CreateTextFile("F:\backup\MyDate.cmd").Write "Set MyDate=" & Date-7

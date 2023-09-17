@@ -1,0 +1,11 @@
+52 control file parallel write
+35 db file sequential read
+32 RMAN backup & recovery I/O
+4 log file parallel write
+3 db file async I/O submit
+3 db file scattered read
+2 library cache load lock
+2 db file parallel read
+1 os thread startup
+1 Streams AQ: qmn coordinator wa
+iting for slave to start

@@ -1,0 +1,4 @@
+event_scheduler	localhost	NULL	Daemon	Waiting on empty queue
+cjc	localhost	cjcdb	Query	Sending data
+root	localhost	NULL	Query	executing
+cjc	localhost	cjcdb	Query	User sleep

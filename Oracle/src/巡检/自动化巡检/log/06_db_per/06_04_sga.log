@@ -1,0 +1,5 @@
+large_pool_size      0
+memory_max_target    1157627904
+memory_target	     1157627904
+sga_max_size	     1157627904
+sga_target	     0

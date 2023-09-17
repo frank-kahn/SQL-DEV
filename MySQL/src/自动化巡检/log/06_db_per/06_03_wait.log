@@ -1,0 +1,2 @@
+4.76 s	NULL	wait/synch/cond/sql/Item_func_sleep::cond	timed_wait
+1.48 m	48 bytes	wait/io/table/sql/handler	fetch

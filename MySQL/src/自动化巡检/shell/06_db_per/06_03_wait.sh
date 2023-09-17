@@ -1,0 +1,1 @@
+mysql -uroot -N -e "select sys.format_time(TIMER_WAIT) as TIMER_WAIT,sys.format_bytes(NUMBER_OF_BYTES) as NUMBER_OF_BYTES,EVENT_NAME,OPERATION FROM cjcdb.v_wait where sys.format_time(TIMER_WAIT) not regexp 'ns|us' order by TIMER_WAIT desc;"

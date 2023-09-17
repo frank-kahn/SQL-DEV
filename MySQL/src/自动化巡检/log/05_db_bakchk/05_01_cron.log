@@ -1,0 +1,1 @@
+00 23 * * *  sh /mysqlbak/mysqlbak.sh 2 > /dev/null

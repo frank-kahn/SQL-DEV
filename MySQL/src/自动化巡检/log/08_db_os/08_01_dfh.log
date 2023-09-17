@@ -1,0 +1,9 @@
+Filesystem            Size  Used Avail Use% Mounted on
+devtmpfs              975M     0  975M   0% /dev
+tmpfs                1000M     0 1000M   0% /dev/shm
+tmpfs                1000M  9.3M  990M   1% /run
+tmpfs                1000M     0 1000M   0% /sys/fs/cgroup
+/dev/mapper/cjc-root   47G   42G  5.5G  89% /
+/dev/sda1            1014M  204M  811M  21% /boot
+tmpfs                 200M   12K  200M   1% /run/user/42
+tmpfs                 200M     0  200M   0% /run/user/0

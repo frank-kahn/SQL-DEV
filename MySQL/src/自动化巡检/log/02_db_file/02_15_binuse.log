@@ -1,0 +1,2 @@
+binlog_cache_size	262144
+max_binlog_cache_size	18446744073709547520

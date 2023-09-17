@@ -1,0 +1,1 @@
+crsctl stat res -t

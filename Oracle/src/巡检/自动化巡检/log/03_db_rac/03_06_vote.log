@@ -1,0 +1,6 @@
+##  STATE    File Universal Id                File Name Disk group
+--  -----    -----------------                --------- ---------
+1. ONLINE   031a02d3b12a4f8abf3d8c3ce4bd8682 (/oradata/vote3) [SYS]
+2. ONLINE   6cbc6d387b2c2230bf2a6569d578618d (/oradata/vote2) [SYS]
+3. ONLINE   35ea26922c5c4026bf96223d19cacc99 (/oradata/vote1) [SYS]
+Located 3 voting disk(s).

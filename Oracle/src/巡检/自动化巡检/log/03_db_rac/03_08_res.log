@@ -1,0 +1,44 @@
+--------------------------------------------------------------------------------
+NAME           TARGET  STATE        SERVER                   STATE_DETAILS       
+--------------------------------------------------------------------------------
+Local Resources
+--------------------------------------------------------------------------------
+ora.DATA.dg
+ONLINE  ONLINE       chenjc-db-01                                  
+ONLINE  ONLINE       chenjc-db-02                                  
+ora.LISTENER.lsnr
+ONLINE  ONLINE       chenjc-db-01                                  
+ONLINE  ONLINE       chenjc-db-02                                  
+ora.SYS.dg
+ONLINE  ONLINE       chenjc-db-01                                  
+ONLINE  ONLINE       chenjc-db-02                                  
+ora.asm
+ONLINE  ONLINE       chenjc-db-01              Started             
+ONLINE  ONLINE       chenjc-db-02              Started             
+ora.gsd
+OFFLINE OFFLINE      chenjc-db-01                                  
+OFFLINE OFFLINE      chenjc-db-02                                  
+ora.net1.network
+ONLINE  ONLINE       chenjc-db-01                                  
+ONLINE  ONLINE       chenjc-db-02                                  
+ora.ons
+ONLINE  ONLINE       chenjc-db-01                                  
+ONLINE  ONLINE       chenjc-db-02                                  
+--------------------------------------------------------------------------------
+Cluster Resources
+--------------------------------------------------------------------------------
+ora.LISTENER_SCAN1.lsnr
+1        ONLINE  ONLINE       chenjc-db-02                                  
+ora.cvu
+1        ONLINE  ONLINE       chenjc-db-02                                  
+ora.chenjc-db-01.vip
+1        ONLINE  ONLINE       chenjc-db-01                                  
+ora.chenjc-db-02.vip
+1        ONLINE  ONLINE       chenjc-db-02                                  
+ora.ebeva.db
+1        ONLINE  ONLINE       chenjc-db-01              Open                
+2        ONLINE  ONLINE       chenjc-db-02              Open                
+ora.oc4j
+1        OFFLINE OFFLINE                                                   
+ora.scan1.vip
+1        ONLINE  ONLINE       chenjc-db-02                                  

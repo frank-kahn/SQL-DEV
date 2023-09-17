@@ -1,0 +1,5 @@
+information_schema	utf8
+cjcdb	utf8mb4
+mysql	utf8mb4
+performance_schema	utf8
+sys	utf8

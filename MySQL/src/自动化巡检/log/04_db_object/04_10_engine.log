@@ -1,0 +1,6 @@
+cjcdb	NULL	1
+cjcdb	ARCHIVE	1
+cjcdb	CSV	1
+cjcdb	InnoDB	3
+cjcdb	MEMORY	2
+cjcdb	MyISAM	1

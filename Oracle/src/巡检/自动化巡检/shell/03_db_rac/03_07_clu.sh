@@ -1,0 +1,1 @@
+crsctl check cluster -all

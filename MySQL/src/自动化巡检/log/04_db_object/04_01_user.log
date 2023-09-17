@@ -1,0 +1,5 @@
+cjc	192.168.%	N
+cjc	localhost	N
+mysql.session	localhost	Y
+mysql.sys	localhost	Y
+root	localhost	N

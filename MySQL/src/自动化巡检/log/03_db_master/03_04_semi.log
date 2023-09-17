@@ -1,0 +1,6 @@
+rpl_semi_sync_master_enabled	ON
+rpl_semi_sync_master_timeout	10000
+rpl_semi_sync_master_trace_level	32
+rpl_semi_sync_master_wait_for_slave_count	1
+rpl_semi_sync_master_wait_no_slave	ON
+rpl_semi_sync_master_wait_point	AFTER_SYNC

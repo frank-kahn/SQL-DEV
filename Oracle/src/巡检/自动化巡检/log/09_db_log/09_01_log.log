@@ -1,0 +1,3 @@
+ORA-06576: not a valid function or procedure name
+ORA-12012: error on auto execute of job "CJC"."J_MDSDE_COUNT"
+ORA-1652: unable to extend temp segment by 128 in tablespace                 CJCTBS 

@@ -1,0 +1,3 @@
+192.0.0.100:/oracle  nfs (rw,relatime,vers=3,rsize=32768,wsize=32768 ......)
+192.0.0.100:/oradata nfs (rw,relatime,vers=3,rsize=32768,wsize=32768 ......)
+192.0.0.100:/oraarch nfs (rw,relatime,vers=3,rsize=32768,wsize=32768 ......)

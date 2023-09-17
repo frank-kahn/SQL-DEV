@@ -1,0 +1,2 @@
+Count: 2  Time=900.00s (1800s)  Lock=0.00s (0s)  Rows=3.0 (6), cjc[cjc]@[192.168.31.200]
+  select *,sleep(N) from t3

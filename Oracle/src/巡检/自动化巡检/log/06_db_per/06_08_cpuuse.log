@@ -1,0 +1,10 @@
+oracle 1.5 ora_vktm_cjc
+oracle 1.6 ora_j001_cjc
+gdm 5.5 /usr/bin/gnome-shell
+rtkit 0.1 /usr/libexec/rtkit-daemon
+rpc 0.1 /sbin/rpcbind
+root 0.0 [kworker/0:2]
+root 0.0 [kworker/0:0]
+root 0.0 [rcuos/0]
+root 0.0 [rcu_bh]
+root 0.0 /bin/bash

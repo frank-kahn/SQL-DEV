@@ -1,0 +1,1 @@
+mysql -uroot -N -e "select TABLE_SCHEMA,ENGINE,count(*) from information_schema.tables where TABLE_SCHEMA not in ('sys','mysql','information_schema','performance_schema') group by table_schema,engine  order by 1,2;"

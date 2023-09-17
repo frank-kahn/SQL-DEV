@@ -1,0 +1,11 @@
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+mysql    10666  4.5  3.2 195584 66560 pts/3    S+   12:35   0:03 mysql -ucjc -p
+root     10438  0.3  0.4 163492  9656 ?        Ss   12:33   0:00 sshd: root@pts/3
+mysql     2876  0.2 20.4 2285548 417612 pts/0  Sl   10:35   0:16 mysqld --defaults-file=/etc/my.cnf --user=mysql
+gdm       1769  0.1  7.8 2921160 160512 ?      Sl   10:24   0:08 /usr/bin/gnome-shell
+rtkit      755  0.0  0.1 198772  3668 ?        SNsl 10:23   0:00 /usr/libexec/rtkit-daemon
+rpc        754  0.0  0.1  69232  3220 ?        Ss   10:23   0:00 /sbin/rpcbind -w
+root         9  0.0  0.0      0     0 ?        S    10:22   0:00 [rcuos/0]
+root       875  0.0  0.6 480748 13992 ?        Ssl  10:23   0:00 /usr/sbin/NetworkManager --no-daemon
+root       847  0.0  1.6 357948 34244 ?        Ssl  10:23   0:01 /usr/bin/python -Es /usr/sbin/firewalld --nofork --nopid
+root       837  0.0  0.1 115312  2404 ?        S    10:23   0:00 /bin/bash /usr/sbin/ksmtuned

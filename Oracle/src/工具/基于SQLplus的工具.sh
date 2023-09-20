@@ -45,6 +45,9 @@ case $1 in
              S.EVENT,
              S.P1 || '/' || S.P2 || '/' || S.P3 P123,
              S.WAIT_TIME WT,
+			 s.last_call_et,
+			 s.status,
+			 s.blocking_instance || ':' || s.blocking_session blocking,
              NVL(SQL_ID, S.PREV_SQL_ID) SQL_ID
               FROM V\$PROCESS P, V\$SESSION S
              WHERE P.ADDR = S.PADDR
@@ -90,7 +93,7 @@ EOF
          col owner format a10
          col segment_name for a30
          alter session set cursor_sharing=force;
-         SELECT  OWNER,SEGMENT_NAME, SEGMENT_TYPE, SUM(BYTES)/1048576 SIZE_MB, 
+         SELECT  /*+ shsnc */ OWNER,SEGMENT_NAME, SEGMENT_TYPE, SUM(BYTES)/1048576 SIZE_MB, 
                     MAX(INITIAL_EXTENT) INIEXT, MAX(NEXT_EXTENT) MAXEXT FROM DBA_SEGMENTS 
              WHERE SEGMENT_NAME = upper('$2') 
                AND ('$3' IS NULL OR UPPER(OWNER) = UPPER('$3')) 
@@ -233,7 +236,7 @@ EOF
      sqlplus -s "$SQLPLUS_CMD" << EOF
          alter session set cursor_sharing=force;
          set linesize 150
-         SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR(to_char('$2'),NULL));
+         SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR(to_char('$2'),NULL),'advanced');
          exit
 EOF
      ;;

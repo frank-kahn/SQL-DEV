@@ -1,0 +1,2104 @@
+[root@orcl1 soft]# ll
+total 7431480
+-rwxr-xr-x. 1 root root     161937 Jul 10 18:41 OracleShellInstall
+-rw-r--r--. 1 root root 1395582860 Jul 10 18:00 p13390677_112040_Linux-x86-64_1of7.zip
+-rw-r--r--. 1 root root 1151304589 Jul 10 18:02 p13390677_112040_Linux-x86-64_2of7.zip
+-rw-r--r--. 1 root root  391781147 Jul 10 18:21 p31537677_112040_Linux-x86-64.zip
+-rw-r--r--. 1 root root   48569486 Jul 10 17:58 p31668908_112040_Linux-x86-64.zip
+-rw-r--r--. 1 root root  124800133 Jul 10 18:19 p6880880_112000_Linux-x86-64.zip
+-rw-r--r--. 1 root root 4497342464 Jul 10 17:56 rhel-server-7.6-x86_64-dvd.iso
+-rw-r--r--. 1 root root     279608 Jul 10 18:19 rlwrap-0.42.tar.gz
+[root@orcl1 soft]# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 00:1c:42:fe:54:76 brd ff:ff:ff:ff:ff:ff
+    inet 10.211.55.100/24 brd 10.211.55.255 scope global noprefixroute eth0
+       valid_lft forever preferred_lft forever
+    inet6 fdb2:2c26:f4e4:0:adad:1326:c5d7:7654/64 scope global noprefixroute dynamic
+       valid_lft 2591453sec preferred_lft 604253sec
+    inet6 fe80::e75e:f345:daab:475f/64 scope link noprefixroute
+       valid_lft forever preferred_lft forever
+3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 00:1c:42:e9:d2:83 brd ff:ff:ff:ff:ff:ff
+    inet 1.1.1.1/24 brd 1.1.1.255 scope global noprefixroute eth1
+       valid_lft forever preferred_lft forever
+    inet6 fdb2:2c26:f4e4:2:72fa:91eb:4287:6828/64 scope global noprefixroute dynamic
+       valid_lft 2591453sec preferred_lft 604253sec
+    inet6 fe80::b0f0:b405:b069:6b61/64 scope link noprefixroute
+       valid_lft forever preferred_lft forever
+4: eth2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 00:1c:42:36:cf:1b brd ff:ff:ff:ff:ff:ff
+    inet 2.1.1.1/24 brd 2.1.1.255 scope global noprefixroute eth2
+       valid_lft forever preferred_lft forever
+    inet6 fdb2:2c26:f4e4:3:5cb3:9324:a8fe:58b5/64 scope global noprefixroute dynamic
+       valid_lft 2591453sec preferred_lft 604253sec
+    inet6 fe80::de70:f4f7:8c4d:d140/64 scope link noprefixroute
+       valid_lft forever preferred_lft forever
+[root@orcl1 soft]# du -sh *
+160K    OracleShellInstall
+1.3G    p13390677_112040_Linux-x86-64_1of7.zip
+1.1G    p13390677_112040_Linux-x86-64_2of7.zip
+374M    p31537677_112040_Linux-x86-64.zip
+47M     p31668908_112040_Linux-x86-64.zip
+120M    p6880880_112000_Linux-x86-64.zip
+4.2G    rhel-server-7.6-x86_64-dvd.iso
+276K    rlwrap-0.42.tar.gz
+[root@orcl1 soft]#
+[root@orcl1 soft]# ./OracleShellInstall -lf eth0 `# local ip ifname`\
+> -n lucifer `# hostname`\
+> -op oracle `# oracle password`\
+> -d /oracle `# software base dir`\
+> -ord /oracle/oradata `# data dir`\
+> -o oradb `# dbname`\
+> -dp oracle `# sys/system password`\
+> -ds AL32UTF8 `# database character`\
+> -ns UTF8 `# national character`\
+> -redo 50 `# redo size`\
+> -opa 31537677 `# oracle PSU/RU`\
+> -jpa 31668908 `# OJVM PSU/RU`\
+> -opd Y `# optimize db`
+
+   ███████                             ██          ████████ ██               ██  ██ ██                    ██              ██  ██
+  ██░░░░░██                           ░██         ██░░░░░░ ░██              ░██ ░██░██                   ░██             ░██ ░██
+ ██     ░░██ ██████  ██████    █████  ░██  █████ ░██       ░██       █████  ░██ ░██░██ ███████   ██████ ██████  ██████   ░██ ░██
+░██      ░██░░██░░█ ░░░░░░██  ██░░░██ ░██ ██░░░██░█████████░██████  ██░░░██ ░██ ░██░██░░██░░░██ ██░░░░ ░░░██░  ░░░░░░██  ░██ ░██
+░██      ░██ ░██ ░   ███████ ░██  ░░  ░██░███████░░░░░░░░██░██░░░██░███████ ░██ ░██░██ ░██  ░██░░█████   ░██    ███████  ░██ ░██
+░░██     ██  ░██    ██░░░░██ ░██   ██ ░██░██░░░░        ░██░██  ░██░██░░░░  ░██ ░██░██ ░██  ░██ ░░░░░██  ░██   ██░░░░██  ░██ ░██
+ ░░███████  ░███   ░░████████░░█████  ███░░██████ ████████ ░██  ░██░░██████ ███ ███░██ ███  ░██ ██████   ░░██ ░░████████ ███ ███
+  ░░░░░░░   ░░░     ░░░░░░░░  ░░░░░  ░░░  ░░░░░░ ░░░░░░░░  ░░   ░░  ░░░░░░ ░░░ ░░░ ░░ ░░░   ░░ ░░░░░░     ░░   ░░░░░░░░ ░░░ ░░░
+
+Please Choose Oracle Install Mode [si/rac] :
+si
+
+Oracle Install Mode: single
+
+
+Please Choose Oracle Database Version [11/12/19/21] :
+11
+
+Oracle Database Version: 11
+
+#==============================================================#
+Configure firewall
+#==============================================================#
+● firewalld.service - firewalld - dynamic firewall daemon
+   Loaded: loaded (/usr/lib/systemd/system/firewalld.service; disabled; vendor preset: enabled)
+   Active: inactive (dead)
+     Docs: man:firewalld(1)
+
+Jul 10 17:38:50 orcl1 systemd[1]: Starting firewalld - dynamic firewall daemon...
+Jul 10 17:38:50 orcl1 systemd[1]: Started firewalld - dynamic firewall daemon.
+Jul 10 18:43:53 orcl1 systemd[1]: Stopping firewalld - dynamic firewall daemon...
+Jul 10 18:43:54 orcl1 systemd[1]: Stopped firewalld - dynamic firewall daemon.
+
+#==============================================================#
+Configure selinux
+#==============================================================#
+SELINUX=disabled
+SELINUXTYPE=targeted
+
+Loaded plugins: product-id, search-disabled-repos
+server                                                                                                                                                                                                            | 4.3 kB  00:00:00
+(1/2): server/group_gz                                                                                                                                                                                            | 146 kB  00:00:00
+(2/2): server/primary_db                                                                                                                                                                                          | 4.2 MB  00:00:00
+Package 2:tar-1.26-35.el7.x86_64 already installed and latest version
+Nothing to do
+Loaded plugins: product-id, search-disabled-repos
+Package binutils-2.27-34.base.el7.x86_64 already installed and latest version
+No package compat-libstdc++-33 available.
+Package elfutils-libelf-0.172-2.el7.x86_64 already installed and latest version
+Package glibc-2.17-260.el7.x86_64 already installed and latest version
+Package libaio-0.3.109-13.el7.x86_64 already installed and latest version
+Package libgcc-4.8.5-36.el7.x86_64 already installed and latest version
+Package libstdc++-4.8.5-36.el7.x86_64 already installed and latest version
+Package 1:make-3.82-23.el7.x86_64 already installed and latest version
+Package e2fsprogs-1.42.9-13.el7.x86_64 already installed and latest version
+Package e2fsprogs-libs-1.42.9-13.el7.x86_64 already installed and latest version
+Package openssh-clients-7.4p1-16.el7.x86_64 already installed and latest version
+Package readline-6.2-10.el7.x86_64 already installed and latest version
+Package policycoreutils-2.5-29.el7.x86_64 already installed and latest version
+Resolving Dependencies
+--> Running transaction check
+---> Package bc.x86_64 0:1.06.95-13.el7 will be installed
+---> Package compat-libcap1.x86_64 0:1.10-7.el7 will be installed
+---> Package elfutils-libelf-devel.x86_64 0:0.172-2.el7 will be installed
+--> Processing Dependency: pkgconfig(zlib) for package: elfutils-libelf-devel-0.172-2.el7.x86_64
+---> Package fontconfig-devel.x86_64 0:2.13.0-4.3.el7 will be installed
+--> Processing Dependency: fontconfig(x86-64) = 2.13.0-4.3.el7 for package: fontconfig-devel-2.13.0-4.3.el7.x86_64
+--> Processing Dependency: freetype-devel >= 2.8-7 for package: fontconfig-devel-2.13.0-4.3.el7.x86_64
+--> Processing Dependency: pkgconfig(freetype2) >= 20.0.14 for package: fontconfig-devel-2.13.0-4.3.el7.x86_64
+--> Processing Dependency: pkgconfig(expat) for package: fontconfig-devel-2.13.0-4.3.el7.x86_64
+--> Processing Dependency: pkgconfig(uuid) for package: fontconfig-devel-2.13.0-4.3.el7.x86_64
+--> Processing Dependency: libfontconfig.so.1()(64bit) for package: fontconfig-devel-2.13.0-4.3.el7.x86_64
+---> Package gcc.x86_64 0:4.8.5-36.el7 will be installed
+--> Processing Dependency: cpp = 4.8.5-36.el7 for package: gcc-4.8.5-36.el7.x86_64
+--> Processing Dependency: libmpc.so.3()(64bit) for package: gcc-4.8.5-36.el7.x86_64
+--> Processing Dependency: libmpfr.so.4()(64bit) for package: gcc-4.8.5-36.el7.x86_64
+---> Package gcc-c++.x86_64 0:4.8.5-36.el7 will be installed
+---> Package glibc-devel.x86_64 0:2.17-260.el7 will be installed
+--> Processing Dependency: glibc-headers = 2.17-260.el7 for package: glibc-devel-2.17-260.el7.x86_64
+--> Processing Dependency: glibc-headers for package: glibc-devel-2.17-260.el7.x86_64
+---> Package ksh.x86_64 0:20120801-139.el7 will be installed
+---> Package libX11.x86_64 0:1.6.5-2.el7 will be installed
+--> Processing Dependency: libX11-common >= 1.6.5-2.el7 for package: libX11-1.6.5-2.el7.x86_64
+---> Package libXau.x86_64 0:1.0.8-2.1.el7 will be installed
+---> Package libXi.x86_64 0:1.7.9-1.el7 will be installed
+--> Processing Dependency: libXext.so.6()(64bit) for package: libXi-1.7.9-1.el7.x86_64
+---> Package libXrender.x86_64 0:0.9.10-1.el7 will be installed
+---> Package libXrender-devel.x86_64 0:0.9.10-1.el7 will be installed
+--> Processing Dependency: pkgconfig(renderproto) >= 0.9 for package: libXrender-devel-0.9.10-1.el7.x86_64
+--> Processing Dependency: pkgconfig(x11) for package: libXrender-devel-0.9.10-1.el7.x86_64
+--> Processing Dependency: pkgconfig(xproto) for package: libXrender-devel-0.9.10-1.el7.x86_64
+---> Package libXtst.x86_64 0:1.2.3-1.el7 will be installed
+---> Package libaio-devel.x86_64 0:0.3.109-13.el7 will be installed
+---> Package libstdc++-devel.x86_64 0:4.8.5-36.el7 will be installed
+---> Package libxcb.x86_64 0:1.13-1.el7 will be installed
+---> Package net-tools.x86_64 0:2.0-0.24.20131004git.el7 will be installed
+---> Package nfs-utils.x86_64 1:1.3.0-0.61.el7 will be installed
+--> Processing Dependency: gssproxy >= 0.7.0-3 for package: 1:nfs-utils-1.3.0-0.61.el7.x86_64
+--> Processing Dependency: libtirpc >= 0.2.4-0.7 for package: 1:nfs-utils-1.3.0-0.61.el7.x86_64
+--> Processing Dependency: keyutils for package: 1:nfs-utils-1.3.0-0.61.el7.x86_64
+--> Processing Dependency: libevent for package: 1:nfs-utils-1.3.0-0.61.el7.x86_64
+--> Processing Dependency: libnfsidmap for package: 1:nfs-utils-1.3.0-0.61.el7.x86_64
+--> Processing Dependency: quota for package: 1:nfs-utils-1.3.0-0.61.el7.x86_64
+--> Processing Dependency: rpcbind for package: 1:nfs-utils-1.3.0-0.61.el7.x86_64
+--> Processing Dependency: libevent-2.0.so.5()(64bit) for package: 1:nfs-utils-1.3.0-0.61.el7.x86_64
+--> Processing Dependency: libnfsidmap.so.0()(64bit) for package: 1:nfs-utils-1.3.0-0.61.el7.x86_64
+--> Processing Dependency: libtirpc.so.1()(64bit) for package: 1:nfs-utils-1.3.0-0.61.el7.x86_64
+---> Package policycoreutils-python.x86_64 0:2.5-29.el7 will be installed
+--> Processing Dependency: audit-libs-python >= 2.1.3-4 for package: policycoreutils-python-2.5-29.el7.x86_64
+--> Processing Dependency: libsemanage-python >= 2.5-14 for package: policycoreutils-python-2.5-29.el7.x86_64
+--> Processing Dependency: setools-libs >= 3.3.8-4 for package: policycoreutils-python-2.5-29.el7.x86_64
+--> Processing Dependency: checkpolicy for package: policycoreutils-python-2.5-29.el7.x86_64
+--> Processing Dependency: libapol.so.4(VERS_4.0)(64bit) for package: policycoreutils-python-2.5-29.el7.x86_64
+--> Processing Dependency: libcgroup for package: policycoreutils-python-2.5-29.el7.x86_64
+--> Processing Dependency: libqpol.so.1(VERS_1.2)(64bit) for package: policycoreutils-python-2.5-29.el7.x86_64
+--> Processing Dependency: libqpol.so.1(VERS_1.4)(64bit) for package: policycoreutils-python-2.5-29.el7.x86_64
+--> Processing Dependency: python-IPy for package: policycoreutils-python-2.5-29.el7.x86_64
+--> Processing Dependency: libapol.so.4()(64bit) for package: policycoreutils-python-2.5-29.el7.x86_64
+--> Processing Dependency: libqpol.so.1()(64bit) for package: policycoreutils-python-2.5-29.el7.x86_64
+---> Package psmisc.x86_64 0:22.20-15.el7 will be installed
+---> Package readline-devel.x86_64 0:6.2-10.el7 will be installed
+--> Processing Dependency: ncurses-devel for package: readline-devel-6.2-10.el7.x86_64
+---> Package smartmontools.x86_64 1:6.5-1.el7 will be installed
+--> Processing Dependency: mailx for package: 1:smartmontools-6.5-1.el7.x86_64
+---> Package sysstat.x86_64 0:10.1.5-17.el7 will be installed
+--> Processing Dependency: libsensors.so.4()(64bit) for package: sysstat-10.1.5-17.el7.x86_64
+---> Package unzip.x86_64 0:6.0-19.el7 will be installed
+--> Running transaction check
+---> Package audit-libs-python.x86_64 0:2.8.4-4.el7 will be installed
+---> Package checkpolicy.x86_64 0:2.5-8.el7 will be installed
+---> Package cpp.x86_64 0:4.8.5-36.el7 will be installed
+---> Package expat-devel.x86_64 0:2.1.0-10.el7_3 will be installed
+---> Package fontconfig.x86_64 0:2.13.0-4.3.el7 will be installed
+--> Processing Dependency: dejavu-sans-fonts for package: fontconfig-2.13.0-4.3.el7.x86_64
+--> Processing Dependency: fontpackages-filesystem for package: fontconfig-2.13.0-4.3.el7.x86_64
+---> Package freetype-devel.x86_64 0:2.8-12.el7 will be installed
+--> Processing Dependency: pkgconfig(libpng) for package: freetype-devel-2.8-12.el7.x86_64
+---> Package glibc-headers.x86_64 0:2.17-260.el7 will be installed
+--> Processing Dependency: kernel-headers >= 2.2.1 for package: glibc-headers-2.17-260.el7.x86_64
+--> Processing Dependency: kernel-headers for package: glibc-headers-2.17-260.el7.x86_64
+---> Package gssproxy.x86_64 0:0.7.0-21.el7 will be installed
+--> Processing Dependency: libini_config >= 1.3.1-31 for package: gssproxy-0.7.0-21.el7.x86_64
+--> Processing Dependency: libini_config.so.3(INI_CONFIG_1.1.0)(64bit) for package: gssproxy-0.7.0-21.el7.x86_64
+--> Processing Dependency: libini_config.so.3(INI_CONFIG_1.2.0)(64bit) for package: gssproxy-0.7.0-21.el7.x86_64
+--> Processing Dependency: libref_array.so.1(REF_ARRAY_0.1.1)(64bit) for package: gssproxy-0.7.0-21.el7.x86_64
+--> Processing Dependency: libverto-module-base for package: gssproxy-0.7.0-21.el7.x86_64
+--> Processing Dependency: libbasicobjects.so.0()(64bit) for package: gssproxy-0.7.0-21.el7.x86_64
+--> Processing Dependency: libcollection.so.2()(64bit) for package: gssproxy-0.7.0-21.el7.x86_64
+--> Processing Dependency: libini_config.so.3()(64bit) for package: gssproxy-0.7.0-21.el7.x86_64
+--> Processing Dependency: libref_array.so.1()(64bit) for package: gssproxy-0.7.0-21.el7.x86_64
+---> Package keyutils.x86_64 0:1.5.8-3.el7 will be installed
+---> Package libX11-common.noarch 0:1.6.5-2.el7 will be installed
+---> Package libX11-devel.x86_64 0:1.6.5-2.el7 will be installed
+--> Processing Dependency: pkgconfig(xcb) >= 1.11.1 for package: libX11-devel-1.6.5-2.el7.x86_64
+--> Processing Dependency: pkgconfig(xcb) for package: libX11-devel-1.6.5-2.el7.x86_64
+---> Package libXext.x86_64 0:1.3.3-3.el7 will be installed
+---> Package libcgroup.x86_64 0:0.41-20.el7 will be installed
+---> Package libevent.x86_64 0:2.0.21-4.el7 will be installed
+---> Package libmpc.x86_64 0:1.0.1-3.el7 will be installed
+---> Package libnfsidmap.x86_64 0:0.25-19.el7 will be installed
+---> Package libsemanage-python.x86_64 0:2.5-14.el7 will be installed
+---> Package libtirpc.x86_64 0:0.2.4-0.15.el7 will be installed
+---> Package libuuid-devel.x86_64 0:2.23.2-59.el7 will be installed
+---> Package lm_sensors-libs.x86_64 0:3.4.0-6.20160601gitf9185e5.el7 will be installed
+---> Package mailx.x86_64 0:12.5-19.el7 will be installed
+---> Package mpfr.x86_64 0:3.1.1-4.el7 will be installed
+---> Package ncurses-devel.x86_64 0:5.9-14.20130511.el7_4 will be installed
+---> Package python-IPy.noarch 0:0.75-6.el7 will be installed
+---> Package quota.x86_64 1:4.01-17.el7 will be installed
+--> Processing Dependency: quota-nls = 1:4.01-17.el7 for package: 1:quota-4.01-17.el7.x86_64
+--> Processing Dependency: tcp_wrappers for package: 1:quota-4.01-17.el7.x86_64
+---> Package rpcbind.x86_64 0:0.2.0-47.el7 will be installed
+---> Package setools-libs.x86_64 0:3.3.8-4.el7 will be installed
+---> Package xorg-x11-proto-devel.noarch 0:2018.4-1.el7 will be installed
+---> Package zlib-devel.x86_64 0:1.2.7-18.el7 will be installed
+--> Running transaction check
+---> Package dejavu-sans-fonts.noarch 0:2.33-6.el7 will be installed
+--> Processing Dependency: dejavu-fonts-common = 2.33-6.el7 for package: dejavu-sans-fonts-2.33-6.el7.noarch
+---> Package fontpackages-filesystem.noarch 0:1.44-8.el7 will be installed
+---> Package kernel-headers.x86_64 0:3.10.0-957.el7 will be installed
+---> Package libbasicobjects.x86_64 0:0.1.1-32.el7 will be installed
+---> Package libcollection.x86_64 0:0.7.0-32.el7 will be installed
+---> Package libini_config.x86_64 0:1.3.1-32.el7 will be installed
+--> Processing Dependency: libpath_utils.so.1(PATH_UTILS_0.2.1)(64bit) for package: libini_config-1.3.1-32.el7.x86_64
+--> Processing Dependency: libpath_utils.so.1()(64bit) for package: libini_config-1.3.1-32.el7.x86_64
+---> Package libpng-devel.x86_64 2:1.5.13-7.el7_2 will be installed
+---> Package libref_array.x86_64 0:0.1.5-32.el7 will be installed
+---> Package libverto-libevent.x86_64 0:0.2.5-4.el7 will be installed
+---> Package libxcb-devel.x86_64 0:1.13-1.el7 will be installed
+--> Processing Dependency: pkgconfig(xau) >= 0.99.2 for package: libxcb-devel-1.13-1.el7.x86_64
+---> Package quota-nls.noarch 1:4.01-17.el7 will be installed
+---> Package tcp_wrappers.x86_64 0:7.6-77.el7 will be installed
+--> Running transaction check
+---> Package dejavu-fonts-common.noarch 0:2.33-6.el7 will be installed
+---> Package libXau-devel.x86_64 0:1.0.8-2.1.el7 will be installed
+---> Package libpath_utils.x86_64 0:0.2.1-32.el7 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+=========================================================================================================================================================================================================================================
+ Package                                                        Arch                                          Version                                                                Repository                                     Size
+=========================================================================================================================================================================================================================================
+Installing:
+ bc                                                             x86_64                                        1.06.95-13.el7                                                         server                                        115 k
+ compat-libcap1                                                 x86_64                                        1.10-7.el7                                                             server                                         19 k
+ elfutils-libelf-devel                                          x86_64                                        0.172-2.el7                                                            server                                         39 k
+ fontconfig-devel                                               x86_64                                        2.13.0-4.3.el7                                                         server                                        138 k
+ gcc                                                            x86_64                                        4.8.5-36.el7                                                           server                                         16 M
+ gcc-c++                                                        x86_64                                        4.8.5-36.el7                                                           server                                        7.2 M
+ glibc-devel                                                    x86_64                                        2.17-260.el7                                                           server                                        1.1 M
+ ksh                                                            x86_64                                        20120801-139.el7                                                       server                                        885 k
+ libX11                                                         x86_64                                        1.6.5-2.el7                                                            server                                        606 k
+ libXau                                                         x86_64                                        1.0.8-2.1.el7                                                          server                                         29 k
+ libXi                                                          x86_64                                        1.7.9-1.el7                                                            server                                         40 k
+ libXrender                                                     x86_64                                        0.9.10-1.el7                                                           server                                         26 k
+ libXrender-devel                                               x86_64                                        0.9.10-1.el7                                                           server                                         17 k
+ libXtst                                                        x86_64                                        1.2.3-1.el7                                                            server                                         20 k
+ libaio-devel                                                   x86_64                                        0.3.109-13.el7                                                         server                                         13 k
+ libstdc++-devel                                                x86_64                                        4.8.5-36.el7                                                           server                                        1.5 M
+ libxcb                                                         x86_64                                        1.13-1.el7                                                             server                                        214 k
+ net-tools                                                      x86_64                                        2.0-0.24.20131004git.el7                                               server                                        306 k
+ nfs-utils                                                      x86_64                                        1:1.3.0-0.61.el7                                                       server                                        410 k
+ policycoreutils-python                                         x86_64                                        2.5-29.el7                                                             server                                        456 k
+ psmisc                                                         x86_64                                        22.20-15.el7                                                           server                                        141 k
+ readline-devel                                                 x86_64                                        6.2-10.el7                                                             server                                        138 k
+ smartmontools                                                  x86_64                                        1:6.5-1.el7                                                            server                                        460 k
+ sysstat                                                        x86_64                                        10.1.5-17.el7                                                          server                                        315 k
+ unzip                                                          x86_64                                        6.0-19.el7                                                             server                                        170 k
+Installing for dependencies:
+ audit-libs-python                                              x86_64                                        2.8.4-4.el7                                                            server                                         76 k
+ checkpolicy                                                    x86_64                                        2.5-8.el7                                                              server                                        295 k
+ cpp                                                            x86_64                                        4.8.5-36.el7                                                           server                                        6.0 M
+ dejavu-fonts-common                                            noarch                                        2.33-6.el7                                                             server                                         64 k
+ dejavu-sans-fonts                                              noarch                                        2.33-6.el7                                                             server                                        1.4 M
+ expat-devel                                                    x86_64                                        2.1.0-10.el7_3                                                         server                                         57 k
+ fontconfig                                                     x86_64                                        2.13.0-4.3.el7                                                         server                                        254 k
+ fontpackages-filesystem                                        noarch                                        1.44-8.el7                                                             server                                        9.9 k
+ freetype-devel                                                 x86_64                                        2.8-12.el7                                                             server                                        446 k
+ glibc-headers                                                  x86_64                                        2.17-260.el7                                                           server                                        683 k
+ gssproxy                                                       x86_64                                        0.7.0-21.el7                                                           server                                        109 k
+ kernel-headers                                                 x86_64                                        3.10.0-957.el7                                                         server                                        8.0 M
+ keyutils                                                       x86_64                                        1.5.8-3.el7                                                            server                                         54 k
+ libX11-common                                                  noarch                                        1.6.5-2.el7                                                            server                                        164 k
+ libX11-devel                                                   x86_64                                        1.6.5-2.el7                                                            server                                        980 k
+ libXau-devel                                                   x86_64                                        1.0.8-2.1.el7                                                          server                                         14 k
+ libXext                                                        x86_64                                        1.3.3-3.el7                                                            server                                         39 k
+ libbasicobjects                                                x86_64                                        0.1.1-32.el7                                                           server                                         26 k
+ libcgroup                                                      x86_64                                        0.41-20.el7                                                            server                                         66 k
+ libcollection                                                  x86_64                                        0.7.0-32.el7                                                           server                                         42 k
+ libevent                                                       x86_64                                        2.0.21-4.el7                                                           server                                        214 k
+ libini_config                                                  x86_64                                        1.3.1-32.el7                                                           server                                         64 k
+ libmpc                                                         x86_64                                        1.0.1-3.el7                                                            server                                         51 k
+ libnfsidmap                                                    x86_64                                        0.25-19.el7                                                            server                                         50 k
+ libpath_utils                                                  x86_64                                        0.2.1-32.el7                                                           server                                         28 k
+ libpng-devel                                                   x86_64                                        2:1.5.13-7.el7_2                                                       server                                        122 k
+ libref_array                                                   x86_64                                        0.1.5-32.el7                                                           server                                         27 k
+ libsemanage-python                                             x86_64                                        2.5-14.el7                                                             server                                        113 k
+ libtirpc                                                       x86_64                                        0.2.4-0.15.el7                                                         server                                         89 k
+ libuuid-devel                                                  x86_64                                        2.23.2-59.el7                                                          server                                         91 k
+ libverto-libevent                                              x86_64                                        0.2.5-4.el7                                                            server                                        8.9 k
+ libxcb-devel                                                   x86_64                                        1.13-1.el7                                                             server                                        1.1 M
+ lm_sensors-libs                                                x86_64                                        3.4.0-6.20160601gitf9185e5.el7                                         server                                         42 k
+ mailx                                                          x86_64                                        12.5-19.el7                                                            server                                        245 k
+ mpfr                                                           x86_64                                        3.1.1-4.el7                                                            server                                        203 k
+ ncurses-devel                                                  x86_64                                        5.9-14.20130511.el7_4                                                  server                                        713 k
+ python-IPy                                                     noarch                                        0.75-6.el7                                                             server                                         32 k
+ quota                                                          x86_64                                        1:4.01-17.el7                                                          server                                        179 k
+ quota-nls                                                      noarch                                        1:4.01-17.el7                                                          server                                         90 k
+ rpcbind                                                        x86_64                                        0.2.0-47.el7                                                           server                                         60 k
+ setools-libs                                                   x86_64                                        3.3.8-4.el7                                                            server                                        620 k
+ tcp_wrappers                                                   x86_64                                        7.6-77.el7                                                             server                                         79 k
+ xorg-x11-proto-devel                                           noarch                                        2018.4-1.el7                                                           server                                        279 k
+ zlib-devel                                                     x86_64                                        1.2.7-18.el7                                                           server                                         50 k
+
+Transaction Summary
+=========================================================================================================================================================================================================================================
+Install  25 Packages (+44 Dependent packages)
+
+Total download size: 53 M
+Installed size: 123 M
+Downloading packages:
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Total                                                                                                                                                                                                     89 MB/s |  53 MB  00:00:00
+Running transaction check
+Running transaction test
+Transaction test succeeded
+Running transaction
+  Installing : mpfr-3.1.1-4.el7.x86_64                                                                                                                                                                                              1/69
+  Installing : libmpc-1.0.1-3.el7.x86_64                                                                                                                                                                                            2/69
+  Installing : xorg-x11-proto-devel-2018.4-1.el7.noarch                                                                                                                                                                             3/69
+  Installing : zlib-devel-1.2.7-18.el7.x86_64                                                                                                                                                                                       4/69
+  Installing : libtirpc-0.2.4-0.15.el7.x86_64                                                                                                                                                                                       5/69
+  Installing : rpcbind-0.2.0-47.el7.x86_64                                                                                                                                                                                          6/69
+  Installing : fontpackages-filesystem-1.44-8.el7.noarch                                                                                                                                                                            7/69
+  Installing : libXau-1.0.8-2.1.el7.x86_64                                                                                                                                                                                          8/69
+  Installing : libxcb-1.13-1.el7.x86_64                                                                                                                                                                                             9/69
+  Installing : libref_array-0.1.5-32.el7.x86_64                                                                                                                                                                                    10/69
+  Installing : libevent-2.0.21-4.el7.x86_64                                                                                                                                                                                        11/69
+  Installing : libbasicobjects-0.1.1-32.el7.x86_64                                                                                                                                                                                 12/69
+  Installing : libcollection-0.7.0-32.el7.x86_64                                                                                                                                                                                   13/69
+  Installing : libverto-libevent-0.2.5-4.el7.x86_64                                                                                                                                                                                14/69
+  Installing : libXau-devel-1.0.8-2.1.el7.x86_64                                                                                                                                                                                   15/69
+  Installing : libxcb-devel-1.13-1.el7.x86_64                                                                                                                                                                                      16/69
+  Installing : dejavu-fonts-common-2.33-6.el7.noarch                                                                                                                                                                               17/69
+  Installing : dejavu-sans-fonts-2.33-6.el7.noarch                                                                                                                                                                                 18/69
+  Installing : fontconfig-2.13.0-4.3.el7.x86_64                                                                                                                                                                                    19/69
+  Installing : 2:libpng-devel-1.5.13-7.el7_2.x86_64                                                                                                                                                                                20/69
+  Installing : freetype-devel-2.8-12.el7.x86_64                                                                                                                                                                                    21/69
+  Installing : cpp-4.8.5-36.el7.x86_64                                                                                                                                                                                             22/69
+  Installing : setools-libs-3.3.8-4.el7.x86_64                                                                                                                                                                                     23/69
+  Installing : mailx-12.5-19.el7.x86_64                                                                                                                                                                                            24/69
+  Installing : libnfsidmap-0.25-19.el7.x86_64                                                                                                                                                                                      25/69
+  Installing : libX11-common-1.6.5-2.el7.noarch                                                                                                                                                                                    26/69
+  Installing : libX11-1.6.5-2.el7.x86_64                                                                                                                                                                                           27/69
+  Installing : libXext-1.3.3-3.el7.x86_64                                                                                                                                                                                          28/69
+  Installing : libXi-1.7.9-1.el7.x86_64                                                                                                                                                                                            29/69
+  Installing : libXrender-0.9.10-1.el7.x86_64                                                                                                                                                                                      30/69
+  Installing : libX11-devel-1.6.5-2.el7.x86_64                                                                                                                                                                                     31/69
+  Installing : keyutils-1.5.8-3.el7.x86_64                                                                                                                                                                                         32/69
+  Installing : kernel-headers-3.10.0-957.el7.x86_64                                                                                                                                                                                33/69
+  Installing : glibc-headers-2.17-260.el7.x86_64                                                                                                                                                                                   34/69
+  Installing : glibc-devel-2.17-260.el7.x86_64                                                                                                                                                                                     35/69
+  Installing : gcc-4.8.5-36.el7.x86_64                                                                                                                                                                                             36/69
+  Installing : ncurses-devel-5.9-14.20130511.el7_4.x86_64                                                                                                                                                                          37/69
+  Installing : audit-libs-python-2.8.4-4.el7.x86_64                                                                                                                                                                                38/69
+  Installing : checkpolicy-2.5-8.el7.x86_64                                                                                                                                                                                        39/69
+  Installing : libsemanage-python-2.5-14.el7.x86_64                                                                                                                                                                                40/69
+  Installing : libuuid-devel-2.23.2-59.el7.x86_64                                                                                                                                                                                  41/69
+  Installing : libpath_utils-0.2.1-32.el7.x86_64                                                                                                                                                                                   42/69
+  Installing : libini_config-1.3.1-32.el7.x86_64                                                                                                                                                                                   43/69
+  Installing : gssproxy-0.7.0-21.el7.x86_64                                                                                                                                                                                        44/69
+  Installing : 1:quota-nls-4.01-17.el7.noarch                                                                                                                                                                                      45/69
+  Installing : libstdc++-devel-4.8.5-36.el7.x86_64                                                                                                                                                                                 46/69
+  Installing : lm_sensors-libs-3.4.0-6.20160601gitf9185e5.el7.x86_64                                                                                                                                                               47/69
+  Installing : expat-devel-2.1.0-10.el7_3.x86_64                                                                                                                                                                                   48/69
+  Installing : python-IPy-0.75-6.el7.noarch                                                                                                                                                                                        49/69
+  Installing : tcp_wrappers-7.6-77.el7.x86_64                                                                                                                                                                                      50/69
+  Installing : 1:quota-4.01-17.el7.x86_64                                                                                                                                                                                          51/69
+  Installing : libcgroup-0.41-20.el7.x86_64                                                                                                                                                                                        52/69
+  Installing : policycoreutils-python-2.5-29.el7.x86_64                                                                                                                                                                            53/69
+  Installing : 1:nfs-utils-1.3.0-0.61.el7.x86_64                                                                                                                                                                                   54/69
+  Installing : fontconfig-devel-2.13.0-4.3.el7.x86_64                                                                                                                                                                              55/69
+  Installing : sysstat-10.1.5-17.el7.x86_64                                                                                                                                                                                        56/69
+  Installing : gcc-c++-4.8.5-36.el7.x86_64                                                                                                                                                                                         57/69
+  Installing : readline-devel-6.2-10.el7.x86_64                                                                                                                                                                                    58/69
+  Installing : libXrender-devel-0.9.10-1.el7.x86_64                                                                                                                                                                                59/69
+  Installing : libXtst-1.2.3-1.el7.x86_64                                                                                                                                                                                          60/69
+  Installing : 1:smartmontools-6.5-1.el7.x86_64                                                                                                                                                                                    61/69
+  Installing : elfutils-libelf-devel-0.172-2.el7.x86_64                                                                                                                                                                            62/69
+  Installing : unzip-6.0-19.el7.x86_64                                                                                                                                                                                             63/69
+  Installing : libaio-devel-0.3.109-13.el7.x86_64                                                                                                                                                                                  64/69
+  Installing : compat-libcap1-1.10-7.el7.x86_64                                                                                                                                                                                    65/69
+  Installing : ksh-20120801-139.el7.x86_64                                                                                                                                                                                         66/69
+  Installing : net-tools-2.0-0.24.20131004git.el7.x86_64                                                                                                                                                                           67/69
+  Installing : psmisc-22.20-15.el7.x86_64                                                                                                                                                                                          68/69
+  Installing : bc-1.06.95-13.el7.x86_64                                                                                                                                                                                            69/69
+server/productid                                                                                                                                                                                                  | 1.6 kB  00:00:00
+  Verifying  : elfutils-libelf-devel-0.172-2.el7.x86_64                                                                                                                                                                             1/69
+  Verifying  : libXext-1.3.3-3.el7.x86_64                                                                                                                                                                                           2/69
+  Verifying  : libXi-1.7.9-1.el7.x86_64                                                                                                                                                                                             3/69
+  Verifying  : fontconfig-2.13.0-4.3.el7.x86_64                                                                                                                                                                                     4/69
+  Verifying  : 2:libpng-devel-1.5.13-7.el7_2.x86_64                                                                                                                                                                                 5/69
+  Verifying  : libXrender-0.9.10-1.el7.x86_64                                                                                                                                                                                       6/69
+  Verifying  : libcgroup-0.41-20.el7.x86_64                                                                                                                                                                                         7/69
+  Verifying  : mpfr-3.1.1-4.el7.x86_64                                                                                                                                                                                              8/69
+  Verifying  : libcollection-0.7.0-32.el7.x86_64                                                                                                                                                                                    9/69
+  Verifying  : readline-devel-6.2-10.el7.x86_64                                                                                                                                                                                    10/69
+  Verifying  : libbasicobjects-0.1.1-32.el7.x86_64                                                                                                                                                                                 11/69
+  Verifying  : sysstat-10.1.5-17.el7.x86_64                                                                                                                                                                                        12/69
+  Verifying  : bc-1.06.95-13.el7.x86_64                                                                                                                                                                                            13/69
+  Verifying  : fontconfig-devel-2.13.0-4.3.el7.x86_64                                                                                                                                                                              14/69
+  Verifying  : tcp_wrappers-7.6-77.el7.x86_64                                                                                                                                                                                      15/69
+  Verifying  : zlib-devel-1.2.7-18.el7.x86_64                                                                                                                                                                                      16/69
+  Verifying  : gcc-4.8.5-36.el7.x86_64                                                                                                                                                                                             17/69
+  Verifying  : xorg-x11-proto-devel-2018.4-1.el7.noarch                                                                                                                                                                            18/69
+  Verifying  : libXau-devel-1.0.8-2.1.el7.x86_64                                                                                                                                                                                   19/69
+  Verifying  : dejavu-fonts-common-2.33-6.el7.noarch                                                                                                                                                                               20/69
+  Verifying  : python-IPy-0.75-6.el7.noarch                                                                                                                                                                                        21/69
+  Verifying  : libXtst-1.2.3-1.el7.x86_64                                                                                                                                                                                          22/69
+  Verifying  : expat-devel-2.1.0-10.el7_3.x86_64                                                                                                                                                                                   23/69
+  Verifying  : libxcb-1.13-1.el7.x86_64                                                                                                                                                                                            24/69
+  Verifying  : lm_sensors-libs-3.4.0-6.20160601gitf9185e5.el7.x86_64                                                                                                                                                               25/69
+  Verifying  : gcc-c++-4.8.5-36.el7.x86_64                                                                                                                                                                                         26/69
+  Verifying  : psmisc-22.20-15.el7.x86_64                                                                                                                                                                                          27/69
+  Verifying  : libxcb-devel-1.13-1.el7.x86_64                                                                                                                                                                                      28/69
+  Verifying  : libini_config-1.3.1-32.el7.x86_64                                                                                                                                                                                   29/69
+  Verifying  : libstdc++-devel-4.8.5-36.el7.x86_64                                                                                                                                                                                 30/69
+  Verifying  : 1:quota-nls-4.01-17.el7.noarch                                                                                                                                                                                      31/69
+  Verifying  : libXrender-devel-0.9.10-1.el7.x86_64                                                                                                                                                                                32/69
+  Verifying  : cpp-4.8.5-36.el7.x86_64                                                                                                                                                                                             33/69
+  Verifying  : net-tools-2.0-0.24.20131004git.el7.x86_64                                                                                                                                                                           34/69
+  Verifying  : libpath_utils-0.2.1-32.el7.x86_64                                                                                                                                                                                   35/69
+  Verifying  : ksh-20120801-139.el7.x86_64                                                                                                                                                                                         36/69
+  Verifying  : libevent-2.0.21-4.el7.x86_64                                                                                                                                                                                        37/69
+  Verifying  : libuuid-devel-2.23.2-59.el7.x86_64                                                                                                                                                                                  38/69
+  Verifying  : libsemanage-python-2.5-14.el7.x86_64                                                                                                                                                                                39/69
+  Verifying  : 1:nfs-utils-1.3.0-0.61.el7.x86_64                                                                                                                                                                                   40/69
+  Verifying  : gssproxy-0.7.0-21.el7.x86_64                                                                                                                                                                                        41/69
+  Verifying  : libX11-1.6.5-2.el7.x86_64                                                                                                                                                                                           42/69
+  Verifying  : rpcbind-0.2.0-47.el7.x86_64                                                                                                                                                                                         43/69
+  Verifying  : libX11-devel-1.6.5-2.el7.x86_64                                                                                                                                                                                     44/69
+  Verifying  : compat-libcap1-1.10-7.el7.x86_64                                                                                                                                                                                    45/69
+  Verifying  : checkpolicy-2.5-8.el7.x86_64                                                                                                                                                                                        46/69
+  Verifying  : libaio-devel-0.3.109-13.el7.x86_64                                                                                                                                                                                  47/69
+  Verifying  : libmpc-1.0.1-3.el7.x86_64                                                                                                                                                                                           48/69
+  Verifying  : libref_array-0.1.5-32.el7.x86_64                                                                                                                                                                                    49/69
+  Verifying  : 1:quota-4.01-17.el7.x86_64                                                                                                                                                                                          50/69
+  Verifying  : audit-libs-python-2.8.4-4.el7.x86_64                                                                                                                                                                                51/69
+  Verifying  : libverto-libevent-0.2.5-4.el7.x86_64                                                                                                                                                                                52/69
+  Verifying  : glibc-devel-2.17-260.el7.x86_64                                                                                                                                                                                     53/69
+  Verifying  : ncurses-devel-5.9-14.20130511.el7_4.x86_64                                                                                                                                                                          54/69
+  Verifying  : dejavu-sans-fonts-2.33-6.el7.noarch                                                                                                                                                                                 55/69
+  Verifying  : libXau-1.0.8-2.1.el7.x86_64                                                                                                                                                                                         56/69
+  Verifying  : kernel-headers-3.10.0-957.el7.x86_64                                                                                                                                                                                57/69
+  Verifying  : 1:smartmontools-6.5-1.el7.x86_64                                                                                                                                                                                    58/69
+  Verifying  : freetype-devel-2.8-12.el7.x86_64                                                                                                                                                                                    59/69
+  Verifying  : policycoreutils-python-2.5-29.el7.x86_64                                                                                                                                                                            60/69
+  Verifying  : keyutils-1.5.8-3.el7.x86_64                                                                                                                                                                                         61/69
+  Verifying  : libX11-common-1.6.5-2.el7.noarch                                                                                                                                                                                    62/69
+  Verifying  : libnfsidmap-0.25-19.el7.x86_64                                                                                                                                                                                      63/69
+  Verifying  : fontpackages-filesystem-1.44-8.el7.noarch                                                                                                                                                                           64/69
+  Verifying  : unzip-6.0-19.el7.x86_64                                                                                                                                                                                             65/69
+  Verifying  : mailx-12.5-19.el7.x86_64                                                                                                                                                                                            66/69
+  Verifying  : setools-libs-3.3.8-4.el7.x86_64                                                                                                                                                                                     67/69
+  Verifying  : glibc-headers-2.17-260.el7.x86_64                                                                                                                                                                                   68/69
+  Verifying  : libtirpc-0.2.4-0.15.el7.x86_64                                                                                                                                                                                      69/69
+
+Installed:
+  bc.x86_64 0:1.06.95-13.el7                  compat-libcap1.x86_64 0:1.10-7.el7       elfutils-libelf-devel.x86_64 0:0.172-2.el7        fontconfig-devel.x86_64 0:2.13.0-4.3.el7       gcc.x86_64 0:4.8.5-36.el7
+  gcc-c++.x86_64 0:4.8.5-36.el7               glibc-devel.x86_64 0:2.17-260.el7        ksh.x86_64 0:20120801-139.el7                     libX11.x86_64 0:1.6.5-2.el7                    libXau.x86_64 0:1.0.8-2.1.el7
+  libXi.x86_64 0:1.7.9-1.el7                  libXrender.x86_64 0:0.9.10-1.el7         libXrender-devel.x86_64 0:0.9.10-1.el7            libXtst.x86_64 0:1.2.3-1.el7                   libaio-devel.x86_64 0:0.3.109-13.el7
+  libstdc++-devel.x86_64 0:4.8.5-36.el7       libxcb.x86_64 0:1.13-1.el7               net-tools.x86_64 0:2.0-0.24.20131004git.el7       nfs-utils.x86_64 1:1.3.0-0.61.el7              policycoreutils-python.x86_64 0:2.5-29.el7
+  psmisc.x86_64 0:22.20-15.el7                readline-devel.x86_64 0:6.2-10.el7       smartmontools.x86_64 1:6.5-1.el7                  sysstat.x86_64 0:10.1.5-17.el7                 unzip.x86_64 0:6.0-19.el7
+
+Dependency Installed:
+  audit-libs-python.x86_64 0:2.8.4-4.el7         checkpolicy.x86_64 0:2.5-8.el7           cpp.x86_64 0:4.8.5-36.el7                                 dejavu-fonts-common.noarch 0:2.33-6.el7   dejavu-sans-fonts.noarch 0:2.33-6.el7
+  expat-devel.x86_64 0:2.1.0-10.el7_3            fontconfig.x86_64 0:2.13.0-4.3.el7       fontpackages-filesystem.noarch 0:1.44-8.el7               freetype-devel.x86_64 0:2.8-12.el7        glibc-headers.x86_64 0:2.17-260.el7
+  gssproxy.x86_64 0:0.7.0-21.el7                 kernel-headers.x86_64 0:3.10.0-957.el7   keyutils.x86_64 0:1.5.8-3.el7                             libX11-common.noarch 0:1.6.5-2.el7        libX11-devel.x86_64 0:1.6.5-2.el7
+  libXau-devel.x86_64 0:1.0.8-2.1.el7            libXext.x86_64 0:1.3.3-3.el7             libbasicobjects.x86_64 0:0.1.1-32.el7                     libcgroup.x86_64 0:0.41-20.el7            libcollection.x86_64 0:0.7.0-32.el7
+  libevent.x86_64 0:2.0.21-4.el7                 libini_config.x86_64 0:1.3.1-32.el7      libmpc.x86_64 0:1.0.1-3.el7                               libnfsidmap.x86_64 0:0.25-19.el7          libpath_utils.x86_64 0:0.2.1-32.el7
+  libpng-devel.x86_64 2:1.5.13-7.el7_2           libref_array.x86_64 0:0.1.5-32.el7       libsemanage-python.x86_64 0:2.5-14.el7                    libtirpc.x86_64 0:0.2.4-0.15.el7          libuuid-devel.x86_64 0:2.23.2-59.el7
+  libverto-libevent.x86_64 0:0.2.5-4.el7         libxcb-devel.x86_64 0:1.13-1.el7         lm_sensors-libs.x86_64 0:3.4.0-6.20160601gitf9185e5.el7   mailx.x86_64 0:12.5-19.el7                mpfr.x86_64 0:3.1.1-4.el7
+  ncurses-devel.x86_64 0:5.9-14.20130511.el7_4   python-IPy.noarch 0:0.75-6.el7           quota.x86_64 1:4.01-17.el7                                quota-nls.noarch 1:4.01-17.el7            rpcbind.x86_64 0:0.2.0-47.el7
+  setools-libs.x86_64 0:3.3.8-4.el7              tcp_wrappers.x86_64 0:7.6-77.el7         xorg-x11-proto-devel.noarch 0:2018.4-1.el7                zlib-devel.x86_64 0:1.2.7-18.el7
+
+Complete!
+#==============================================================#
+rpm check
+#==============================================================#
+bc-1.06.95-13.el7.x86_64
+binutils-2.27-34.base.el7.x86_64
+compat-libcap1-1.10-7.el7.x86_64
+package compat-libstdc++-33 is not installed
+gcc-4.8.5-36.el7.x86_64
+gcc-c++-4.8.5-36.el7.x86_64
+elfutils-libelf-0.172-2.el7.x86_64
+elfutils-libelf-devel-0.172-2.el7.x86_64
+glibc-2.17-260.el7.x86_64
+glibc-devel-2.17-260.el7.x86_64
+ksh-20120801-139.el7.x86_64
+libaio-0.3.109-13.el7.x86_64
+libaio-devel-0.3.109-13.el7.x86_64
+libgcc-4.8.5-36.el7.x86_64
+libstdc++-4.8.5-36.el7.x86_64
+libstdc++-devel-4.8.5-36.el7.x86_64
+libxcb-1.13-1.el7.x86_64
+libX11-1.6.5-2.el7.x86_64
+libXau-1.0.8-2.1.el7.x86_64
+libXi-1.7.9-1.el7.x86_64
+libXtst-1.2.3-1.el7.x86_64
+libXrender-0.9.10-1.el7.x86_64
+libXrender-devel-0.9.10-1.el7.x86_64
+make-3.82-23.el7.x86_64
+net-tools-2.0-0.24.20131004git.el7.x86_64
+nfs-utils-1.3.0-0.61.el7.x86_64
+smartmontools-6.5-1.el7.x86_64
+sysstat-10.1.5-17.el7.x86_64
+e2fsprogs-1.42.9-13.el7.x86_64
+e2fsprogs-libs-1.42.9-13.el7.x86_64
+fontconfig-devel-2.13.0-4.3.el7.x86_64
+unzip-6.0-19.el7.x86_64
+openssh-clients-7.4p1-16.el7.x86_64
+readline-6.2-10.el7.x86_64
+readline-devel-6.2-10.el7.x86_64
+policycoreutils-2.5-29.el7.x86_64
+policycoreutils-python-2.5-29.el7.x86_64
+
+#==============================================================#
+hostname
+#==============================================================#
+   Static hostname: lucifer
+         Icon name: computer-vm
+           Chassis: vm
+        Machine ID: cbefb21f1e28bb40893e3b4c6c8a49c7
+           Boot ID: dcc40fce76dc493ab16063658007fa50
+    Virtualization: kvm
+  Operating System: Red Hat Enterprise Linux Server 7.6 (Maipo)
+       CPE OS Name: cpe:/o:redhat:enterprise_linux:7.6:GA:server
+            Kernel: Linux 3.10.0-957.el7.x86_64
+      Architecture: x86-64
+
+#==============================================================#
+Configure hosts
+#==============================================================#
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+## OracleBegin
+## Public IP
+10.211.55.100   lucifer
+
+Changing password for user oracle.
+passwd: all authentication tokens updated successfully.
+#==============================================================#
+Create user and groups
+#==============================================================#
+uid=54321(oracle) gid=54321(oinstall) groups=54321(oinstall),54322(dba),54323(oper),54324(backupdba),54325(dgdba),54326(kmdba),54330(racdba)                                                                                             
+
+#==============================================================#
+Configure avahi deamon
+#==============================================================#
+
+
+Removed symlink /etc/systemd/system/multi-user.target.wants/avahi-daemon.service.
+Removed symlink /etc/systemd/system/sockets.target.wants/avahi-daemon.socket.
+Removed symlink /etc/systemd/system/dbus-org.freedesktop.Avahi.service.
+#==============================================================#
+check avahi-daemon
+#==============================================================#
+● avahi-daemon.service - Avahi mDNS/DNS-SD Stack
+   Loaded: loaded (/usr/lib/systemd/system/avahi-daemon.service; disabled; vendor preset: enabled)
+   Active: inactive (dead)
+
+#==============================================================#
+THP && numa && ASM I/O scheduler
+#==============================================================#
+index=0
+kernel=/boot/vmlinuz-3.10.0-957.el7.x86_64
+args="ro rd.lvm.lv=rhel/root rd.lvm.lv=rhel/swap rhgb quiet LANG=en_US.UTF-8 numa=off transparent_hugepage=never elevator=deadline"
+--
+index=1
+kernel=/boot/vmlinuz-0-rescue-cbefb21f1e28bb40893e3b4c6c8a49c7
+args="ro rd.lvm.lv=rhel/root rd.lvm.lv=rhel/swap rhgb quiet numa=off transparent_hugepage=never elevator=deadline"
+
+#==============================================================#
+Configure sysctl.conf
+#==============================================================#
+fs.aio-max-nr = 1048576
+fs.file-max = 6815744
+kernel.shmall = 2097152
+kernel.shmmax = 8365604863
+kernel.shmmni = 4096
+kernel.sem = 250 32000 100 128
+net.ipv4.ip_local_port_range = 9000 65500
+net.core.rmem_default = 262144
+net.core.rmem_max = 4194304
+net.core.wmem_default = 262144
+net.core.wmem_max = 1048576
+net.ipv4.conf.eth0.rp_filter = 1
+vm.min_free_kbytes = 32678
+
+#==============================================================#
+Configure nsysctl.conf
+#==============================================================#
+NOZEROCONF=yes
+
+#==============================================================#
+Configure RemoveIPC
+#==============================================================#
+[Login]
+RemoveIPC=no
+
+#==============================================================#
+/etc/security/limits.conf
+#==============================================================#
+oracle soft nofile 1024
+oracle hard nofile 65536
+oracle soft stack 10240
+oracle hard stack 32768
+oracle soft nproc 2047
+oracle hard nproc 16384
+oracle hard memlock unlimited
+oracle soft memlock unlimited
+
+#==============================================================#
+/etc/pam.d/login
+#==============================================================#
+auth [user_unknown=ignore success=ok ignore=ignore default=bad] pam_securetty.so
+auth       substack     system-auth
+auth       include      postlogin
+account    required     pam_nologin.so
+account    include      system-auth
+password   include      system-auth
+session    required     pam_selinux.so close
+session    required     pam_loginuid.so
+session    optional     pam_console.so
+session    required     pam_selinux.so open
+session    required     pam_namespace.so
+session    optional     pam_keyinit.so force revoke
+session    include      system-auth
+session    include      postlogin
+-session   optional     pam_ck_connector.so
+session required pam_limits.so
+session required /lib64/security/pam_limits.so
+
+#==============================================================#
+Configure /dev/shm
+#==============================================================#
+/dev/mapper/rhel-root   /                       xfs     defaults        0 0
+UUID=4397df4b-6ef5-41bd-bb2e-8bad804fc59d /boot                   xfs     defaults        0 0
+/dev/mapper/rhel-swap   swap                    swap    defaults        0 0
+tmpfs /dev/shm tmpfs size=8169536k 0 0
+
+#==============================================================#
+rlwrap install
+#==============================================================#
+
+
+Will rlwrap find command's working directory under /proc/<commands pid>/cwd? let's see...
+
+
+
+Now do:
+    make (or gmake)  to build rlwrap
+    make check       for instructions how to test it
+    make install     to install it
+
+Making all in doc
+Making all in src
+Making all in filters
+Making install in doc
+ /usr/bin/mkdir -p '/usr/local/share/man/man1'
+ /usr/bin/install -c -m 644 rlwrap.1 '/usr/local/share/man/man1'
+Making install in src
+ /usr/bin/mkdir -p '/usr/local/bin'
+  /usr/bin/install -c rlwrap '/usr/local/bin'
+Making install in filters
+ /usr/bin/mkdir -p '/usr/local/share/man/man3'
+ /usr/bin/install -c -m 644 /soft/rlwrap/filters/RlwrapFilter.3pm '/usr/local/share/man/man3'
+ /usr/bin/mkdir -p '/usr/local/share/rlwrap'
+ /usr/bin/mkdir -p '/usr/local/share/rlwrap/filters'
+ /usr/bin/install -c -m 644  /soft/rlwrap/filters/README /soft/rlwrap/filters/RlwrapFilter.pm /soft/rlwrap/filters/RlwrapFilter.3pm /soft/rlwrap/filters/count_in_prompt /soft/rlwrap/filters/pipeto /soft/rlwrap/filters/logger /soft/rlwrap/filters/null /soft/rlwrap/filters/unbackspace /soft/rlwrap/filters/pipeline /soft/rlwrap/filters/ftp_filter /soft/rlwrap/filters/history_format /soft/rlwrap/filters/simple_macro /soft/rlwrap/filters/template /soft/rlwrap/filters/scrub_prompt /soft/rlwrap/filters/paint_prompt /soft/rlwrap/filters/censor_passwords /soft/rlwrap/filters/listing '/usr/local/share/rlwrap/filters'
+ /usr/bin/mkdir -p '/usr/local/share/rlwrap/completions'
+ /usr/bin/install -c -m 644  /soft/rlwrap/completions/testclient /soft/rlwrap/completions/coqtop '/usr/local/share/rlwrap/completions'
+Making distclean in doc
+Making distclean in src
+Making distclean in filters
+#==============================================================#
+rlwrap check
+#==============================================================#
+rlwrap 0.42
+
+#==============================================================#
+root profile
+#==============================================================#
+if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+fi
+PATH=$PATH:$HOME/bin
+export PATH
+alias so='su - oracle'
+alias sg='su - grid'
+export PS1="[`whoami`@`hostname`:"'\w]# '
+
+#==============================================================#
+oracle profile
+#==============================================================#
+if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+fi
+PATH=$PATH:$HOME/.local/bin:$HOME/bin
+export PATH
+umask 022
+export TMP=/tmp
+export TMPDIR=$TMP
+export NLS_LANG=AMERICAN_AMERICA.AL32UTF8
+export ORACLE_BASE=/oracle/app/oracle
+export ORACLE_HOME=/oracle/app/oracle/product/11.2.0/db
+export ORACLE_TERM=xterm
+export TNS_ADMIN=$ORACLE_HOME/network/admin
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib:/lib:/usr/lib
+export ORACLE_SID=oradb
+export PATH=/usr/sbin:$PATH
+export PATH=$ORACLE_HOME/bin:$ORACLE_HOME/OPatch:$ORACLE_HOME/perl/bin:$PATH
+export PERL5LIB=$ORACLE_HOME/perl/lib
+alias sas='sqlplus / as sysdba'
+alias awr='sqlplus / as sysdba @?/rdbms/admin/awrrpt'
+alias ash='sqlplus / as sysdba @?/rdbms/admin/ashrpt'
+export PS1="[`whoami`@`hostname`:"'\w]$ '
+alias sqlplus='rlwrap sqlplus'
+alias rman='rlwrap rman'
+alias adrci='rlwrap adrci'
+
+#==============================================================#
+unzip database software
+#==============================================================#
+Silently unzip database software, please wait a moment:
+
+
+      .---- -. -. .  .   .        .
+     ( .',----- - - ' '      '                                         __
+      \_/      ;--:-          __--------------------___  ____=========_||___
+     __U__n_^_''__[.  ooo___  | |_!_||_!_||_!_||_!_| |   |..|_i_|..|_i_|..|
+   c(_ ..(_ ..(_ ..( /,,,,,,] | |___||___||___||___| |   |                |
+   ,_\___________'_|,L______],|______________________|_i,!________________!_i
+  /;_(@)(@)==(@)(@)   (o)(o)      (o)^(o)--(o)^(o)          (o)(o)-(o)(o)
+""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""
+
+#==============================================================#
+db rsp
+#==============================================================#
+oracle.install.responseFileVersion=/oracle/install/rspfmt_dbinstall_response_schema_v11_2_0
+oracle.install.option=INSTALL_DB_SWONLY
+UNIX_GROUP_NAME=oinstall
+INVENTORY_LOCATION=/oracle/app/oraInventory
+SELECTED_LANGUAGES=en,zh_CN
+ORACLE_HOME=/oracle/app/oracle/product/11.2.0/db
+ORACLE_BASE=/oracle/app/oracle
+oracle.install.db.InstallEdition=EE
+oracle.install.db.DBA_GROUP=dba
+oracle.install.db.OPER_GROUP=oper
+DECLINE_SECURITY_UPDATES=true
+oracle.installer.autoupdates.option=SKIP_UPDATES
+
+#==============================================================#
+Install database software and Patch
+#==============================================================#
+
+
+Starting Oracle Universal Installer...
+
+Checking Temp space: must be greater than 120 MB.   Actual 43877 MB    Passed
+Checking swap space: must be greater than 150 MB.   Actual 8191 MB    Passed
+Preparing to launch Oracle Universal Installer from /tmp/OraInstall2022-07-10_06-45-30PM. Please wait ...You can find the log of this install session at:
+ /oracle/app/oraInventory/logs/installActions2022-07-10_06-45-30PM.log
+
+Prepare in progress.
+..................................................   9% Done.
+
+Prepare successful.
+
+Copy files in progress.
+..................................................   14% Done.
+..................................................   20% Done.
+..................................................   26% Done.
+..................................................   31% Done.
+..................................................   36% Done.
+..................................................   41% Done.
+..................................................   47% Done.
+..................................................   52% Done.
+..................................................   57% Done.
+..................................................   63% Done.
+..................................................   68% Done.
+..................................................   73% Done.
+..................................................   78% Done.
+..................................................   83% Done.
+..............................
+Copy files successful.
+
+Link binaries in progress.
+..........
+Link binaries successful.
+
+Setup files in progress.
+..................................................   88% Done.
+..................................................   94% Done.
+
+Setup files successful.
+The installation of Oracle Database 11g was successful.
+Please check '/oracle/app/oraInventory/logs/silentInstall2022-07-10_06-45-30PM.log' for more details.
+
+Execute Root Scripts in progress.
+
+As a root user, execute the following script(s):
+        1. /oracle/app/oraInventory/orainstRoot.sh
+        2. /oracle/app/oracle/product/11.2.0/db/root.sh
+
+
+..................................................   100% Done.
+
+Execute Root Scripts successful.
+Successfully Setup Software.
+Changing permissions of /oracle/app/oraInventory.
+Adding read,write permissions for group.
+Removing read,write,execute permissions for world.
+
+Changing groupname of /oracle/app/oraInventory to oinstall.
+The execution of the script is complete.
+Check /oracle/app/oracle/product/11.2.0/db/install/root_lucifer_2022-07-10_18-49-13.log for the output of root script
+Oracle Interim Patch Installer version 11.2.0.3.34
+Copyright (c) 2022, Oracle Corporation.  All rights reserved.
+
+PREREQ session
+
+Oracle Home       : /oracle/app/oracle/product/11.2.0/db
+Central Inventory : /oracle/app/oraInventory
+   from           : /oracle/app/oracle/product/11.2.0/db/oraInst.loc
+OPatch version    : 11.2.0.3.34
+OUI version       : 11.2.0.4.0
+Log file location : /oracle/app/oracle/product/11.2.0/db/cfgtoollogs/opatch/opatch2022-07-10_18-49-17PM_1.log
+
+Invoking prereq "checkconflictagainstohwithdetail"
+
+Prereq "checkConflictAgainstOHWithDetail" passed.
+
+OPatch succeeded.
+Oracle Interim Patch Installer version 11.2.0.3.34
+Copyright (c) 2022, Oracle Corporation.  All rights reserved.
+
+
+Oracle Home       : /oracle/app/oracle/product/11.2.0/db
+Central Inventory : /oracle/app/oraInventory
+   from           : /oracle/app/oracle/product/11.2.0/db/oraInst.loc
+OPatch version    : 11.2.0.3.34
+OUI version       : 11.2.0.4.0
+Log file location : /oracle/app/oracle/product/11.2.0/db/cfgtoollogs/opatch/opatch2022-07-10_18-49-19PM_1.log
+
+Verifying environment and performing prerequisite checks...
+OPatch continues with these patches:   17478514  18031668  18522509  19121551  19769489  20299013  20760982  21352635  21948347  22502456  23054359  24006111  24732075  25869727  26609445  26392168  26925576  27338049  27734982  28204707  28729262  29141056  29497421  29913194  30298532  30670774  31103343  31537677
+
+Do you want to proceed? [y|n]
+Y (auto-answered by -silent)
+User Responded with: Y
+All checks passed.
+
+Please shutdown Oracle instances running out of this ORACLE_HOME on the local system.
+(Oracle Home = '/oracle/app/oracle/product/11.2.0/db')
+
+
+Is the local system ready for patching? [y|n]
+Y (auto-answered by -silent)
+User Responded with: Y
+Backing up files...
+Applying sub-patch '17478514' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.sdo, 11.2.0.4.0...
+
+Patching component oracle.sysman.agent, 10.2.0.4.5...
+
+Patching component oracle.xdk, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+
+Patching component oracle.sdo.locator, 11.2.0.4.0...
+
+Patching component oracle.nlsrtl.rsf, 11.2.0.4.0...
+
+Patching component oracle.xdk.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rman, 11.2.0.4.0...
+Applying sub-patch '18031668' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.ldap.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms.crs, 11.2.0.4.0...
+
+Patching component oracle.precomp.common, 11.2.0.4.0...
+
+Patching component oracle.ldap.rsf.ic, 11.2.0.4.0...
+
+Patching component oracle.rdbms.deconfig, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rman, 11.2.0.4.0...
+Applying sub-patch '18522509' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.precomp.common, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rman, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+
+Patching component oracle.rdbms.deconfig, 11.2.0.4.0...
+Applying sub-patch '19121551' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.precomp.common, 11.2.0.4.0...
+
+Patching component oracle.sysman.console.db, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rman, 11.2.0.4.0...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+
+Patching component oracle.ordim.client, 11.2.0.4.0...
+
+Patching component oracle.ordim.jai, 11.2.0.4.0...
+Applying sub-patch '19769489' to OH '/oracle/app/oracle/product/11.2.0/db'
+ApplySession: Optional component(s) [ oracle.sysman.agent, 11.2.0.4.0 ]  not present in the Oracle Home or a higher version is found.
+
+Patching component oracle.precomp.common, 11.2.0.4.0...
+
+Patching component oracle.ovm, 11.2.0.4.0...
+
+Patching component oracle.xdk, 11.2.0.4.0...
+
+Patching component oracle.rdbms.util, 11.2.0.4.0...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+
+Patching component oracle.xdk.parser.java, 11.2.0.4.0...
+
+Patching component oracle.oraolap, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.xdk.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rman, 11.2.0.4.0...
+
+Patching component oracle.rdbms.deconfig, 11.2.0.4.0...
+Applying sub-patch '20299013' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.rdbms.dv, 11.2.0.4.0...
+
+Patching component oracle.rdbms.oci, 11.2.0.4.0...
+
+Patching component oracle.precomp.common, 11.2.0.4.0...
+
+Patching component oracle.sysman.agent, 10.2.0.4.5...
+
+Patching component oracle.xdk, 11.2.0.4.0...
+
+Patching component oracle.sysman.common, 10.2.0.4.5...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+
+Patching component oracle.xdk.parser.java, 11.2.0.4.0...
+
+Patching component oracle.sysman.console.db, 11.2.0.4.0...
+
+Patching component oracle.xdk.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.sysman.common.core, 10.2.0.4.5...
+
+Patching component oracle.rdbms.rman, 11.2.0.4.0...
+
+Patching component oracle.rdbms.deconfig, 11.2.0.4.0...
+Applying sub-patch '20760982' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.sysman.console.db, 11.2.0.4.0...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+Applying sub-patch '21352635' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.sysman.agent, 10.2.0.4.5...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rman, 11.2.0.4.0...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+Applying sub-patch '21948347' to OH '/oracle/app/oracle/product/11.2.0/db'
+ApplySession: Optional component(s) [ oracle.tfa, 11.2.0.4.0 ]  not present in the Oracle Home or a higher version is found.
+
+Patching component oracle.sysman.agent, 10.2.0.4.5...
+
+Patching component oracle.ovm, 11.2.0.4.0...
+
+Patching component oracle.xdk, 11.2.0.4.0...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.nlsrtl.rsf, 11.2.0.4.0...
+
+Patching component oracle.xdk.parser.java, 11.2.0.4.0...
+
+Patching component oracle.sysman.console.db, 11.2.0.4.0...
+
+Patching component oracle.xdk.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.sysman.oms.core, 10.2.0.4.5...
+Applying sub-patch '22502456' to OH '/oracle/app/oracle/product/11.2.0/db'
+ApplySession: Optional component(s) [ oracle.tfa, 11.2.0.4.0 ]  not present in the Oracle Home or a higher version is found.
+
+Patching component oracle.precomp.common, 11.2.0.4.0...
+
+Patching component oracle.oraolap.dbscripts, 11.2.0.4.0...
+
+Patching component oracle.rdbms.olap, 11.2.0.4.0...
+
+Patching component oracle.oraolap, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rman, 11.2.0.4.0...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+Applying sub-patch '23054359' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.rdbms.dv, 11.2.0.4.0...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+Applying sub-patch '24006111' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.sqlplus.ic, 11.2.0.4.0...
+
+Patching component oracle.sqlplus, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+Applying sub-patch '24732075' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.precomp.common, 11.2.0.4.0...
+
+Patching component oracle.sysman.plugin.db.main.agent, 11.2.0.4.0...
+
+Patching component oracle.sqlplus.ic, 11.2.0.4.0...
+
+Patching component oracle.sqlplus, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.util, 11.2.0.4.0...
+
+Patching component oracle.ordim.client, 11.2.0.4.0...
+
+Patching component oracle.ordim.jai, 11.2.0.4.0...
+
+Patching component oracle.ordim.server, 11.2.0.4.0...
+Applying sub-patch '25869727' to OH '/oracle/app/oracle/product/11.2.0/db'
+ApplySession: Optional component(s) [ oracle.oid.client, 11.2.0.4.0 ]  not present in the Oracle Home or a higher version is found.
+
+Patching component oracle.ldap.rsf, 11.2.0.4.0...
+
+Patching component oracle.oracore.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rman, 11.2.0.4.0...
+Applying sub-patch '26609445' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.oracore.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+Applying sub-patch '26392168' to OH '/oracle/app/oracle/product/11.2.0/db'
+ApplySession: Optional component(s) [ oracle.oid.client, 11.2.0.4.0 ]  not present in the Oracle Home or a higher version is found.
+
+Patching component oracle.network.rsf, 11.2.0.4.0...
+
+Patching component oracle.ldap.client, 11.2.0.4.0...
+
+Patching component oracle.sysman.agent, 10.2.0.4.5...
+
+Patching component oracle.xdk, 11.2.0.4.0...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.network.listener, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+
+Patching component oracle.nlsrtl.rsf, 11.2.0.4.0...
+
+Patching component oracle.xdk.parser.java, 11.2.0.4.0...
+
+Patching component oracle.xdk.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rman, 11.2.0.4.0...
+Applying sub-patch '26925576' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rman, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+Applying sub-patch '27338049' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.assistants.server, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rman, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+Applying sub-patch '27734982' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.ctx, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.ctx.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rman, 11.2.0.4.0...
+Applying sub-patch '28204707' to OH '/oracle/app/oracle/product/11.2.0/db'
+Applying changes to emctl script on the home: /oracle/app/oracle/product/11.2.0/db ...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.oracore.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.ldap.rsf, 11.2.0.4.0...
+
+Patching component oracle.ldap.rsf.ic, 11.2.0.4.0...
+
+Patching component oracle.network.rsf, 11.2.0.4.0...
+
+Patching component oracle.sysman.agent, 10.2.0.4.5...
+
+Patching component oracle.sysman.console.db, 11.2.0.4.0...
+
+Patching component oracle.ldap.security.osdt, 11.2.0.4.0...
+
+Patching component oracle.ldap.owm, 11.2.0.4.0...
+
+Patching component oracle.sqlplus.rsf, 11.2.0.4.0...
+
+Patching component oracle.ctx, 11.2.0.4.0...
+Applying sub-patch '28729262' to OH '/oracle/app/oracle/product/11.2.0/db'
+INFO: Script isn't applicable to this port!
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms.util, 11.2.0.4.0...
+
+Patching component oracle.ldap.rsf, 11.2.0.4.0...
+
+Patching component oracle.ldap.rsf.ic, 11.2.0.4.0...
+
+Patching component oracle.network.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rman, 11.2.0.4.0...
+
+Patching component oracle.ctx, 11.2.0.4.0...
+Applying sub-patch '29141056' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rman, 11.2.0.4.0...
+
+Patching component oracle.oracore.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+Applying sub-patch '29497421' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rman, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.ldap.rsf, 11.2.0.4.0...
+
+Patching component oracle.ldap.rsf.ic, 11.2.0.4.0...
+
+Patching component oracle.oracore.rsf, 11.2.0.4.0...
+
+Patching component oracle.ctx, 11.2.0.4.0...
+Applying sub-patch '29913194' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.network.rsf, 11.2.0.4.0...
+
+Patching component oracle.ldap.rsf, 11.2.0.4.0...
+
+Patching component oracle.ldap.rsf.ic, 11.2.0.4.0...
+
+Patching component oracle.rdbms.util, 11.2.0.4.0...
+Applying sub-patch '30298532' to OH '/oracle/app/oracle/product/11.2.0/db'
+ApplySession: Optional component(s) [ oracle.rdbms.tg4tera, 11.2.0.4.0 ] , [ oracle.rdbms.tg4sybs, 11.2.0.4.0 ] , [ oracle.rdbms.tg4ifmx, 11.2.0.4.0 ] , [ oracle.rdbms.tg4db2, 11.2.0.4.0 ] , [ oracle.rdbms.tg4msql, 11.2.0.4.0 ]  not present in the Oracle Home or a higher version is found.
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+
+Patching component oracle.rdbms.hsodbc, 11.2.0.4.0...
+
+Patching component oracle.ldap.rsf, 11.2.0.4.0...
+
+Patching component oracle.ldap.rsf.ic, 11.2.0.4.0...
+Applying sub-patch '30670774' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+
+Patching component oracle.network.rsf, 11.2.0.4.0...
+
+Patching component oracle.ldap.rsf, 11.2.0.4.0...
+
+Patching component oracle.ldap.rsf.ic, 11.2.0.4.0...
+
+Patching component oracle.swd.oui, 11.2.0.4.0...
+
+Patching component oracle.ctx, 11.2.0.4.0...
+Applying sub-patch '31103343' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+Applying sub-patch '31537677' to OH '/oracle/app/oracle/product/11.2.0/db'
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dv, 11.2.0.4.0...
+
+Patching component oracle.rdbms.rman, 11.2.0.4.0...
+
+Patching component oracle.ldap.rsf, 11.2.0.4.0...
+
+Patching component oracle.ldap.rsf.ic, 11.2.0.4.0...
+
+Patching component oracle.oracore.rsf, 11.2.0.4.0...
+
+Patching component oracle.rdbms.util, 11.2.0.4.0...
+
+Patching component oracle.dbdev, 11.2.0.4.0...
+
+Patching component oracle.ctx, 11.2.0.4.0...
+
+Patching component oracle.buildtools.rsf, 11.2.0.4.0...
+
+OPatch found the word "warning" in the stderr of the make command.
+Please look at this stderr. You can re-run this make command.
+Stderr output:
+/bin/ld: warning: -z lazyload ignored.
+/bin/ld: warning: -z nolazyload ignored.
+
+
+
+OPatch found the word "error" in the stderr of the make command.
+Please look at this stderr. You can re-run this make command.
+Stderr output:
+chmod: changing permissions of ‘/oracle/app/oracle/product/11.2.0/db/bin/extjobO’: Operation not permitted
+make: [iextjob] Error 1 (ignored)
+
+
+
+OPatch found the word "warning" in the stderr of the make command.
+Please look at this stderr. You can re-run this make command.
+Stderr output:
+/bin/ld: warning: -z lazyload ignored.
+/bin/ld: warning: -z nolazyload ignored.
+
+
+
+OPatch found the word "warning" in the stderr of the make command.
+Please look at this stderr. You can re-run this make command.
+Stderr output:
+/bin/ld: warning: -z lazyload ignored.
+/bin/ld: warning: -z nolazyload ignored.
+
+
+
+OPatch found the word "warning" in the stderr of the make command.
+Please look at this stderr. You can re-run this make command.
+Stderr output:
+/bin/ld: warning: -z lazyload ignored.
+/bin/ld: warning: -z nolazyload ignored.
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmeoci.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmeoci.so .so
++ libname=libnmeoci
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmeoci.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmeoci.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmeoci.so _LIBNAME=libnmeoci _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmeociLIBS)' '_LIBNAME_EXTRALIBS=$(libnmeociEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefw.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefw.so .so
++ libname=libnmefw
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefw.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefw.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefw.so _LIBNAME=libnmefw _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmefwLIBS)' '_LIBNAME_EXTRALIBS=$(libnmefwEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefos.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefos.so .so
++ libname=libnmefos
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefos.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefos.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefos.so _LIBNAME=libnmefos _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmefosLIBS)' '_LIBNAME_EXTRALIBS=$(libnmefosEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefsql.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefsql.so .so
++ libname=libnmefsql
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefsql.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefsql.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefsql.so _LIBNAME=libnmefsql _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmefsqlLIBS)' '_LIBNAME_EXTRALIBS=$(libnmefsqlEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefud.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefud.so .so
++ libname=libnmefud
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefud.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefud.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefud.so _LIBNAME=libnmefud _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmefudLIBS)' '_LIBNAME_EXTRALIBS=$(libnmefudEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefdms.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefdms.so .so
++ libname=libnmefdms
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefdms.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefdms.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefdms.so _LIBNAME=libnmefdms _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmefdmsLIBS)' '_LIBNAME_EXTRALIBS=$(libnmefdmsEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefojmx.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefojmx.so .so
++ libname=libnmefojmx
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefojmx.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefojmx.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefojmx.so _LIBNAME=libnmefojmx _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmefojmxLIBS)' '_LIBNAME_EXTRALIBS=$(libnmefojmxEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefut.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefut.so .so
++ libname=libnmefut
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefut.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefut.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefut.so _LIBNAME=libnmefut _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmefutLIBS)' '_LIBNAME_EXTRALIBS=$(libnmefutEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefvr.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefvr.so .so
++ libname=libnmefvr
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefvr.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefvr.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefvr.so _LIBNAME=libnmefvr _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmefvrLIBS)' '_LIBNAME_EXTRALIBS=$(libnmefvrEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefpfa.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefpfa.so .so
++ libname=libnmefpfa
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefpfa.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefpfa.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefpfa.so _LIBNAME=libnmefpfa _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmefpfaLIBS)' '_LIBNAME_EXTRALIBS=$(libnmefpfaEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmevq.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmevq.so .so
++ libname=libnmevq
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmevq.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmevq.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmevq.so _LIBNAME=libnmevq _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmevqLIBS)' '_LIBNAME_EXTRALIBS=$(libnmevqEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmevsp.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmevsp.so .so
++ libname=libnmevsp
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmevsp.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmevsp.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmevsp.so _LIBNAME=libnmevsp _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmevspLIBS)' '_LIBNAME_EXTRALIBS=$(libnmevspEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmevc.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmevc.so .so
++ libname=libnmevc
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmevc.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmevc.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmevc.so _LIBNAME=libnmevc _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmevcLIBS)' '_LIBNAME_EXTRALIBS=$(libnmevcEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmadbg.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmadbg.so .so
++ libname=libnmadbg
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmadbg.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmadbg.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmadbg.so _LIBNAME=libnmadbg _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmadbgLIBS)' '_LIBNAME_EXTRALIBS=$(libnmadbgEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmadm.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmadm.so .so
++ libname=libnmadm
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmadm.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmadm.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmadm.so _LIBNAME=libnmadm _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmadmLIBS)' '_LIBNAME_EXTRALIBS=$(libnmadmEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmalk.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmalk.so .so
++ libname=libnmalk
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmalk.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmalk.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmalk.so _LIBNAME=libnmalk _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmalkLIBS)' '_LIBNAME_EXTRALIBS=$(libnmalkEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmastk.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmastk.so .so
++ libname=libnmastk
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmastk.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmastk.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmastk.so _LIBNAME=libnmastk _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmastkLIBS)' '_LIBNAME_EXTRALIBS=$(libnmastkEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmasf.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmasf.so .so
++ libname=libnmasf
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmasf.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmasf.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmasf.so _LIBNAME=libnmasf _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmasfLIBS)' '_LIBNAME_EXTRALIBS=$(libnmasfEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmarl.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmarl.so .so
++ libname=libnmarl
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmarl.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmarl.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmarl.so _LIBNAME=libnmarl _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmarlLIBS)' '_LIBNAME_EXTRALIBS=$(libnmarlEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefsp.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefsp.so .so
++ libname=libnmefsp
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefsp.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefsp.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefsp.so _LIBNAME=libnmefsp _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmefspLIBS)' '_LIBNAME_EXTRALIBS=$(libnmefspEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefsqlt.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefsqlt.so .so
++ libname=libnmefsqlt
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefsqlt.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefsqlt.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefsqlt.so _LIBNAME=libnmefsqlt _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmefsqltLIBS)' '_LIBNAME_EXTRALIBS=$(libnmefsqltEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefport.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefport.so .so
++ libname=libnmefport
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefport.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefport.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmefport.so _LIBNAME=libnmefport _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmefportLIBS)' '_LIBNAME_EXTRALIBS=$(libnmefportEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmcfhc.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmcfhc.so .so
++ libname=libnmcfhc
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmcfhc.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmcfhc.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmcfhc.so _LIBNAME=libnmcfhc _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmcfhcLIBS)' '_LIBNAME_EXTRALIBS=$(libnmcfhcEXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmcfsga.so
++ makefile=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk
++ so_ext=so
++ target=new_ld_shlib
++ var=
+++ basename /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmcfsga.so .so
++ libname=libnmcfsga
+++ dirname /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmcfsga.so
++ dir=/oracle/app/oracle/product/11.2.0/db/sysman/lib
++ '[' var = new_ld_shlib ']'
++ '[' -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmcfsga.a ']'
++ dir2=/oracle/app/oracle/product/11.2.0/db/sysman/lib/
++ '[' '' '!=' '' ']'
++ make -f /oracle/app/oracle/product/11.2.0/db/sysman/lib/ins_emagent.mk new_ld_shlib _FULL_LIBNAME=/oracle/app/oracle/product/11.2.0/db/sysman/lib/libnmcfsga.so _LIBNAME=libnmcfsga _LIBDIR=/oracle/app/oracle/product/11.2.0/db/sysman/lib/ '_LIBNAME_LIBS=$(libnmcfsgaLIBS)' '_LIBNAME_EXTRALIBS=$(libnmcfsgaEXTRALIBS)'
+/bin/ld: warning: -z lazyload ignored.
+/bin/ld: warning: -z nolazyload ignored.
+/bin/ld: warning: -z lazyload ignored.
+/bin/ld: warning: -z nolazyload ignored.
+/bin/ld: warning: -z lazyload ignored.
+/bin/ld: warning: -z nolazyload ignored.
+/bin/ld: warning: -z lazyload ignored.
+/bin/ld: warning: -z nolazyload ignored.
+/bin/ld: warning: -z lazyload ignored.
+/bin/ld: warning: -z nolazyload ignored.
+/bin/ld: warning: -z lazyload ignored.
+/bin/ld: warning: -z nolazyload ignored.
+/bin/ld: warning: -z lazyload ignored.
+/bin/ld: warning: -z nolazyload ignored.
+/bin/ld: warning: -z lazyload ignored.
+/bin/ld: warning: -z nolazyload ignored.
+/bin/ld: warning: -z lazyload ignored.
+/bin/ld: warning: -z nolazyload ignored.
+
+
+Composite patch 31537677 successfully applied.
+OPatch Session completed with warnings.
+Log file location: /oracle/app/oracle/product/11.2.0/db/cfgtoollogs/opatch/opatch2022-07-10_18-49-19PM_1.log
+
+OPatch completed with warnings.
+Oracle Interim Patch Installer version 11.2.0.3.34
+Copyright (c) 2022, Oracle Corporation.  All rights reserved.
+
+PREREQ session
+
+Oracle Home       : /oracle/app/oracle/product/11.2.0/db
+Central Inventory : /oracle/app/oraInventory
+   from           : /oracle/app/oracle/product/11.2.0/db/oraInst.loc
+OPatch version    : 11.2.0.3.34
+OUI version       : 11.2.0.4.0
+Log file location : /oracle/app/oracle/product/11.2.0/db/cfgtoollogs/opatch/opatch2022-07-10_18-53-09PM_1.log
+
+Invoking prereq "checkconflictagainstohwithdetail"
+
+Prereq "checkConflictAgainstOHWithDetail" passed.
+
+OPatch succeeded.
+Oracle Interim Patch Installer version 11.2.0.3.34
+Copyright (c) 2022, Oracle Corporation.  All rights reserved.
+
+
+Oracle Home       : /oracle/app/oracle/product/11.2.0/db
+Central Inventory : /oracle/app/oraInventory
+   from           : /oracle/app/oracle/product/11.2.0/db/oraInst.loc
+OPatch version    : 11.2.0.3.34
+OUI version       : 11.2.0.4.0
+Log file location : /oracle/app/oracle/product/11.2.0/db/cfgtoollogs/opatch/opatch2022-07-10_18-53-11PM_1.log
+
+Verifying environment and performing prerequisite checks...
+OPatch continues with these patches:   31668908
+
+Do you want to proceed? [y|n]
+Y (auto-answered by -silent)
+User Responded with: Y
+All checks passed.
+
+Please shutdown Oracle instances running out of this ORACLE_HOME on the local system.
+(Oracle Home = '/oracle/app/oracle/product/11.2.0/db')
+
+
+Is the local system ready for patching? [y|n]
+Y (auto-answered by -silent)
+User Responded with: Y
+Backing up files...
+Applying interim patch '31668908' to OH '/oracle/app/oracle/product/11.2.0/db'
+ApplySession: Optional component(s) [ oracle.sqlj, 11.2.0.4.0 ] , [ oracle.sqlj.companion, 11.2.0.4.0 ]  not present in the Oracle Home or a higher version is found.
+
+Patching component oracle.javavm.server, 11.2.0.4.0...
+
+Patching component oracle.precomp.common, 11.2.0.4.0...
+
+Patching component oracle.rdbms, 11.2.0.4.0...
+
+Patching component oracle.rdbms.dbscripts, 11.2.0.4.0...
+
+Patching component oracle.javavm.client, 11.2.0.4.0...
+
+Patching component oracle.dbjava.jdbc, 11.2.0.4.0...
+
+Patching component oracle.dbjava.ic, 11.2.0.4.0...
+Patch 31668908 successfully applied.
+Log file location: /oracle/app/oracle/product/11.2.0/db/cfgtoollogs/opatch/opatch2022-07-10_18-53-11PM_1.log
+
+OPatch succeeded.
+#==============================================================#
+Oracle RDBMS
+#==============================================================#
+
+SQL*Plus: Release 11.2.0.4.0 Production
+
+#==============================================================#
+Oracle OPatch Version
+#==============================================================#
+OPatch Version: 11.2.0.3.34
+
+OPatch succeeded.
+
+#==============================================================#
+OPatch lspatches
+#==============================================================#
+31668908;OJVM PATCH SET UPDATE 11.2.0.4.201020
+31537677;Database Patch Set Update : 11.2.0.4.201020 (31537677)
+
+OPatch succeeded.
+
+#==============================================================#
+Configure listener
+#==============================================================#
+
+
+
+Parsing command line arguments:
+    Parameter "silent" = true
+    Parameter "responsefile" = /oracle/app/oracle/product/11.2.0/db/assistants/netca/netca.rsp
+Done parsing command line arguments.
+Oracle Net Services Configuration:
+Profile configuration complete.
+Oracle Net Listener Startup:
+    Running Listener Control:
+      /oracle/app/oracle/product/11.2.0/db/bin/lsnrctl start LISTENER
+    Listener Control complete.
+    Listener started successfully.
+Listener configuration complete.
+Oracle Net Services configuration successful. The exit code is 0
+#==============================================================#
+Listener check
+#==============================================================#
+
+LSNRCTL for Linux: Version 11.2.0.4.0 - Production on 10-JUL-2022 18:53:47
+
+Copyright (c) 1991, 2013, Oracle.  All rights reserved.
+
+Connecting to (DESCRIPTION=(ADDRESS=(PROTOCOL=IPC)(KEY=EXTPROC1521)))
+STATUS of the LISTENER
+------------------------
+Alias                     LISTENER
+Version                   TNSLSNR for Linux: Version 11.2.0.4.0 - Production
+Start Date                10-JUL-2022 18:53:46
+Uptime                    0 days 0 hr. 0 min. 0 sec
+Trace Level               off
+Security                  ON: Local OS Authentication
+SNMP                      OFF
+Listener Parameter File   /oracle/app/oracle/product/11.2.0/db/network/admin/listener.ora
+Listener Log File         /oracle/app/oracle/diag/tnslsnr/lucifer/listener/alert/log.xml
+Listening Endpoints Summary...
+  (DESCRIPTION=(ADDRESS=(PROTOCOL=ipc)(KEY=EXTPROC1521)))
+  (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=lucifer)(PORT=1521)))
+The listener supports no services
+The command completed successfully
+
+#==============================================================#
+create database
+#==============================================================#
+
+
+Copying database files
+1% complete
+3% complete
+11% complete
+18% complete
+26% complete
+37% complete
+Creating and starting Oracle instance
+40% complete
+45% complete
+50% complete
+55% complete
+56% complete
+60% complete
+62% complete
+Completing Database Creation
+66% complete
+70% complete
+73% complete
+74% complete
+75% complete
+76% complete
+77% complete
+88% complete
+100% complete
+Look at the log file "/oracle/app/oracle/cfgtoollogs/dbca/oradb/oradb.log" for further details.
+
+System altered.
+
+
+System altered.
+
+#==============================================================#
+Configure controlfile and redolog
+#==============================================================#
+Silently configure controlfile and redolog, please wait a moment:
+
+
+
+Database altered.
+
+#==============================================================#
+optimize database
+#==============================================================#
+
+
+#==============================================================#
+Configure HugePages
+#==============================================================#
+
+
+Recommended setting: vm.nr_hugepages = 2564
+vm.nr_hugepages = 2564
+
+Profile altered.
+
+
+Profile altered.
+
+
+Profile altered.
+
+
+Profile altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+PL/SQL procedure successfully completed.
+
+
+PL/SQL procedure successfully completed.
+
+
+PL/SQL procedure successfully completed.
+
+
+PL/SQL procedure successfully completed.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+Congratulations, Oracle Single install successfully, please reboot now: [Y/N]
+y
+Now rebooting ........

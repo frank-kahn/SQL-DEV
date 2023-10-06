@@ -1,0 +1,2072 @@
+[root@luciferdb03:/soft]# ll
+total 19250604
+-rw-r--r-- 1 oracle oinstall 10746535936 Jul 11 04:26 CentOS-7-x86_64-Athena-1904.iso
+-rw-r--r-- 1 root   root      3453696911 Jul 12 05:58 LINUX.X64_122010_db_home.zip
+-rw-r--r-- 1 root   root      2994687209 Jul 12 05:59 LINUX.X64_122010_grid_home.zip
+-rwxr-xr-x 1 oracle oinstall      158313 Jul 12 04:05 OracleShellInstall
+-rw-r--r-- 1 root   root      2393137641 Jul 12 06:00 p33583921_122010_Linux-x86-64.zip
+-rw-r--r-- 1 root   root       124109254 Jul 12 05:59 p6880880_122010_Linux-x86-64.zip
+-rw-r--r-- 1 oracle oinstall      279608 Jul 11 13:22 rlwrap-0.42.tar.gz
+[root@luciferdb03:/soft]# ./OracleShellInstall -n luciferdb `# hostname prefix`\
+> -hn luciferdb03,luciferdb04 `# rac node hostname`\
+> -cn luciferdb-cls `# cluster_name`\
+> -rp password `# root password`\
+> -gp oracle `# grid password`\
+> -op oracle `# oracle password`\
+> -lf eth0 `# local ip ifname`\
+> -pf eth1 `# rac private ip ifname`\
+> -ri 193.1.3.1,193.1.3.2 `# rac node public ip`\
+> -vi 193.1.3.4,193.1.3.5 `# rac virtual ip`\
+> -si 193.1.3.10 `# rac scan ip`\
+> -od /dev/sdb `# rac ocr asm disk`\
+> -dd /dev/sdc `# rac data asm disk`\
+> -o oradb `# dbname`\
+> -ds AL32UTF8 `# database character`\
+> -ns AL16UTF16 `# national character`\
+> -dp Oracle123Pwd `# sys/system password`\
+> -gpa 33583921 `# grid PSU/RU`\
+> -opd Y `# optimize db`
+
+   ███████                             ██          ████████ ██               ██  ██ ██                    ██              ██  ██
+  ██░░░░░██                           ░██         ██░░░░░░ ░██              ░██ ░██░██                   ░██             ░██ ░██
+ ██     ░░██ ██████  ██████    █████  ░██  █████ ░██       ░██       █████  ░██ ░██░██ ███████   ██████ ██████  ██████   ░██ ░██
+░██      ░██░░██░░█ ░░░░░░██  ██░░░██ ░██ ██░░░██░█████████░██████  ██░░░██ ░██ ░██░██░░██░░░██ ██░░░░ ░░░██░  ░░░░░░██  ░██ ░██
+░██      ░██ ░██ ░   ███████ ░██  ░░  ░██░███████░░░░░░░░██░██░░░██░███████ ░██ ░██░██ ░██  ░██░░█████   ░██    ███████  ░██ ░██
+░░██     ██  ░██    ██░░░░██ ░██   ██ ░██░██░░░░        ░██░██  ░██░██░░░░  ░██ ░██░██ ░██  ░██ ░░░░░██  ░██   ██░░░░██  ░██ ░██
+ ░░███████  ░███   ░░████████░░█████  ███░░██████ ████████ ░██  ░██░░██████ ███ ███░██ ███  ░██ ██████   ░░██ ░░████████ ███ ███
+  ░░░░░░░   ░░░     ░░░░░░░░  ░░░░░  ░░░  ░░░░░░ ░░░░░░░░  ░░   ░░  ░░░░░░ ░░░ ░░░ ░░ ░░░   ░░ ░░░░░░     ░░   ░░░░░░░░ ░░░ ░░░
+
+Please Choose Oracle Install Mode [si/rac] :
+rac
+
+Oracle Install Mode: rac
+
+
+Please Choose Oracle Database Version [11/12/19/21] :
+12
+
+Oracle Database Version: 12
+
+10+0 records in
+10+0 records out
+1048576000 bytes (1.0 GB) copied, 0.71654 s, 1.5 GB/s
+10+0 records in
+10+0 records out
+1048576000 bytes (1.0 GB) copied, 0.661157 s, 1.6 GB/s
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+server                                                                                                                                                                                     | 3.6 kB  00:00:00
+Package expect-5.45-14.el7_1.x86_64 already installed and latest version
+Nothing to do
+Generating public/private rsa key pair.
+Your identification has been saved in /root/.ssh/id_rsa.
+Your public key has been saved in /root/.ssh/id_rsa.pub.
+The key fingerprint is:
+SHA256:VnfnkflJlnYJTjFk2GcEGXWwUaqDiG25Ic/n0mb+saM root@luciferdb03
+The key's randomart image is:
++---[RSA 3072]----+
+|            +XX=o|
+|           .+oo**|
+|          . ..*Xo|
+|       o + o o+o=|
+|      o S . o  .o|
+|       * o   .   |
+|        +.. .    |
+|        .o+ .o   |
+|         =Eoo.   |
++----[SHA256]-----+
+# 193.1.3.1:22 SSH-2.0-OpenSSH_8.0
+# 193.1.3.1:22 SSH-2.0-OpenSSH_8.0
+# 193.1.3.2:22 SSH-2.0-OpenSSH_8.0
+# 193.1.3.2:22 SSH-2.0-OpenSSH_8.0
+spawn scp -r /root/.ssh root@193.1.3.1:~
+id_rsa                                                                                                                                                                          100% 2602   878.2KB/s   00:00
+id_rsa.pub                                                                                                                                                                      100%  570   269.9KB/s   00:00
+authorized_keys                                                                                                                                                                 100%  570   315.4KB/s   00:00
+known_hosts                                                                                                                                                                     100% 1468   661.8KB/s   00:00
+send: spawn id exp6 not open
+    while executing
+"send "password\r""
+spawn ssh-copy-id -f root@193.1.3.1
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/root/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'root@193.1.3.1'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp6 not open
+    while executing
+"send "password\r""
+spawn scp -r /root/.ssh root@193.1.3.2:~
+Password:
+id_rsa                                                                                                                                                                          100% 2602    93.2KB/s   00:00
+id_rsa.pub                                                                                                                                                                      100%  570   397.7KB/s   00:00
+authorized_keys                                                                                                                                                                 100% 1140     3.3MB/s   00:00
+known_hosts                                                                                                                                                                     100% 1468     1.2MB/s   00:00
+spawn ssh-copy-id -f root@193.1.3.2
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/root/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'root@193.1.3.2'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp6 not open
+    while executing
+"send "password\r""
+racnode.sh                                                                                                                                                                      100%  406    26.1KB/s   00:00
+OracleShellInstall                                                                                                                                                              100%  155KB  17.2MB/s   00:00
+#==============================================================#
+Configure firewall
+#==============================================================#
+● firewalld.service - firewalld - dynamic firewall daemon
+   Loaded: loaded (/usr/lib/systemd/system/firewalld.service; disabled; vendor preset: enabled)
+   Active: inactive (dead)
+     Docs: man:firewalld(1)
+
+#==============================================================#
+Configure selinux
+#==============================================================#
+SELINUX=disabled
+SELINUXTYPE=targeted
+
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+Package 2:tar-1.26-35.el7.x86_64 already installed and latest version
+Nothing to do
+#==============================================================#
+rpm check
+#==============================================================#
+bc-1.06.95-13.el7.x86_64
+binutils-2.27-34.base.el7.x86_64
+compat-libcap1-1.10-7.el7.x86_64
+compat-libstdc++-33-3.2.3-72.el7.x86_64
+gcc-4.8.5-36.el7.x86_64
+gcc-c++-4.8.5-36.el7.x86_64
+elfutils-libelf-0.172-2.el7.x86_64
+elfutils-libelf-devel-0.172-2.el7.x86_64
+glibc-2.17-260.el7.x86_64
+glibc-devel-2.17-260.el7.x86_64
+ksh-20120801-139.el7.x86_64
+libaio-0.3.109-13.el7.x86_64
+libaio-devel-0.3.109-13.el7.x86_64
+libgcc-4.8.5-36.el7.x86_64
+libstdc++-4.8.5-36.el7.x86_64
+libstdc++-devel-4.8.5-36.el7.x86_64
+libxcb-1.13-1.el7.x86_64
+libX11-1.6.5-2.el7.x86_64
+libXau-1.0.8-2.1.el7.x86_64
+libXi-1.7.9-1.el7.x86_64
+libXtst-1.2.3-1.el7.x86_64
+libXrender-0.9.10-1.el7.x86_64
+libXrender-devel-0.9.10-1.el7.x86_64
+make-3.82-23.el7.x86_64
+net-tools-2.0-0.24.20131004git.el7.x86_64
+nfs-utils-1.3.0-0.61.el7.x86_64
+smartmontools-6.5-1.el7.x86_64
+sysstat-10.1.5-17.el7.x86_64
+e2fsprogs-1.42.9-13.el7.x86_64
+e2fsprogs-libs-1.42.9-13.el7.x86_64
+fontconfig-devel-2.13.0-4.3.el7.x86_64
+unzip-6.0-19.el7.x86_64
+openssh-clients-8.0p1-1.el7.x86_64
+readline-6.2-10.el7.x86_64
+readline-devel-6.2-10.el7.x86_64
+
+#==============================================================#
+hostname
+#==============================================================#
+   Static hostname: luciferdb03
+         Icon name: computer-vm
+           Chassis: vm
+        Machine ID: 92707fb7b3624680a66464cb6bd6101c
+           Boot ID: fefed70dedbb4493b534755f84b9d2d7
+    Virtualization: kvm
+  Operating System: CentOS Linux 7 (Core)
+       CPE OS Name: cpe:/o:centos:centos:7
+            Kernel: Linux 3.10.0-957.el7.x86_64
+      Architecture: x86-64
+
+#==============================================================#
+Configure hosts
+#==============================================================#
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+## OracleBegin
+## Public IP
+193.1.3.1 luciferdb03
+193.1.3.2 luciferdb04
+## Virtual IP
+193.1.3.4 luciferdb03-vip
+193.1.3.5 luciferdb04-vip
+## Private IP 1
+1.1.1.1 luciferdb03-priv
+1.1.1.2 luciferdb04-priv
+## Scan IP
+193.1.3.10 luciferdb-scan
+
+Changing password for user grid.
+passwd: all authentication tokens updated successfully.
+Changing password for user oracle.
+passwd: all authentication tokens updated successfully.
+#==============================================================#
+Create user and groups
+#==============================================================#
+uid=11012(grid) gid=54321(oinstall) groups=54321(oinstall),54322(dba),54323(oper),54330(racdba),54327(asmdba),54328(asmoper),54329(asmadmin)
+
+uid=54321(oracle) gid=54321(oinstall) groups=54321(oinstall),54322(dba),54323(oper),54324(backupdba),54325(dgdba),54326(kmdba),54330(racdba),54327(asmdba)                                                        
+
+#==============================================================#
+Configure avahi deamon
+#==============================================================#
+
+
+Package avahi-0.6.31-19.el7.x86_64 already installed and latest version
+#==============================================================#
+check avahi-daemon
+#==============================================================#
+● avahi-daemon.service - Avahi mDNS/DNS-SD Stack
+   Loaded: loaded (/usr/lib/systemd/system/avahi-daemon.service; disabled; vendor preset: enabled)
+   Active: inactive (dead)
+
+#==============================================================#
+Configure transparent_hugepages && numa
+#==============================================================#
+
+
+Generating grub configuration file ...
+Found linux image: /boot/vmlinuz-3.10.0-957.el7.x86_64
+Found initrd image: /boot/initramfs-3.10.0-957.el7.x86_64.img
+Found linux image: /boot/vmlinuz-0-rescue-92707fb7b3624680a66464cb6bd6101c
+Found initrd image: /boot/initramfs-0-rescue-92707fb7b3624680a66464cb6bd6101c.img
+done
+#==============================================================#
+/etc/default/grub
+#==============================================================#
+GRUB_TIMEOUT=5
+GRUB_DISTRIBUTOR="$(sed 's, release .*$,,g' /etc/system-release)"
+GRUB_DEFAULT=saved
+GRUB_DISABLE_SUBMENU=true
+GRUB_TERMINAL_OUTPUT="console"
+GRUB_CMDLINE_LINUX="rd.lvm.lv=centos/root rd.lvm.lv=centos/swap nomodeset biosdevname=0 net.ifnames=0 rhgb quiet transparent_hugepage=never numa=off"
+GRUB_DISABLE_RECOVERY="true"
+
+#==============================================================#
+Transparent_hugepages
+#==============================================================#
+always madvise [never]
+
+#==============================================================#
+Configure sysctl.conf
+#==============================================================#
+net.ipv6.conf.all.disable_ipv6 = 1
+net.ipv6.conf.default.disable_ipv6 = 1
+net.ipv6.conf.lo.disable_ipv6 = 1
+kernel.randomize_va_space = 0
+fs.aio-max-nr = 1048576
+fs.file-max = 6815744
+kernel.shmall = 2097152
+kernel.shmmax = 4294967295
+kernel.shmmni = 4096
+kernel.sem = 250 32000 100 128
+net.ipv4.ip_local_port_range = 9000 65500
+net.core.rmem_default = 262144
+net.core.rmem_max = 4194304
+net.core.wmem_default = 262144
+net.core.wmem_max = 1048586
+fs.aio-max-nr = 1048576
+fs.file-max = 6815744
+kernel.shmall = 3284992
+kernel.shmmax = 16819924991
+kernel.shmmni = 4096
+kernel.sem = 250 32000 100 128
+net.ipv4.ip_local_port_range = 9000 65500
+net.core.rmem_default = 262144
+net.core.rmem_max = 4194304
+net.core.wmem_default = 262144
+net.core.wmem_max = 1048576
+net.ipv4.conf.eth0.rp_filter = 1
+net.ipv4.conf.eth1.rp_filter = 2
+
+#==============================================================#
+Configure nsysctl.conf
+#==============================================================#
+NOZEROCONF=yes
+
+#==============================================================#
+Configure RemoveIPC
+#==============================================================#
+[Login]
+RemoveIPC=no
+
+#==============================================================#
+/etc/security/limits.conf
+#==============================================================#
+*                -       nofile          65536
+oracle soft nofile 1024
+oracle hard nofile 65536
+oracle soft stack 10240
+oracle hard stack 32768
+oracle soft nproc 2047
+oracle hard nproc 16384
+oracle hard memlock unlimited
+oracle soft memlock unlimited
+grid soft nofile 1024
+grid hard nofile 65536
+grid soft stack 10240
+grid hard stack 32768
+grid soft nproc 2047
+grid hard nproc 16384
+
+#==============================================================#
+/etc/pam.d/login
+#==============================================================#
+auth [user_unknown=ignore success=ok ignore=ignore default=bad] pam_securetty.so
+auth       substack     system-auth
+auth       include      postlogin
+account    required     pam_nologin.so
+account    include      system-auth
+password   include      system-auth
+session    required     pam_selinux.so close
+session    required     pam_loginuid.so
+session    optional     pam_console.so
+session    required     pam_selinux.so open
+session    required     pam_namespace.so
+session    optional     pam_keyinit.so force revoke
+session    include      system-auth
+session    include      postlogin
+-session   optional     pam_ck_connector.so
+session required pam_limits.so
+session required /lib64/security/pam_limits.so
+
+#==============================================================#
+Configure /dev/shm
+#==============================================================#
+/dev/mapper/centos-root /                       xfs     defaults        0 0
+UUID=ff6f1d1a-6ab2-4fc2-9ec4-c02043bd15cb /boot                   ext4    defaults        1 2
+/dev/mapper/centos-swap swap                    swap    defaults        0 0
+/swapfile swap swap defaults 0 0
+tmpfs /dev/shm tmpfs size=16425708k 0 0
+
+rlwrap-0.42.tar.gz                                                                                                                                                              100%  273KB   6.8MB/s   00:00
+#==============================================================#
+grid profile
+#==============================================================#
+if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+fi
+PATH=$PATH:$HOME/.local/bin:$HOME/bin
+export PATH
+umask 022
+export TMP=/tmp
+export TMPDIR=$TMP
+export NLS_LANG=AMERICAN_AMERICA.AL32UTF8
+export ORACLE_BASE=/u01/app/grid
+export ORACLE_HOME=/u01/app/12.2.0/grid
+export ORACLE_TERM=xterm
+export TNS_ADMIN=$ORACLE_HOME/network/admin
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib:/lib:/usr/lib
+export ORACLE_SID=+ASM1
+export PATH=/usr/sbin:$PATH
+export PATH=$ORACLE_HOME/bin:$ORACLE_HOME/OPatch:$PATH
+alias sas='sqlplus / as sysasm'
+export PS1="[`whoami`@`hostname`:"'\w]$ '
+alias sqlplus='rlwrap sqlplus'
+alias asmcmd='rlwrap asmcmd'
+alias adrci='rlwrap adrci'
+
+#==============================================================#
+root profile
+#==============================================================#
+if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+fi
+PATH=$PATH:$HOME/bin
+export PATH
+alias so='su - oracle'
+alias sg='su - grid'
+export PS1="[`whoami`@`hostname`:"'\w]# '
+alias crsctl='/u01/app/12.2.0/grid/bin/crsctl'
+alias srvctl='/u01/app/12.2.0/grid/bin/srvctl'
+
+#==============================================================#
+oracle profile
+#==============================================================#
+if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+fi
+PATH=$PATH:$HOME/.local/bin:$HOME/bin
+export PATH
+umask 022
+export TMP=/tmp
+export TMPDIR=$TMP
+export NLS_LANG=AMERICAN_AMERICA.AL32UTF8
+export ORACLE_BASE=/u01/app/oracle
+export ORACLE_HOME=/u01/app/oracle/product/12.2.0/db
+export ORACLE_TERM=xterm
+export TNS_ADMIN=$ORACLE_HOME/network/admin
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib:/lib:/usr/lib
+export ORACLE_SID=oradb1
+export PATH=/usr/sbin:$PATH
+export PATH=$ORACLE_HOME/bin:$ORACLE_HOME/OPatch:$PATH
+alias sas='sqlplus / as sysdba'
+alias awr='sqlplus / as sysdba @?/rdbms/admin/awrrpt'
+alias ash='sqlplus / as sysdba @?/rdbms/admin/ashrpt'
+export PS1="[`whoami`@`hostname`:"'\w]$ '
+alias sqlplus='rlwrap sqlplus'
+alias rman='rlwrap rman'
+alias adrci='rlwrap adrci'
+
+#==============================================================#
+Configure multipath
+#==============================================================#
+
+
+Package device-mapper-multipath-0.4.9-123.el7.x86_64 already installed and latest version
+create: ocr_1 (0QEMU_QEMU_HARDDISK_6c7edfe5-0014-11ed03) undef QEMU    ,QEMU HARDDISK
+size=60G features='0' hwhandler='0' wp=undef
+`-+- policy='service-time 0' prio=1 status=undef
+  `- 4:0:0:0 sdb 8:16 undef ready running
+create: data_1 (0QEMU_QEMU_HARDDISK_6c7edfe5-0014-11ed04) undef QEMU    ,QEMU HARDDISK
+size=70G features='0' hwhandler='0' wp=undef
+`-+- policy='service-time 0' prio=1 status=undef
+  `- 5:0:0:0 sdc 8:32 undef ready running
+reload: ocr_1 (0QEMU_QEMU_HARDDISK_6c7edfe5-0014-11ed03) undef QEMU    ,QEMU HARDDISK
+size=60G features='0' hwhandler='0' wp=undef
+`-+- policy='service-time 0' prio=1 status=undef
+  `- 4:0:0:0 sdb 8:16 active ready running
+reload: data_1 (0QEMU_QEMU_HARDDISK_6c7edfe5-0014-11ed04) undef QEMU    ,QEMU HARDDISK
+size=70G features='0' hwhandler='0' wp=undef
+`-+- policy='service-time 0' prio=1 status=undef
+  `- 5:0:0:0 sdc 8:32 active ready running
+create: ocr_1 (0QEMU_QEMU_HARDDISK_6c7edfe5-0014-11ed03) undef QEMU    ,QEMU HARDDISK
+size=60G features='0' hwhandler='0' wp=undef
+`-+- policy='service-time 0' prio=1 status=undef
+  `- 4:0:0:0 sdb 8:16 undef ready running
+create: data_1 (0QEMU_QEMU_HARDDISK_6c7edfe5-0014-11ed04) undef QEMU    ,QEMU HARDDISK
+size=70G features='0' hwhandler='0' wp=undef
+`-+- policy='service-time 0' prio=1 status=undef
+  `- 5:0:0:0 sdc 8:32 undef ready running
+#==============================================================#
+multipath info
+#==============================================================#
+data_1 (0QEMU_QEMU_HARDDISK_6c7edfe5-0014-11ed04) dm-3 QEMU    ,QEMU HARDDISK
+size=70G features='0' hwhandler='0' wp=rw
+`-+- policy='service-time 0' prio=1 status=enabled
+  `- 5:0:0:0 sdc 8:32 active ready running
+ocr_1 (0QEMU_QEMU_HARDDISK_6c7edfe5-0014-11ed03) dm-2 QEMU    ,QEMU HARDDISK
+size=60G features='0' hwhandler='0' wp=rw
+`-+- policy='service-time 0' prio=1 status=enabled
+  `- 4:0:0:0 sdb 8:16 active ready running
+
+#==============================================================#
+Configure asm disk
+#==============================================================#
+
+
+
+Successfully load udev.
+#==============================================================#
+asm disk info:
+#==============================================================#
+/dev/asm_data_1
+/dev/asm_ocr_1
+
+
+#==============================================================#
+Configure rac node2
+#==============================================================#
+
+
+
+Now excute script on node2:
+
+
+   ███████                             ██          ████████ ██               ██  ██ ██                    ██              ██  ██
+  ██░░░░░██                           ░██         ██░░░░░░ ░██              ░██ ░██░██                   ░██             ░██ ░██
+ ██     ░░██ ██████  ██████    █████  ░██  █████ ░██       ░██       █████  ░██ ░██░██ ███████   ██████ ██████  ██████   ░██ ░██
+░██      ░██░░██░░█ ░░░░░░██  ██░░░██ ░██ ██░░░██░█████████░██████  ██░░░██ ░██ ░██░██░░██░░░██ ██░░░░ ░░░██░  ░░░░░░██  ░██ ░██
+░██      ░██ ░██ ░   ███████ ░██  ░░  ░██░███████░░░░░░░░██░██░░░██░███████ ░██ ░██░██ ░██  ░██░░█████   ░██    ███████  ░██ ░██
+░░██     ██  ░██    ██░░░░██ ░██   ██ ░██░██░░░░        ░██░██  ░██░██░░░░  ░██ ░██░██ ░██  ░██ ░░░░░██  ░██   ██░░░░██  ░██ ░██
+ ░░███████  ░███   ░░████████░░█████  ███░░██████ ████████ ░██  ░██░░██████ ███ ███░██ ███  ░██ ██████   ░░██ ░░████████ ███ ███
+  ░░░░░░░   ░░░     ░░░░░░░░  ░░░░░  ░░░  ░░░░░░ ░░░░░░░░  ░░   ░░  ░░░░░░ ░░░ ░░░ ░░ ░░░   ░░ ░░░░░░     ░░   ░░░░░░░░ ░░░ ░░░
+#==============================================================#
+Configure firewall
+#==============================================================#
+● firewalld.service - firewalld - dynamic firewall daemon
+   Loaded: loaded (/usr/lib/systemd/system/firewalld.service; disabled; vendor preset: enabled)
+   Active: inactive (dead)
+     Docs: man:firewalld(1)
+
+#==============================================================#
+Configure selinux
+#==============================================================#
+SELINUX=disabled
+SELINUXTYPE=targeted
+
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+server                                                                                                                                                                                     | 3.6 kB  00:00:00
+Package 2:tar-1.26-35.el7.x86_64 already installed and latest version
+Nothing to do
+#==============================================================#
+rpm check
+#==============================================================#
+bc-1.06.95-13.el7.x86_64
+binutils-2.27-34.base.el7.x86_64
+compat-libcap1-1.10-7.el7.x86_64
+compat-libstdc++-33-3.2.3-72.el7.x86_64
+gcc-4.8.5-36.el7.x86_64
+gcc-c++-4.8.5-36.el7.x86_64
+elfutils-libelf-0.172-2.el7.x86_64
+elfutils-libelf-devel-0.172-2.el7.x86_64
+glibc-2.17-260.el7.x86_64
+glibc-devel-2.17-260.el7.x86_64
+ksh-20120801-139.el7.x86_64
+libaio-0.3.109-13.el7.x86_64
+libaio-devel-0.3.109-13.el7.x86_64
+libgcc-4.8.5-36.el7.x86_64
+libstdc++-4.8.5-36.el7.x86_64
+libstdc++-devel-4.8.5-36.el7.x86_64
+libxcb-1.13-1.el7.x86_64
+libX11-1.6.5-2.el7.x86_64
+libXau-1.0.8-2.1.el7.x86_64
+libXi-1.7.9-1.el7.x86_64
+libXtst-1.2.3-1.el7.x86_64
+libXrender-0.9.10-1.el7.x86_64
+libXrender-devel-0.9.10-1.el7.x86_64
+make-3.82-23.el7.x86_64
+net-tools-2.0-0.24.20131004git.el7.x86_64
+nfs-utils-1.3.0-0.61.el7.x86_64
+smartmontools-6.5-1.el7.x86_64
+sysstat-10.1.5-17.el7.x86_64
+e2fsprogs-1.42.9-13.el7.x86_64
+e2fsprogs-libs-1.42.9-13.el7.x86_64
+fontconfig-devel-2.13.0-4.3.el7.x86_64
+unzip-6.0-19.el7.x86_64
+openssh-clients-8.0p1-1.el7.x86_64
+readline-6.2-10.el7.x86_64
+readline-devel-6.2-10.el7.x86_64
+
+#==============================================================#
+hostname
+#==============================================================#
+   Static hostname: luciferdb04
+         Icon name: computer-vm
+           Chassis: vm
+        Machine ID: 4e7678e901b240889c54bf0cebe20738
+           Boot ID: f4e22eaebcce4fcab2d5097afa47bf21
+    Virtualization: kvm
+  Operating System: CentOS Linux 7 (Core)
+       CPE OS Name: cpe:/o:centos:centos:7
+            Kernel: Linux 3.10.0-957.el7.x86_64
+      Architecture: x86-64
+
+#==============================================================#
+Configure hosts
+#==============================================================#
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+## OracleBegin
+## Public IP
+193.1.3.1 luciferdb03
+193.1.3.2 luciferdb04
+## Virtual IP
+193.1.3.4 luciferdb03-vip
+193.1.3.5 luciferdb04-vip
+## Private IP 1
+1.1.1.1 luciferdb03-priv
+1.1.1.2 luciferdb04-priv
+## Scan IP
+193.1.3.10 luciferdb-scan
+
+Changing password for user grid.
+passwd: all authentication tokens updated successfully.
+Changing password for user oracle.
+passwd: all authentication tokens updated successfully.
+#==============================================================#
+Create user and groups
+#==============================================================#
+uid=11012(grid) gid=54321(oinstall) groups=54321(oinstall),54322(dba),54323(oper),54330(racdba),54327(asmdba),54328(asmoper),54329(asmadmin)
+
+uid=54321(oracle) gid=54321(oinstall) groups=54321(oinstall),54322(dba),54323(oper),54324(backupdba),54325(dgdba),54326(kmdba),54330(racdba),54327(asmdba)                                                        
+
+#==============================================================#
+Configure avahi deamon
+#==============================================================#
+
+
+Package avahi-0.6.31-19.el7.x86_64 already installed and latest version
+#==============================================================#
+check avahi-daemon
+#==============================================================#
+● avahi-daemon.service - Avahi mDNS/DNS-SD Stack
+   Loaded: loaded (/usr/lib/systemd/system/avahi-daemon.service; disabled; vendor preset: enabled)
+   Active: inactive (dead)
+
+#==============================================================#
+Configure transparent_hugepages && numa
+#==============================================================#
+
+
+Generating grub configuration file ...
+Found linux image: /boot/vmlinuz-3.10.0-957.el7.x86_64
+Found initrd image: /boot/initramfs-3.10.0-957.el7.x86_64.img
+Found linux image: /boot/vmlinuz-0-rescue-4e7678e901b240889c54bf0cebe20738
+Found initrd image: /boot/initramfs-0-rescue-4e7678e901b240889c54bf0cebe20738.img
+done
+#==============================================================#
+/etc/default/grub
+#==============================================================#
+GRUB_TIMEOUT=5
+GRUB_DISTRIBUTOR="$(sed 's, release .*$,,g' /etc/system-release)"
+GRUB_DEFAULT=saved
+GRUB_DISABLE_SUBMENU=true
+GRUB_TERMINAL_OUTPUT="console"
+GRUB_CMDLINE_LINUX="rd.lvm.lv=centos/root rd.lvm.lv=centos/swap nomodeset biosdevname=0 net.ifnames=0 rhgb quiet transparent_hugepage=never numa=off"
+GRUB_DISABLE_RECOVERY="true"
+
+#==============================================================#
+Transparent_hugepages
+#==============================================================#
+always madvise [never]
+
+#==============================================================#
+Configure sysctl.conf
+#==============================================================#
+net.ipv6.conf.all.disable_ipv6 = 1
+net.ipv6.conf.default.disable_ipv6 = 1
+net.ipv6.conf.lo.disable_ipv6 = 1
+kernel.randomize_va_space = 0
+fs.aio-max-nr = 1048576
+fs.file-max = 6815744
+kernel.shmall = 2097152
+kernel.shmmax = 4294967295
+kernel.shmmni = 4096
+kernel.sem = 250 32000 100 128
+net.ipv4.ip_local_port_range = 9000 65500
+net.core.rmem_default = 262144
+net.core.rmem_max = 4194304
+net.core.wmem_default = 262144
+net.core.wmem_max = 1048586
+fs.aio-max-nr = 1048576
+fs.file-max = 6815744
+kernel.shmall = 3284992
+kernel.shmmax = 16819924991
+kernel.shmmni = 4096
+kernel.sem = 250 32000 100 128
+net.ipv4.ip_local_port_range = 9000 65500
+net.core.rmem_default = 262144
+net.core.rmem_max = 4194304
+net.core.wmem_default = 262144
+net.core.wmem_max = 1048576
+net.ipv4.conf.eth0.rp_filter = 1
+net.ipv4.conf.eth1.rp_filter = 2
+
+#==============================================================#
+Configure nsysctl.conf
+#==============================================================#
+NOZEROCONF=yes
+
+#==============================================================#
+Configure RemoveIPC
+#==============================================================#
+[Login]
+RemoveIPC=no
+
+#==============================================================#
+/etc/security/limits.conf
+#==============================================================#
+*                -       nofile          65536
+oracle soft nofile 1024
+oracle hard nofile 65536
+oracle soft stack 10240
+oracle hard stack 32768
+oracle soft nproc 2047
+oracle hard nproc 16384
+oracle hard memlock unlimited
+oracle soft memlock unlimited
+grid soft nofile 1024
+grid hard nofile 65536
+grid soft stack 10240
+grid hard stack 32768
+grid soft nproc 2047
+grid hard nproc 16384
+
+#==============================================================#
+/etc/pam.d/login
+#==============================================================#
+auth [user_unknown=ignore success=ok ignore=ignore default=bad] pam_securetty.so
+auth       substack     system-auth
+auth       include      postlogin
+account    required     pam_nologin.so
+account    include      system-auth
+password   include      system-auth
+session    required     pam_selinux.so close
+session    required     pam_loginuid.so
+session    optional     pam_console.so
+session    required     pam_selinux.so open
+session    required     pam_namespace.so
+session    optional     pam_keyinit.so force revoke
+session    include      system-auth
+session    include      postlogin
+-session   optional     pam_ck_connector.so
+session required pam_limits.so
+session required /lib64/security/pam_limits.so
+
+#==============================================================#
+Configure /dev/shm
+#==============================================================#
+/dev/mapper/centos-root /                       xfs     defaults        0 0
+UUID=169eb424-a02c-476a-9883-1d3ea0b22c51 /boot                   ext4    defaults        1 2
+/dev/mapper/centos-swap swap                    swap    defaults        0 0
+/swapfile swap swap defaults 0 0
+tmpfs /dev/shm tmpfs size=16425724k 0 0
+
+#==============================================================#
+grid profile
+#==============================================================#
+if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+fi
+PATH=$PATH:$HOME/.local/bin:$HOME/bin
+export PATH
+umask 022
+export TMP=/tmp
+export TMPDIR=$TMP
+export NLS_LANG=AMERICAN_AMERICA.AL32UTF8
+export ORACLE_BASE=/u01/app/grid
+export ORACLE_HOME=/u01/app/12.2.0/grid
+export ORACLE_TERM=xterm
+export TNS_ADMIN=$ORACLE_HOME/network/admin
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib:/lib:/usr/lib
+export ORACLE_SID=+ASM2
+export PATH=/usr/sbin:$PATH
+export PATH=$ORACLE_HOME/bin:$ORACLE_HOME/OPatch:$PATH
+alias sas='sqlplus / as sysasm'
+export PS1="[`whoami`@`hostname`:"'\w]$ '
+alias sqlplus='rlwrap sqlplus'
+alias asmcmd='rlwrap asmcmd'
+alias adrci='rlwrap adrci'
+
+#==============================================================#
+root profile
+#==============================================================#
+if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+fi
+PATH=$PATH:$HOME/bin
+export PATH
+alias so='su - oracle'
+alias sg='su - grid'
+export PS1="[`whoami`@`hostname`:"'\w]# '
+alias crsctl='/u01/app/12.2.0/grid/bin/crsctl'
+alias srvctl='/u01/app/12.2.0/grid/bin/srvctl'
+
+#==============================================================#
+oracle profile
+#==============================================================#
+if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+fi
+PATH=$PATH:$HOME/.local/bin:$HOME/bin
+export PATH
+umask 022
+export TMP=/tmp
+export TMPDIR=$TMP
+export NLS_LANG=AMERICAN_AMERICA.AL32UTF8
+export ORACLE_BASE=/u01/app/oracle
+export ORACLE_HOME=/u01/app/oracle/product/12.2.0/db
+export ORACLE_TERM=xterm
+export TNS_ADMIN=$ORACLE_HOME/network/admin
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib:/lib:/usr/lib
+export ORACLE_SID=oradb2
+export PATH=/usr/sbin:$PATH
+export PATH=$ORACLE_HOME/bin:$ORACLE_HOME/OPatch:$PATH
+alias sas='sqlplus / as sysdba'
+alias awr='sqlplus / as sysdba @?/rdbms/admin/awrrpt'
+alias ash='sqlplus / as sysdba @?/rdbms/admin/ashrpt'
+export PS1="[`whoami`@`hostname`:"'\w]$ '
+alias sqlplus='rlwrap sqlplus'
+alias rman='rlwrap rman'
+alias adrci='rlwrap adrci'
+
+#==============================================================#
+Configure multipath
+#==============================================================#
+
+
+Package device-mapper-multipath-0.4.9-123.el7.x86_64 already installed and latest version
+create: ocr_1 (0QEMU_QEMU_HARDDISK_6c7edfe5-0014-11ed03) undef QEMU    ,QEMU HARDDISK
+size=60G features='0' hwhandler='0' wp=undef
+`-+- policy='service-time 0' prio=1 status=undef
+  `- 4:0:0:0 sdb 8:16 undef ready running
+create: data_1 (0QEMU_QEMU_HARDDISK_6c7edfe5-0014-11ed04) undef QEMU    ,QEMU HARDDISK
+size=70G features='0' hwhandler='0' wp=undef
+`-+- policy='service-time 0' prio=1 status=undef
+  `- 5:0:0:0 sdc 8:32 undef ready running
+reload: ocr_1 (0QEMU_QEMU_HARDDISK_6c7edfe5-0014-11ed03) undef QEMU    ,QEMU HARDDISK
+size=60G features='0' hwhandler='0' wp=undef
+`-+- policy='service-time 0' prio=1 status=undef
+  `- 4:0:0:0 sdb 8:16 active ready running
+reload: data_1 (0QEMU_QEMU_HARDDISK_6c7edfe5-0014-11ed04) undef QEMU    ,QEMU HARDDISK
+size=70G features='0' hwhandler='0' wp=undef
+`-+- policy='service-time 0' prio=1 status=undef
+  `- 5:0:0:0 sdc 8:32 active ready running
+create: ocr_1 (0QEMU_QEMU_HARDDISK_6c7edfe5-0014-11ed03) undef QEMU    ,QEMU HARDDISK
+size=60G features='0' hwhandler='0' wp=undef
+`-+- policy='service-time 0' prio=1 status=undef
+  `- 4:0:0:0 sdb 8:16 undef ready running
+create: data_1 (0QEMU_QEMU_HARDDISK_6c7edfe5-0014-11ed04) undef QEMU    ,QEMU HARDDISK
+size=70G features='0' hwhandler='0' wp=undef
+`-+- policy='service-time 0' prio=1 status=undef
+  `- 5:0:0:0 sdc 8:32 undef ready running
+#==============================================================#
+multipath info
+#==============================================================#
+data_1 (0QEMU_QEMU_HARDDISK_6c7edfe5-0014-11ed04) dm-3 QEMU    ,QEMU HARDDISK
+size=70G features='0' hwhandler='0' wp=rw
+`-+- policy='service-time 0' prio=1 status=enabled
+  `- 5:0:0:0 sdc 8:32 active ready running
+ocr_1 (0QEMU_QEMU_HARDDISK_6c7edfe5-0014-11ed03) dm-2 QEMU    ,QEMU HARDDISK
+size=60G features='0' hwhandler='0' wp=rw
+`-+- policy='service-time 0' prio=1 status=enabled
+  `- 4:0:0:0 sdb 8:16 active ready running
+
+#==============================================================#
+Configure asm disk
+#==============================================================#
+
+
+
+Successfully load udev.
+#==============================================================#
+asm disk info:
+#==============================================================#
+/dev/asm_data_1
+/dev/asm_ocr_1
+
+Connection to 193.1.3.2 closed.
+
+Configure rac node2 Finish!
+#==============================================================#
+Configure oracle/grid ssh
+#==============================================================#
+
+
+Generating public/private rsa key pair.
+Your identification has been saved in /root/.ssh/id_rsa.
+Your public key has been saved in /root/.ssh/id_rsa.pub.
+The key fingerprint is:
+SHA256:CeCRo8MTKyIVchXs9J/9Bn/Ud5ydHYUY1FKss5JmiVo root@luciferdb03
+The key's randomart image is:
++---[RSA 3072]----+
+|. o+=o     .o*.. |
+| oo.=o      o + .|
+| o *.o.      o  .|
+|+ * . .. .  o  . |
+|o. o   .S+ o o o*|
+|        E O . .oB|
+|       o o = .  o|
+|      .     + .  |
+|           . .   |
++----[SHA256]-----+
+# 193.1.3.1:22 SSH-2.0-OpenSSH_8.0
+# 193.1.3.1:22 SSH-2.0-OpenSSH_8.0
+# 193.1.3.2:22 SSH-2.0-OpenSSH_8.0
+# 193.1.3.2:22 SSH-2.0-OpenSSH_8.0
+# 1.1.1.1:22 SSH-2.0-OpenSSH_8.0
+# 1.1.1.1:22 SSH-2.0-OpenSSH_8.0
+# 1.1.1.2:22 SSH-2.0-OpenSSH_8.0
+# 1.1.1.2:22 SSH-2.0-OpenSSH_8.0
+# luciferdb03:22 SSH-2.0-OpenSSH_8.0
+# luciferdb03:22 SSH-2.0-OpenSSH_8.0
+# luciferdb04:22 SSH-2.0-OpenSSH_8.0
+# luciferdb04:22 SSH-2.0-OpenSSH_8.0
+# luciferdb03-priv:22 SSH-2.0-OpenSSH_8.0
+# luciferdb03-priv:22 SSH-2.0-OpenSSH_8.0
+# luciferdb04-priv:22 SSH-2.0-OpenSSH_8.0
+# luciferdb04-priv:22 SSH-2.0-OpenSSH_8.0
+spawn scp -r /root/.ssh root@193.1.3.1:~
+id_rsa                                                                                                                                                                          100% 2602   615.8KB/s   00:00
+id_rsa.pub                                                                                                                                                                      100%  570   307.8KB/s   00:00
+authorized_keys                                                                                                                                                                 100%  570   309.7KB/s   00:00
+known_hosts                                                                                                                                                                     100% 5900     3.2MB/s   00:00
+send: spawn id exp6 not open
+    while executing
+"send "password\r""
+spawn ssh-copy-id -f root@193.1.3.1
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/root/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'root@193.1.3.1'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp6 not open
+    while executing
+"send "password\r""
+spawn scp -r /root/.ssh root@193.1.3.2:~
+Password:
+id_rsa                                                                                                                                                                          100% 2602     3.8MB/s   00:00
+id_rsa.pub                                                                                                                                                                      100%  570     1.7MB/s   00:00
+authorized_keys                                                                                                                                                                 100% 1140     3.4MB/s   00:00
+known_hosts                                                                                                                                                                     100% 5900     2.6MB/s   00:00
+spawn ssh-copy-id -f root@193.1.3.2
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/root/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'root@193.1.3.2'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp6 not open
+    while executing
+"send "password\r""
+spawn scp -r /root/.ssh root@1.1.1.1:~
+id_rsa                                                                                                                                                                          100% 2602     5.6MB/s   00:00
+id_rsa.pub                                                                                                                                                                      100%  570     2.4MB/s   00:00
+authorized_keys                                                                                                                                                                 100% 1140     4.6MB/s   00:00
+known_hosts                                                                                                                                                                     100% 5900    18.8MB/s   00:00
+send: spawn id exp6 not open
+    while executing
+"send "password\r""
+spawn ssh-copy-id -f root@1.1.1.1
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/root/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'root@1.1.1.1'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp6 not open
+    while executing
+"send "password\r""
+spawn scp -r /root/.ssh root@1.1.1.2:~
+id_rsa                                                                                                                                                                          100% 2602     3.3MB/s   00:00
+id_rsa.pub                                                                                                                                                                      100%  570     1.4MB/s   00:00
+authorized_keys                                                                                                                                                                 100% 1710     1.3MB/s   00:00
+known_hosts                                                                                                                                                                     100% 5900     9.1MB/s   00:00
+send: spawn id exp6 not open
+    while executing
+"send "password\r""
+spawn ssh-copy-id -f root@1.1.1.2
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/root/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'root@1.1.1.2'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp6 not open
+    while executing
+"send "password\r""
+spawn scp -r /root/.ssh root@luciferdb03:~
+id_rsa                                                                                                                                                                          100% 2602     7.4MB/s   00:00
+id_rsa.pub                                                                                                                                                                      100%  570     2.9MB/s   00:00
+authorized_keys                                                                                                                                                                 100% 1710     1.0MB/s   00:00
+known_hosts                                                                                                                                                                     100% 5900    22.1MB/s   00:00
+send: spawn id exp6 not open
+    while executing
+"send "password\r""
+spawn ssh-copy-id -f root@luciferdb03
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/root/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'root@luciferdb03'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp6 not open
+    while executing
+"send "password\r""
+spawn scp -r /root/.ssh root@luciferdb04:~
+id_rsa                                                                                                                                                                          100% 2602     5.8MB/s   00:00
+id_rsa.pub                                                                                                                                                                      100%  570     1.3MB/s   00:00
+authorized_keys                                                                                                                                                                 100% 2280     1.6MB/s   00:00
+known_hosts                                                                                                                                                                     100% 5900    11.5MB/s   00:00
+send: spawn id exp6 not open
+    while executing
+"send "password\r""
+spawn ssh-copy-id -f root@luciferdb04
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/root/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'root@luciferdb04'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp6 not open
+    while executing
+"send "password\r""
+spawn scp -r /root/.ssh root@luciferdb03-priv:~
+id_rsa                                                                                                                                                                          100% 2602     7.9MB/s   00:00
+id_rsa.pub                                                                                                                                                                      100%  570     3.1MB/s   00:00
+authorized_keys                                                                                                                                                                 100% 2280     1.1MB/s   00:00
+known_hosts                                                                                                                                                                     100% 5900    20.5MB/s   00:00
+send: spawn id exp6 not open
+    while executing
+"send "password\r""
+spawn ssh-copy-id -f root@luciferdb03-priv
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/root/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'root@luciferdb03-priv'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp6 not open
+    while executing
+"send "password\r""
+spawn scp -r /root/.ssh root@luciferdb04-priv:~
+id_rsa                                                                                                                                                                          100% 2602     4.3MB/s   00:00
+id_rsa.pub                                                                                                                                                                      100%  570     1.6MB/s   00:00
+authorized_keys                                                                                                                                                                 100% 2850     1.9MB/s   00:00
+known_hosts                                                                                                                                                                     100% 5900    10.0MB/s   00:00
+send: spawn id exp6 not open
+    while executing
+"send "password\r""
+spawn ssh-copy-id -f root@luciferdb04-priv
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/root/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'root@luciferdb04-priv'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp6 not open
+    while executing
+"send "password\r""
+Generating public/private rsa key pair.
+Your identification has been saved in /home/grid/.ssh/id_rsa.
+Your public key has been saved in /home/grid/.ssh/id_rsa.pub.
+The key fingerprint is:
+SHA256:m6qqxk7ZCPN7NByFGGPzhU3W205lFNA8AHjwSz+l74Y grid@luciferdb03
+The key's randomart image is:
++---[RSA 3072]----+
+|  =o ==+..o*o.   |
+| ..+oo+.o   *    |
+|    .. .oo o..   |
+|    .  ..ooo     |
+|o  . .  So+      |
+|.o+ +    o.o     |
+|.+.o .  o  ..    |
+|.o ..  .  E..    |
+|+ooo...    ..    |
++----[SHA256]-----+
+# 193.1.3.1:22 SSH-2.0-OpenSSH_8.0
+# 193.1.3.1:22 SSH-2.0-OpenSSH_8.0
+# 193.1.3.2:22 SSH-2.0-OpenSSH_8.0
+# 193.1.3.2:22 SSH-2.0-OpenSSH_8.0
+# 1.1.1.1:22 SSH-2.0-OpenSSH_8.0
+# 1.1.1.1:22 SSH-2.0-OpenSSH_8.0
+# 1.1.1.2:22 SSH-2.0-OpenSSH_8.0
+# 1.1.1.2:22 SSH-2.0-OpenSSH_8.0
+# luciferdb03:22 SSH-2.0-OpenSSH_8.0
+# luciferdb03:22 SSH-2.0-OpenSSH_8.0
+# luciferdb04:22 SSH-2.0-OpenSSH_8.0
+# luciferdb04:22 SSH-2.0-OpenSSH_8.0
+# luciferdb03-priv:22 SSH-2.0-OpenSSH_8.0
+# luciferdb03-priv:22 SSH-2.0-OpenSSH_8.0
+# luciferdb04-priv:22 SSH-2.0-OpenSSH_8.0
+# luciferdb04-priv:22 SSH-2.0-OpenSSH_8.0
+spawn scp -r /home/grid/.ssh grid@193.1.3.1:~
+id_rsa                                        100% 2602   538.1KB/s   00:00
+id_rsa.pub                                    100%  570   455.8KB/s   00:00
+authorized_keys                               100%  570   303.1KB/s   00:00
+known_hosts                                   100% 5900     3.0MB/s   00:00
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn ssh-copy-id -f grid@193.1.3.1
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/grid/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'grid@193.1.3.1'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn scp -r /home/grid/.ssh grid@193.1.3.2:~
+Password:
+id_rsa                                        100% 2602   109.0KB/s   00:00
+id_rsa.pub                                    100%  570   321.5KB/s   00:00
+authorized_keys                               100% 1140     4.1MB/s   00:00
+known_hosts                                   100% 5900     5.1MB/s   00:00
+spawn ssh-copy-id -f grid@193.1.3.2
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/grid/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'grid@193.1.3.2'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn scp -r /home/grid/.ssh grid@1.1.1.1:~
+id_rsa                                        100% 2602     7.6MB/s   00:00
+id_rsa.pub                                    100%  570     2.4MB/s   00:00
+authorized_keys                               100% 1140   741.8KB/s   00:00
+known_hosts                                   100% 5900    20.5MB/s   00:00
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn ssh-copy-id -f grid@1.1.1.1
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/grid/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'grid@1.1.1.1'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn scp -r /home/grid/.ssh grid@1.1.1.2:~
+id_rsa                                        100% 2602     3.6MB/s   00:00
+id_rsa.pub                                    100%  570     1.4MB/s   00:00
+authorized_keys                               100% 1710     1.1MB/s   00:00
+known_hosts                                   100% 5900     8.3MB/s   00:00
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn ssh-copy-id -f grid@1.1.1.2
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/grid/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'grid@1.1.1.2'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn scp -r /home/grid/.ssh grid@luciferdb03:~
+id_rsa                                        100% 2602     8.1MB/s   00:00
+id_rsa.pub                                    100%  570     2.7MB/s   00:00
+authorized_keys                               100% 1710     1.0MB/s   00:00
+known_hosts                                   100% 5900    20.1MB/s   00:00
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn ssh-copy-id -f grid@luciferdb03
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/grid/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'grid@luciferdb03'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn scp -r /home/grid/.ssh grid@luciferdb04:~
+id_rsa                                        100% 2602     4.4MB/s   00:00
+id_rsa.pub                                    100%  570     1.9MB/s   00:00
+authorized_keys                               100% 2280     1.5MB/s   00:00
+known_hosts                                   100% 5900    11.2MB/s   00:00
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn ssh-copy-id -f grid@luciferdb04
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/grid/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'grid@luciferdb04'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn scp -r /home/grid/.ssh grid@luciferdb03-priv:~
+id_rsa                                        100% 2602     8.2MB/s   00:00
+id_rsa.pub                                    100%  570     3.0MB/s   00:00
+authorized_keys                               100% 2280     1.6MB/s   00:00
+known_hosts                                   100% 5900    21.6MB/s   00:00
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn ssh-copy-id -f grid@luciferdb03-priv
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/grid/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'grid@luciferdb03-priv'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn scp -r /home/grid/.ssh grid@luciferdb04-priv:~
+id_rsa                                        100% 2602     2.9MB/s   00:00
+id_rsa.pub                                    100%  570     1.5MB/s   00:00
+authorized_keys                               100% 2850     1.4MB/s   00:00
+known_hosts                                   100% 5900     9.3MB/s   00:00
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn ssh-copy-id -f grid@luciferdb04-priv
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/grid/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'grid@luciferdb04-priv'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+Generating public/private rsa key pair.
+Your identification has been saved in /home/oracle/.ssh/id_rsa.
+Your public key has been saved in /home/oracle/.ssh/id_rsa.pub.
+The key fingerprint is:
+SHA256:rbtEfzHYmqMgkoAbtAE1pVu9ijHGcZuN1Awpz+Fiq+U oracle@luciferdb03
+The key's randomart image is:
++---[RSA 3072]----+
+|..o.o.           |
+|. .oo=           |
+| oo=+.+          |
+|o.=*+= . . o     |
+|+o*o+ o S o +    |
+| =o= . . o o o   |
+|.++ o . o = .    |
+|. E. . o o o     |
+|        +.       |
++----[SHA256]-----+
+# 193.1.3.1:22 SSH-2.0-OpenSSH_8.0
+# 193.1.3.1:22 SSH-2.0-OpenSSH_8.0
+# 193.1.3.2:22 SSH-2.0-OpenSSH_8.0
+# 193.1.3.2:22 SSH-2.0-OpenSSH_8.0
+# 1.1.1.1:22 SSH-2.0-OpenSSH_8.0
+# 1.1.1.1:22 SSH-2.0-OpenSSH_8.0
+# 1.1.1.2:22 SSH-2.0-OpenSSH_8.0
+# 1.1.1.2:22 SSH-2.0-OpenSSH_8.0
+# luciferdb03:22 SSH-2.0-OpenSSH_8.0
+# luciferdb03:22 SSH-2.0-OpenSSH_8.0
+# luciferdb04:22 SSH-2.0-OpenSSH_8.0
+# luciferdb04:22 SSH-2.0-OpenSSH_8.0
+# luciferdb03-priv:22 SSH-2.0-OpenSSH_8.0
+# luciferdb03-priv:22 SSH-2.0-OpenSSH_8.0
+# luciferdb04-priv:22 SSH-2.0-OpenSSH_8.0
+# luciferdb04-priv:22 SSH-2.0-OpenSSH_8.0
+spawn scp -r /home/oracle/.ssh oracle@193.1.3.1:~
+id_rsa                                        100% 2610     1.0MB/s   00:00
+id_rsa.pub                                    100%  572   224.9KB/s   00:00
+authorized_keys                               100%  572   287.7KB/s   00:00
+known_hosts                                   100% 5900     3.2MB/s   00:00
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn ssh-copy-id -f oracle@193.1.3.1
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/oracle/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'oracle@193.1.3.1'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn scp -r /home/oracle/.ssh oracle@193.1.3.2:~
+Password:
+id_rsa                                        100% 2610   669.8KB/s   00:00
+id_rsa.pub                                    100%  572   459.6KB/s   00:00
+authorized_keys                               100% 1144     3.3MB/s   00:00
+known_hosts                                   100% 5900     5.9MB/s   00:00
+spawn ssh-copy-id -f oracle@193.1.3.2
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/oracle/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'oracle@193.1.3.2'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn scp -r /home/oracle/.ssh oracle@1.1.1.1:~
+id_rsa                                        100% 2610     5.8MB/s   00:00
+id_rsa.pub                                    100%  572     2.6MB/s   00:00
+authorized_keys                               100% 1144   520.3KB/s   00:00
+known_hosts                                   100% 5900    17.0MB/s   00:00
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn ssh-copy-id -f oracle@1.1.1.1
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/oracle/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'oracle@1.1.1.1'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn scp -r /home/oracle/.ssh oracle@1.1.1.2:~
+id_rsa                                        100% 2610     3.4MB/s   00:00
+id_rsa.pub                                    100%  572   905.6KB/s   00:00
+authorized_keys                               100% 1716   781.8KB/s   00:00
+known_hosts                                   100% 5900    10.0MB/s   00:00
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn ssh-copy-id -f oracle@1.1.1.2
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/oracle/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'oracle@1.1.1.2'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn scp -r /home/oracle/.ssh oracle@luciferdb03:~
+id_rsa                                        100% 2610     7.6MB/s   00:00
+id_rsa.pub                                    100%  572     2.7MB/s   00:00
+authorized_keys                               100% 1716   926.7KB/s   00:00
+known_hosts                                   100% 5900    21.4MB/s   00:00
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn ssh-copy-id -f oracle@luciferdb03
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/oracle/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'oracle@luciferdb03'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn scp -r /home/oracle/.ssh oracle@luciferdb04:~
+id_rsa                                        100% 2610     4.8MB/s   00:00
+id_rsa.pub                                    100%  572     2.2MB/s   00:00
+authorized_keys                               100% 2288     1.8MB/s   00:00
+known_hosts                                   100% 5900    12.0MB/s   00:00
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn ssh-copy-id -f oracle@luciferdb04
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/oracle/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'oracle@luciferdb04'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn scp -r /home/oracle/.ssh oracle@luciferdb03-priv:~
+id_rsa                                        100% 2610     5.9MB/s   00:00
+id_rsa.pub                                    100%  572     2.2MB/s   00:00
+authorized_keys                               100% 2288     1.5MB/s   00:00
+known_hosts                                   100% 5900    16.3MB/s   00:00
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn ssh-copy-id -f oracle@luciferdb03-priv
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/oracle/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'oracle@luciferdb03-priv'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn scp -r /home/oracle/.ssh oracle@luciferdb04-priv:~
+id_rsa                                        100% 2610     3.3MB/s   00:00
+id_rsa.pub                                    100%  572     1.1MB/s   00:00
+authorized_keys                               100% 2860     1.6MB/s   00:00
+known_hosts                                   100% 5900     7.5MB/s   00:00
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+spawn ssh-copy-id -f oracle@luciferdb04-priv
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/oracle/.ssh/id_rsa.pub"
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'oracle@luciferdb04-priv'"
+and check to make sure that only the key(s) you wanted were added.
+
+send: spawn id exp5 not open
+    while executing
+"send "oracle\r""
+#==============================================================#
+unzip grid software
+#==============================================================#
+Silently unzip grid software, please wait a moment:
+
+
+      .---- -. -. .  .   .        .
+     ( .',----- - - ' '      '                                         __
+      \_/      ;--:-          __--------------------___  ____=========_||___
+     __U__n_^_''__[.  ooo___  | |_!_||_!_||_!_||_!_| |   |..|_i_|..|_i_|..|
+   c(_ ..(_ ..(_ ..( /,,,,,,] | |___||___||___||___| |   |                |
+   ,_\___________'_|,L______],|______________________|_i,!________________!_i
+  /;_(@)(@)==(@)(@)   (o)(o)      (o)^(o)--(o)^(o)          (o)(o)-(o)(o)
+""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""
+
+p33583921_122010_Linux-x86-64.zip                                                                                                                                               100% 2282MB  91.3MB/s   00:24
+p6880880_122010_Linux-x86-64.zip                                                                                                                                                100%  118MB  57.8MB/s   00:02
+#==============================================================#
+unzip database software
+#==============================================================#
+Silently unzip database software, please wait a moment:
+
+
+      .---- -. -. .  .   .        .
+     ( .',----- - - ' '      '                                         __
+      \_/      ;--:-          __--------------------___  ____=========_||___
+     __U__n_^_''__[.  ooo___  | |_!_||_!_||_!_||_!_| |   |..|_i_|..|_i_|..|
+   c(_ ..(_ ..(_ ..( /,,,,,,] | |___||___||___||___| |   |                |
+   ,_\___________'_|,L______],|______________________|_i,!________________!_i
+  /;_(@)(@)==(@)(@)   (o)(o)      (o)^(o)--(o)^(o)          (o)(o)-(o)(o)
+""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""
+
+#==============================================================#
+grid rsp
+#==============================================================#
+oracle.install.responseFileVersion=/oracle/install/rspfmt_crsinstall_response_schema_v12.2.0
+INVENTORY_LOCATION=/u01/app/oraInventory
+oracle.install.option=CRS_CONFIG
+ORACLE_BASE=/u01/app/grid
+oracle.install.asm.OSDBA=asmdba
+oracle.install.asm.OSOPER=asmoper
+oracle.install.asm.OSASM=asmadmin
+oracle.install.crs.config.gpnp.scanName=luciferdb-scan
+oracle.install.crs.config.gpnp.scanPort=1521
+oracle.install.crs.config.ClusterConfiguration=STANDALONE
+oracle.install.crs.config.configureAsExtendedCluster=false
+oracle.install.crs.config.clusterName=luciferdb-cls
+oracle.install.crs.config.gpnp.configureGNS=false
+oracle.install.crs.config.autoConfigureClusterNodeVIP=false
+oracle.install.crs.configureGIMR=false
+oracle.install.asm.configureGIMRDataDG=false
+oracle.install.crs.config.useIPMI=false
+oracle.install.asm.storageOption=ASM
+oracle.install.asm.SYSASMPassword=Oracle123Pwd
+oracle.install.asm.diskGroup.name=OCR
+oracle.install.asm.diskGroup.redundancy=EXTERNAL
+oracle.install.asm.diskGroup.AUSize=4
+oracle.install.asm.diskGroup.disksWithFailureGroupNames=/dev/asm_ocr_1,
+oracle.install.asm.diskGroup.disks=/dev/asm_ocr_1
+oracle.install.asm.monitorPassword=Oracle123Pwd
+oracle.install.asm.configureAFD=false
+oracle.install.crs.configureRHPS=false
+oracle.install.crs.config.ignoreDownNodes=false
+oracle.install.config.managementOption=NONE
+oracle.install.crs.rootconfig.executeRootScript=false
+oracle.install.asm.diskGroup.diskDiscoveryString=/dev/asm*
+oracle.install.crs.config.networkInterfaceList=eth0:193.1.3.0:1,eth1:1.1.1.0:5
+oracle.install.crs.config.clusterNodes=luciferdb03:luciferdb03-vip:HUB,luciferdb04:luciferdb04-vip:HUB
+
+#==============================================================#
+Install grid software and Patch
+#==============================================================#
+
+
+Preparing the home to patch...
+Applying the patch /soft/33583921...
+Successfully applied the patch.
+The log can be found at: /tmp/GridSetupActions2022-07-12_06-08-59AM/installerPatchActions_2022-07-12_06-08-59AM.log
+Launching Oracle Grid Infrastructure Setup Wizard...
+
+[WARNING] [INS-06009] SSH performance is detected to be slow, which may impact performance during remote node operations like copying the software and executing prerequisite checks.
+   ACTION: Consider optimizing the ssh configuration.
+[WARNING] [INS-40109] The specified Oracle Base location is not empty on this server.
+   ACTION: Specify an empty location for Oracle Base.
+[WARNING] [INS-40110] The specified Oracle Base location is not empty on following nodes: [luciferdb04].
+   ACTION: Specify an empty location for Oracle Base.
+You can find the log of this install session at:
+ /tmp/GridSetupActions2022-07-12_06-08-59AM/gridSetupActions2022-07-12_06-08-59AM.log
+
+As a root user, execute the following script(s):
+        1. /u01/app/oraInventory/orainstRoot.sh
+        2. /u01/app/12.2.0/grid/root.sh
+
+Execute /u01/app/oraInventory/orainstRoot.sh on the following nodes:
+[luciferdb03, luciferdb04]
+Execute /u01/app/12.2.0/grid/root.sh on the following nodes:
+[luciferdb03, luciferdb04]
+
+Run the script on the local node first. After successful completion, you can start the script in parallel on all other nodes.
+
+Successfully Setup Software.
+As install user, execute the following command to complete the configuration.
+        /u01/app/12.2.0/grid/gridSetup.sh -executeConfigTools -responseFile /soft/grid.rsp [-silent]
+
+
+Moved the install session logs to:
+ /u01/app/oraInventory/logs/GridSetupActions2022-07-12_06-08-59AM
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/u01/app/12.2.0/grid/lib/libasmclntsh12.so
++ makefile=/u01/app/12.2.0/grid/rdbms/lib/ins_rdbms.mk
++ so_ext=so
++ target=ld_shlib
+++ basename /u01/app/12.2.0/grid/lib/libasmclntsh12.so .so
++ libname=libasmclntsh12
+++ dirname /u01/app/12.2.0/grid/lib/libasmclntsh12.so
++ sodir=/u01/app/12.2.0/grid/lib
++ ardir=/u01/app/12.2.0/grid/lib/
++ '[' var = ld_shlib ']'
++ suffix=LIBS
++ var=
++ '[' '!' -f /u01/app/12.2.0/grid/lib/libasmclntsh12.a ']'
++ '[' '' '!=' '' ']'
++ make -f /u01/app/12.2.0/grid/rdbms/lib/ins_rdbms.mk ld_shlib _FULL_LIBNAME=/u01/app/12.2.0/grid/lib/libasmclntsh12.so _LIBNAME=libasmclntsh12 _LIBDIR=/u01/app/12.2.0/grid/lib/ '_LIBNAME_LIBS=$(libasmclntsh12LIBS)' '_LIBNAME_EXTRALIBS=$(libasmclntsh12EXTRALIBS)'
++ PATH=/bin:/usr/bin:/usr/ccs/bin
++ export PATH
++ lib=/u01/app/12.2.0/grid/lib/libasmperl12.so
++ makefile=/u01/app/12.2.0/grid/rdbms/lib/ins_rdbms.mk
++ so_ext=so
++ target=dlopenlib
+++ basename /u01/app/12.2.0/grid/lib/libasmperl12.so .so
++ libname=libasmperl12
+++ dirname /u01/app/12.2.0/grid/lib/libasmperl12.so
++ sodir=/u01/app/12.2.0/grid/lib
++ ardir=/u01/app/12.2.0/grid/lib/
++ '[' var = dlopenlib ']'
++ suffix=LIBS
++ var=
++ '[' '!' -f /u01/app/12.2.0/grid/lib/libasmperl12.a ']'
++ '[' '' '!=' '' ']'
++ make -f /u01/app/12.2.0/grid/rdbms/lib/ins_rdbms.mk dlopenlib _FULL_LIBNAME=/u01/app/12.2.0/grid/lib/libasmperl12.so _LIBNAME=libasmperl12 _LIBDIR=/u01/app/12.2.0/grid/lib/ '_LIBNAME_LIBS=$(libasmperl12LIBS)' '_LIBNAME_EXTRALIBS=$(libasmperl12EXTRALIBS)'
+Changing permissions of /u01/app/oraInventory.
+Adding read,write permissions for group.
+Removing read,write,execute permissions for world.
+
+Changing groupname of /u01/app/oraInventory to oinstall.
+The execution of the script is complete.
+Changing permissions of /u01/app/oraInventory.
+Adding read,write permissions for group.
+Removing read,write,execute permissions for world.
+
+Changing groupname of /u01/app/oraInventory to oinstall.
+The execution of the script is complete.
+Check /u01/app/12.2.0/grid/install/root_luciferdb03_2022-07-12_06-20-39-788172108.log for the output of root script
+Check /u01/app/12.2.0/grid/install/root_luciferdb04_2022-07-12_06-35-22-292996154.log for the output of root script
+Launching Oracle Grid Infrastructure Setup Wizard...
+
+You can find the logs of this session at:
+/u01/app/oraInventory/logs/GridSetupActions2022-07-12_06-43-12AM
+
+Configuration failed.
+[WARNING] [INS-43080] Some of the configuration assistants failed, were cancelled or skipped.
+   ACTION: Refer to the logs or contact Oracle Support Services.
+#==============================================================#
+Grid RDBMS
+#==============================================================#
+
+SQL*Plus: Release 12.2.0.1.0 Production
+
+#==============================================================#
+OPatch lspatches
+#==============================================================#
+33587128;Database Jan 2022 Release Update : 12.2.0.1.220118 (33587128)
+33116894;ACFS JUL 2021 RELEASE UPDATE 12.2.0.1.210720 (33116894)
+26839277;DBWLM RELEASE UPDATE 12.2.0.1.0(ID:170913) (26839277)
+33610989;TOMCAT RELEASE UPDATE 12.2.0.1.0(ID:RELEASE) (33610989)
+33678030;OCW JAN 2022 RELEASE UPDATE 12.2.0.1.220118 (33678030)
+
+OPatch succeeded.
+
+#==============================================================#
+create asm diskgroup
+#==============================================================#
+
+
+
+Disk groups created successfully. Check /u01/app/grid/cfgtoollogs/asmca/asmca-220712AM064641.log for details.
+
+
+#==============================================================#
+asm group
+#==============================================================#
+State    Type    Rebal  Sector  Logical_Sector  Block       AU  Total_MB  Free_MB  Req_mir_free_MB  Usable_file_MB  Offline_disks  Voting_files  Name
+MOUNTED  EXTERN  N         512             512   4096  1048576     71680    71582                0           71582              0             N  DATA/
+MOUNTED  EXTERN  N         512             512   4096  4194304     61440    61104                0           61104              0             Y  OCR/                                                             
+
+#==============================================================#
+db rsp
+#==============================================================#
+oracle.install.responseFileVersion=/oracle/install/rspfmt_dbinstall_response_schema_v12.2.0
+oracle.install.option=INSTALL_DB_SWONLY
+UNIX_GROUP_NAME=oinstall
+ORACLE_HOME=/u01/app/oracle/product/12.2.0/db
+INVENTORY_LOCATION=/u01/app/oraInventory
+ORACLE_BASE=/u01/app/oracle
+SELECTED_LANGUAGES=en,zh_CN
+oracle.install.db.InstallEdition=EE
+oracle.install.db.OSDBA_GROUP=dba
+oracle.install.db.OSOPER_GROUP=oper
+oracle.install.db.OSBACKUPDBA_GROUP=backupdba
+oracle.install.db.OSDGDBA_GROUP=dgdba
+oracle.install.db.OSKMDBA_GROUP=kmdba
+oracle.install.db.OSRACDBA_GROUP=racdba
+oracle.install.db.CLUSTER_NODES=luciferdb03,luciferdb04
+
+#==============================================================#
+Install database software and Patch
+#==============================================================#
+
+
+Starting Oracle Universal Installer...
+
+Checking Temp space: must be greater than 500 MB.   Actual 48421 MB    Passed
+Checking swap space: must be greater than 150 MB.   Actual 15204 MB    Passed
+Preparing to launch Oracle Universal Installer from /tmp/OraInstall2022-07-12_06-47-02AM. Please wait ...You can find the log of this install session at:
+ /u01/app/oraInventory/logs/installActions2022-07-12_06-47-02AM.log
+
+Prepare in progress.
+..................................................   7% Done.
+
+Prepare successful.
+
+Copy files in progress.
+..................................................   14% Done.
+..................................................   20% Done.
+..................................................   25% Done.
+..................................................   30% Done.
+..................................................   36% Done.
+..................................................   45% Done.
+..................................................   50% Done.
+..................................................   55% Done.
+..................................................   60% Done.
+..................................................   65% Done.
+..........
+Copy files successful.
+
+Link binaries in progress.
+....................
+Link binaries successful.
+
+Setup files in progress.
+....................
+Setup files successful.
+
+Setup Inventory in progress.
+
+Setup Inventory successful.
+
+Finish Setup successful.
+The installation of Oracle Database 12c was successful.
+Please check '/u01/app/oraInventory/logs/silentInstall2022-07-12_06-47-02AM.log' for more details.
+
+Copy Files to Remote Nodes in progress.
+..................................................   70% Done.
+..................................................   75% Done.
+..................................................   80% Done.
+..................................................   85% Done.
+
+Copy Files to Remote Nodes successful.
+
+Prepare in progress.
+
+Prepare successful.
+..........
+Setup in progress.
+....................
+Setup successful.
+The Cluster Node Addition of /u01/app/oracle/product/12.2.0/db was successful.
+Please check '/u01/app/oraInventory/logs/silentInstall2022-07-12_06-47-02AM.log' for more details.
+
+Setup Oracle Base in progress.
+
+Setup Oracle Base successful.
+..................................................   97% Done.
+
+As a root user, execute the following script(s):
+        1. /u01/app/oracle/product/12.2.0/db/root.sh
+
+Execute /u01/app/oracle/product/12.2.0/db/root.sh on the following nodes:
+[luciferdb03, luciferdb04]
+
+
+..................................................   100% Done.
+Successfully Setup Software.
+Changing permissions of /u01/app/oraInventory.
+Adding read,write permissions for group.
+Removing read,write,execute permissions for world.
+
+Changing groupname of /u01/app/oraInventory to oinstall.
+The execution of the script is complete.
+Check /u01/app/oracle/product/12.2.0/db/install/root_luciferdb03_2022-07-12_06-54-06-985189876.log for the output of root script
+Changing permissions of /u01/app/oraInventory.
+Adding read,write permissions for group.
+Removing read,write,execute permissions for world.
+
+Changing groupname of /u01/app/oraInventory to oinstall.
+The execution of the script is complete.
+Check /u01/app/oracle/product/12.2.0/db/install/root_luciferdb04_2022-07-12_06-54-07-453228214.log for the output of root script
+
+OPatchauto session is initiated at Tue Jul 12 06:54:16 2022
+
+System initialization log file is /u01/app/oracle/product/12.2.0/db/cfgtoollogs/opatchautodb/systemconfig2022-07-12_06-54-21AM.log.
+
+Session log file is /u01/app/oracle/product/12.2.0/db/cfgtoollogs/opatchauto/opatchauto2022-07-12_06-54-49AM.log
+The id for this session is R2DT
+
+Executing OPatch prereq operations to verify patch applicability on home /u01/app/oracle/product/12.2.0/db
+Patch applicability verified successfully on home /u01/app/oracle/product/12.2.0/db
+
+
+Executing patch validation checks on home /u01/app/oracle/product/12.2.0/db
+Patch validation checks successfully completed on home /u01/app/oracle/product/12.2.0/db
+
+
+Verifying SQL patch applicability on home /u01/app/oracle/product/12.2.0/db
+No step execution required.........
+
+
+Preparing to bring down database service on home /u01/app/oracle/product/12.2.0/db
+No step execution required.........
+
+
+Performing prepatch operation on home /u01/app/oracle/product/12.2.0/db
+Perpatch operation completed successfully on home /u01/app/oracle/product/12.2.0/db
+
+
+Start applying binary patch on home /u01/app/oracle/product/12.2.0/db
+Binary patch applied successfully on home /u01/app/oracle/product/12.2.0/db
+
+
+Performing postpatch operation on home /u01/app/oracle/product/12.2.0/db
+Postpatch operation completed successfully on home /u01/app/oracle/product/12.2.0/db
+
+
+Preparing home /u01/app/oracle/product/12.2.0/db after database service restarted
+No step execution required.........
+
+
+Trying to apply SQL patch on home /u01/app/oracle/product/12.2.0/db
+SQL patch applied successfully on home /u01/app/oracle/product/12.2.0/db
+
+OPatchAuto successful.
+
+--------------------------------Summary--------------------------------
+
+Patching is completed successfully. Please find the summary as follows:
+
+Host:luciferdb03
+RAC Home:/u01/app/oracle/product/12.2.0/db
+Version:12.2.0.1.0
+Summary:
+
+==Following patches were SKIPPED:
+
+Patch: /soft/33583921/33116894
+Reason: This patch is not applicable to this specified target type - "rac_database"
+
+Patch: /soft/33583921/26839277
+Reason: This patch is not applicable to this specified target type - "rac_database"
+
+Patch: /soft/33583921/33610989
+Reason: This patch is not applicable to this specified target type - "rac_database"
+
+
+==Following patches were SUCCESSFULLY applied:
+
+Patch: /soft/33583921/33587128
+Log: /u01/app/oracle/product/12.2.0/db/cfgtoollogs/opatchauto/core/opatch/opatch2022-07-12_06-55-09AM_1.log
+
+Patch: /soft/33583921/33678030
+Log: /u01/app/oracle/product/12.2.0/db/cfgtoollogs/opatchauto/core/opatch/opatch2022-07-12_06-55-09AM_1.log
+
+
+
+OPatchauto session completed at Tue Jul 12 06:59:42 2022
+Time taken to complete the session 5 minutes, 26 seconds
+
+OPatchauto session is initiated at Tue Jul 12 06:59:43 2022
+
+System initialization log file is /u01/app/oracle/product/12.2.0/db/cfgtoollogs/opatchautodb/systemconfig2022-07-12_06-59-50AM.log.
+
+Session log file is /u01/app/oracle/product/12.2.0/db/cfgtoollogs/opatchauto/opatchauto2022-07-12_07-00-08AM.log
+The id for this session is IXK4
+
+Executing OPatch prereq operations to verify patch applicability on home /u01/app/oracle/product/12.2.0/db
+Patch applicability verified successfully on home /u01/app/oracle/product/12.2.0/db
+
+
+Executing patch validation checks on home /u01/app/oracle/product/12.2.0/db
+Patch validation checks successfully completed on home /u01/app/oracle/product/12.2.0/db
+
+
+Verifying SQL patch applicability on home /u01/app/oracle/product/12.2.0/db
+No step execution required.........
+
+
+Preparing to bring down database service on home /u01/app/oracle/product/12.2.0/db
+No step execution required.........
+
+
+Performing prepatch operation on home /u01/app/oracle/product/12.2.0/db
+Perpatch operation completed successfully on home /u01/app/oracle/product/12.2.0/db
+
+
+Start applying binary patch on home /u01/app/oracle/product/12.2.0/db
+Binary patch applied successfully on home /u01/app/oracle/product/12.2.0/db
+
+
+Performing postpatch operation on home /u01/app/oracle/product/12.2.0/db
+Postpatch operation completed successfully on home /u01/app/oracle/product/12.2.0/db
+
+
+Preparing home /u01/app/oracle/product/12.2.0/db after database service restarted
+No step execution required.........
+
+
+Trying to apply SQL patch on home /u01/app/oracle/product/12.2.0/db
+SQL patch applied successfully on home /u01/app/oracle/product/12.2.0/db
+
+OPatchAuto successful.
+
+--------------------------------Summary--------------------------------
+
+Patching is completed successfully. Please find the summary as follows:
+
+Host:luciferdb04
+RAC Home:/u01/app/oracle/product/12.2.0/db
+Version:12.2.0.1.0
+Summary:
+
+==Following patches were SKIPPED:
+
+Patch: /soft/33583921/33116894
+Reason: This patch is not applicable to this specified target type - "rac_database"
+
+Patch: /soft/33583921/26839277
+Reason: This patch is not applicable to this specified target type - "rac_database"
+
+Patch: /soft/33583921/33610989
+Reason: This patch is not applicable to this specified target type - "rac_database"
+
+
+==Following patches were SUCCESSFULLY applied:
+
+Patch: /soft/33583921/33587128
+Log: /u01/app/oracle/product/12.2.0/db/cfgtoollogs/opatchauto/core/opatch/opatch2022-07-12_07-00-28AM_1.log
+
+Patch: /soft/33583921/33678030
+Log: /u01/app/oracle/product/12.2.0/db/cfgtoollogs/opatchauto/core/opatch/opatch2022-07-12_07-00-28AM_1.log
+
+
+
+OPatchauto session completed at Tue Jul 12 07:04:54 2022
+Time taken to complete the session 5 minutes, 11 seconds
+#==============================================================#
+Oracle RDBMS
+#==============================================================#
+
+SQL*Plus: Release 12.2.0.1.0 Production
+
+#==============================================================#
+Oracle OPatch Version
+#==============================================================#
+OPatch Version: 12.2.0.1.30
+
+OPatch succeeded.
+
+#==============================================================#
+OPatch lspatches
+#==============================================================#
+33678030;OCW JAN 2022 RELEASE UPDATE 12.2.0.1.220118 (33678030)
+33587128;Database Jan 2022 Release Update : 12.2.0.1.220118 (33587128)
+
+OPatch succeeded.
+
+#==============================================================#
+create database
+#==============================================================#
+
+
+Copying database files
+1% complete
+2% complete
+15% complete
+27% complete
+Creating and starting Oracle instance
+29% complete
+32% complete
+36% complete
+40% complete
+41% complete
+43% complete
+45% complete
+Creating cluster database views
+47% complete
+63% complete
+Completing Database Creation
+64% complete
+65% complete
+68% complete
+70% complete
+72% complete
+Executing Post Configuration Actions
+100% complete
+Look at the log file "/u01/app/oracle/cfgtoollogs/dbca/oradb/oradb1.log" for further details.
+
+Recovery Manager: Release 12.2.0.1.0 - Production on Tue Jul 12 07:15:01 2022
+
+Copyright (c) 1982, 2017, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: ORADB (DBID=2863098484)
+
+RMAN>
+using target database control file instead of recovery catalog
+new RMAN configuration parameters:
+CONFIGURE SNAPSHOT CONTROLFILE NAME TO '+DATA/snapcf_fdcdb1.f';
+new RMAN configuration parameters are successfully stored
+
+RMAN>
+
+Recovery Manager complete.
+
+System altered.
+
+
+System altered.
+
+sqlnet.ora                                                                                                                                                                      100%   76    21.5KB/s   00:00
+#==============================================================#
+Configure controlfile and redolog
+#==============================================================#
+Silently configure controlfile and redolog, please wait a moment:
+
+
+
+Recovery Manager: Release 12.2.0.1.0 - Production on Tue Jul 12 07:16:49 2022
+
+Copyright (c) 1982, 2017, Oracle and/or its affiliates.  All rights reserved.
+
+connected to target database: ORADB (not mounted)
+
+RMAN>
+Starting restore at 12-JUL-22
+using target database control file instead of recovery catalog
+allocated channel: ORA_DISK_1
+channel ORA_DISK_1: SID=141 instance=oradb1 device type=DISK
+
+channel ORA_DISK_1: copied control file copy
+Finished restore at 12-JUL-22
+
+RMAN>
+
+Recovery Manager complete.
+
+System altered.
+
+
+Database altered.
+
+
+Database altered.
+
+#==============================================================#
+optimize database
+#==============================================================#
+
+
+#==============================================================#
+Configure HugePages
+#==============================================================#
+
+
+Recommended setting: vm.nr_hugepages = 5140
+vm.nr_hugepages = 5140
+vm.nr_hugepages = 5140
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+Profile altered.
+
+
+Profile altered.
+
+
+Profile altered.
+
+
+Profile altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+System altered.
+
+
+Congratulations, Oracle RAC install successfully, please reboot now: [Y/N]
+

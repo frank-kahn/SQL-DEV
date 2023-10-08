@@ -1,3 +1,5 @@
+v$datafile 是从oracle的控制文件中获得的数据文件的信息
+v$datafile_header 是从数据文件的头部
 gv$lock
 gv$process
 gv$session

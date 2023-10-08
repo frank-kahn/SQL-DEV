@@ -1,3 +1,6 @@
+-- 如何查看 oracle 官方文档
+https://blog.csdn.net/moveofgod/article/details/38688269
+
 --Oracle一键安装脚本
 https://github.com/DBAutoTask/OracleShellInstall 
 

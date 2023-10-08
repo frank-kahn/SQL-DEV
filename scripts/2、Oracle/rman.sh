@@ -1,3 +1,7 @@
+#待研究
+https://blog.csdn.net/leshami/article/details/9011789
+
+
 #####################################配置catalog#####################################
 mkdir /oradata/testdb -p
 chown -R oracle:oinstall /oradata

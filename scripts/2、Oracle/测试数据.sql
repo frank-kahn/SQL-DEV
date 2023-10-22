@@ -44,9 +44,11 @@ create user test01 identified by test01 default tablespace test01;
 create user test02 identified by test02 default tablespace test02;
 grant dba to test01;
 grant dba to test02;
+alter user test01 quota unlimited on test01; 
+alter user test02 quota unlimited on test02; 
 
 conn test01/test01;
-create table test01 (id number(2),name varchar2(10));
+create table test01 (id number(2) primary key,name varchar2(10));
 insert into test01 values(1,'test01');
 insert into test01 values(2,'test02');
 insert into test01 values(3,'test03');
@@ -54,6 +56,18 @@ insert into test01 values(4,'test04');
 insert into test01 values(5,'test05');
 commit;
 create table test02 as select * from test01;
+
+conn test02/test02;
+create table test01 (id number(2) primary key,name varchar2(10));
+insert into test01 values(1,'test01');
+insert into test01 values(2,'test02');
+insert into test01 values(3,'test03');
+insert into test01 values(4,'test04');
+insert into test01 values(5,'test05');
+commit;
+create table test02 as select * from test01;
+
+
 -- 做个检查点：把缓存数据全部写进数据文件：
 alter system checkpoint;
 -- 切换日志

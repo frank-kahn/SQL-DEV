@@ -113,3 +113,12 @@ crosscheck archivelog all;
 list expired archivelog all; 
 delete expired archivelog all;
 
+
+
+
+
+
+#如何在Oracle 19c expdp/impdp 脚本中不使用密码？
+https://www.modb.pro/db/602204
+expdp \'/ as sysdba\' directory=
+impdp \'/ as sysdba\' directory=

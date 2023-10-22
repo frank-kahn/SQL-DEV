@@ -48,3 +48,15 @@ select lower(user)||'@'||lower(instance_name)||'('||(select distinct sid from v$
 set sqlprompt '&gname> '
 set termout on
 
+
+
+
+
+
+set long 200000
+set pagesize 5000
+set linesize 1024
+set head off
+set verify off
+set feedback off
+

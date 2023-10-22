@@ -25,6 +25,7 @@ startup
 --关闭PDB
 
 alter pluggable database orcl1 close;       --关闭指定的PDB
+alter pluggable database orcl1 close immediate instances=all;       --关闭指定的PDB
 alter pluggable database all close;     --关闭所有PDB
 alter session set container=orcl1;  --切换到PDB进去关闭数据库
 shutdown immediate

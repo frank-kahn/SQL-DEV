@@ -72,3 +72,8 @@ create table test02 as select * from test01;
 alter system checkpoint;
 -- 切换日志
 alter system switch logfile;
+
+-- 创建目录
+create or replace directory bak_dir as '/oracle/backup'; 
+grant read,write on directory bak_dir to system; 
+grant read,write on directory bak_dir to test01;

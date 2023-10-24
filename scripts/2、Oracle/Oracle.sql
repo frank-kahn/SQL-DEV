@@ -120,5 +120,11 @@ delete expired archivelog all;
 
 #如何在Oracle 19c expdp/impdp 脚本中不使用密码？
 https://www.modb.pro/db/602204
-expdp \'/ as sysdba\' directory=
-impdp \'/ as sysdba\' directory=
+
+
+
+-- 查看数据库中的表和列的字符集
+SELECT table_name, column_name, data_type, data_length, char_length, data_precision, data_scale, character_set_name
+FROM all_tab_columns
+WHERE owner = 'schema_name';
+

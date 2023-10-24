@@ -53,10 +53,16 @@ set termout on
 
 
 
+
+set pagesize 1000
+set linesize 100
+col parameter for a30
+col value for a40
 set long 200000
-set pagesize 5000
-set linesize 1024
 set head off
 set verify off
 set feedback off
+set numwidth 7
+
+
 

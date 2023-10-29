@@ -47,33 +47,6 @@ https://blog.csdn.net/qq_16566415/article/details/78295899
 
 
 
-
-
-
-
-
-
-
-
-declare 
-i integer;
-oddsum integer:=0;
-begin
-for i in 1..100 loop
-if mod(i,2)>0
-then
-oddsum:=oddsum+i;
-end if;
-end loop;
-dbms_output.put_line('100内奇数和为：'||oddsum);
-end;
-
-
-
-
-
-
-
 -- 完整的开启和关闭归档设置流程
 -- 1、恢复区设置
 show parameter db_recovery;

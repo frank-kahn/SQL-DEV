@@ -31,7 +31,7 @@ alias alert="tail -100f /oracle/app/oracle/diag/rdbms/fghsdb/fghsdb/trace/alert_
 
 
 
-
+define _editor=vi
 set serveroutput on size 1000000
 set trimspool on				--去除重定向（spool）输出每行的拖尾空格，缺省为off
 set timing on					--显示执行sql语句耗时信息，默认是off状态
@@ -48,21 +48,26 @@ select lower(user)||'@'||lower(instance_name)||'('||(select distinct sid from v$
 set sqlprompt '&gname> '
 set termout on
 
+define gname=idle
+column global_name new_value gname
+select lower(user) || '@' || substr( global_name, 1, decode( dot, 0, length(global_name), dot-1) ) global_name from (select global_name, instr(global_name,'.') dot from global_name );
+set sqlprompt '&gname _DATE> '
 
 
 
 
 
 
-set pagesize 1000
+set serveroutput on size 1000000
+set pagesize 1000       -- set PAGESIZE 0 代表什么意思
 set linesize 100
+set long 200000			-- long代表什么意思
+set trimspool on        -- 这个是什么意思 
+set termout off         -- 这个是什么意思
 col parameter for a30
 col value for a40
-set long 200000
 set head off
 set verify off
 set feedback off
 set numwidth 7
-
-
 

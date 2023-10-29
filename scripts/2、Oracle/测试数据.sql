@@ -20,7 +20,7 @@ insert into test values(6,'liumei');
 
 
 
-create tablespace test_ts datafile '/u01/app/oracle/oradata/testdb/test1.dbf' size 100m autoextend off;
+create tablespace test_ts datafile '/oracle/oradata/test1.dbf' size 100m autoextend off extent management local autoallocate segment space management auto;
 create user test_user identified by test_user default tablespace test_ts temporary tablespace temp;
 grant dba to test_user;
 conn test_user/test_user
@@ -44,8 +44,8 @@ create user test01 identified by test01 default tablespace test01;
 create user test02 identified by test02 default tablespace test02;
 grant dba to test01;
 grant dba to test02;
-alter user test01 quota unlimited on test01; 
-alter user test02 quota unlimited on test02; 
+alter user test01 quota unlimited on test01;
+alter user test02 quota unlimited on test02;
 
 conn test01/test01;
 create table test01 (id number(2) primary key,name varchar2(10));

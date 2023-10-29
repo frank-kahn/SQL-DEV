@@ -1,35 +1,26 @@
 pvcreate /dev/sdb /dev/sdc /dev/sdd /dev/sde
-
 vgcreate oravg /dev/sdb
-vgcreate datavg /dev/sdc
-vgcreate backup /dev/sdd
-vgcreate archvg /dev/sde
 
 lvcreate -n oralv -L 50000M oravg
-lvcreate -n datalv -L 200000M datavg
-lvcreate -n backuplv -L 400000M backup
-lvcreate -n archivelv -L 200000 archvg
+lvcreate -n oralv -L 190G oravg
 
-格式化文件系统：
-mkfs.xfs /dev/backup/backuplv
-mkfs.xfs /dev/archvg/archivelv
-mkfs.xfs /dev/datavg/datalv
+#格式化文件系统：
 mkfs.xfs /dev/oravg/oralv
+mkfs.ext4 /dev/oravg/oralv
 
 echo "/dev/oravg/oralv		/oracle		xfs  defaults  0 0">>/etc/fstab
-echo "/dev/datavg/datalv	/oradata		xfs	defaults  0 0">>/etc/fstab
-echo "/dev/backup/backuplv  /backup	xfs  defaults  0 0">>/etc/fstab
-echo "/dev/archvg/archivelv  /archive	xfs  defaults  0 0">>/etc/fstab
-echo "none /dev/shm   tmpfs defaults,size=6144m 0 0">>/etc/fstab
+
+cat >> /etc/fstab << "EOF"
+/dev/oravg/oralv /oracle ext4 defaults 0 0
+EOF
 
 cat /etc/fstab
-mkdir /oracle
-mkdir /oradata
-mkdir /backup
-mkdir /archive
+
+pvs
+vgs/vgdisplay
+lvs/lvdisplay
+
+mount -a
+df -h
 
 
-mount /oracle
-mount /oradata
-mount /backup
-mount /archive

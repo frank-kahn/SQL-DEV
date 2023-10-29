@@ -17,3 +17,10 @@ LANG：LANG环境变量存放的是Linux系统的语言、地区、字符集，�
 
 zh_CN.UTF-8
 en_US.UTF-8
+
+# 语言变量
+export LANG="zh_CN.UTF-8"
+export LANG="en_US.UTF-8"
+
+echo 'LANG=en_US.UTF-8' >> ~/.bash_profile
+source ~/.bash_profile

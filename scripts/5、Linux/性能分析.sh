@@ -1,3 +1,29 @@
+# 占用CPU的操作
+cat /dev/zero
+# 占用内存的操作
+dd if=/dev/zero of=/dev/null bs=1024MB
+#测试磁盘的写速度
+dd if=/dev/zero of=/dev/null
+# 造一个2G的文件
+dd if=/dev/zero of=/root/test-file bs=1MB count=2000
+#查看进程的线程资源使用情况
+top -H -p  进程号
+top -H -p <PID>
+# shell linux中如何用shell写一个占用CPU的脚本
+https://www.jb51.net/article/223724.htm
+
+
+#系统监控
+#查看IO
+iostat -k -x 1
+#查看网络
+sar -n DEV 1
+#查看热点函数
+perf top
+perf record
+perf report
+
+
 #iostat
 iostat -x 3是一个用于在 Linux 系统上查看磁盘和设备的输入/输出统计信息的命令。该命令将返回一系列指标字段，用于评估磁盘和设备的性能。以下是iostat -x 3 命令返回的各个指标字段的解释：          
 %user：表示在给定时间间隔内，CPU 用于处理用户进程的百分比。这是 CPU 时间的一部分，用于执行用户应用程序。          
@@ -33,3 +59,5 @@ oflag=dsync：要求在每次写入操作后等待数据同步到磁盘。
 使用这个命令可以测试磁盘写入的性能，因为/dev/zero是一个特殊设备，它会生成无限数量的零字节流。通过将这些零写入到文件中，并使用oflag=dsync          
 选项确保每次写入操作后都进行数据同步到磁盘，可以测量磁盘写入的性能和延迟          
 进程测试写入1M/S，我行生产全量8T的库，在导出导入的时候可以达到9.6M/s。进一步验证了磁盘写入性能差
+
+

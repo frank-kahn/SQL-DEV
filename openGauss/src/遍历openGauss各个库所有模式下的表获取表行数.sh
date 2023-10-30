@@ -14,6 +14,6 @@ for db in ${all_db[@]}
 	  for table in ${all_table[@]}
 	  do
 	  source${env_path}
-	  echo "${db}.${table}:`gsql -d $db -p ${db_port} -p ${db_port} -At -c "select count(*) from $table;"`"
+	  echo "${db}.${table}:`gsql -d $db -p ${db_port} -At -c "select count(*) from $table;"`"
 	done
 done

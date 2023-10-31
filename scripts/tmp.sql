@@ -1,3 +1,8 @@
+-- 模板
+blog.csdn.net/xxx/article/details/xxx
+blog.51cto.com/xxx/xxx
+
+
 -- Oracle
 RAC巡检
   1、rac各个进程的含义

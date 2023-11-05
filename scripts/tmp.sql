@@ -1,3 +1,8 @@
+#云下数据库导出导入到云上并重名
+#1、导出
+#如下testdb为数据库名，如下方式导出不带创建数据库的命令
+mysqldump -uroot -proot testdb > testdb.sql
+
 -- 模板
 blog.csdn.net/xxx/article/details/xxx
 blog.51cto.com/xxx/xxx

@@ -36,3 +36,14 @@ commit;
 select * from test_t02;
 
 
+
+create database testdb1 charset gbk;
+use testdb1;
+create table test_t(
+id int,
+name varchar(20)
+) engine=innodb,charset=gbk;
+insert into test_t values(1,'情到');
+insert into test_t values(2,'深处');
+insert into test_t values(3,'人孤独');
+commit;

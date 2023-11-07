@@ -1,6 +1,9 @@
 #后台执行命令
 nohup test.sh > nohup.test.log 2>&1 &
 
+2> 1.log 表示把错误的日志打印到1.log
+
+
 #每十秒执行一次脚本
 * * * * *  /home/gauss/1.sh >> 1.log
 * * * * * sleep 10; /home/gauss/1.sh >> 1.log

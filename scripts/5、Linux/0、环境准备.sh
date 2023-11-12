@@ -165,9 +165,12 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-7
 yum makecache
 
 
+#Centos 7.6 图像界面安装
+yum groupinstall -y "X Window System"
+yum groupinstall -y "GNOME Desktop" "Graphical Administration Tools"
 
-#Centos 8.2安装图像界面
-yum groupinstall "Server with GUI" -y
+#Centos 8.2 图像界面安装
+yum groupinstall -y "Server with GUI"
 
 
 #############################################################################################

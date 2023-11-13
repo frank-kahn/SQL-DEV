@@ -128,6 +128,8 @@ CREATE EVENT TRIGGER get_object_trigger_for_drops
 
 https://pgfans.cn/a/2063
 
+https://stackoverflow.com/questions/2577168/how-to-find-table-creation-time
+
 
 
 ## 查看用户的schema权限
@@ -225,4 +227,73 @@ BEGIN
 end;
 $$ language plpgsql;
 ~~~
+
+## 给表添加注释如果注释不存在添加，存在不添加
+
+~~~sql
+-- 匿名块
+do $$ << comment_test >>
+declare
+   v_schemaname pg_namespace.nspname % type := 'test'; -- 模式名
+   v_tablename pg_class.relname % type :='test_t';     -- 表名
+   v_comment pg_description.description % type := 'XXXXXXXXXXXXXXXXXXXX'; --表的注释内容
+   flag boolean;
+   v_sql text := concat('comment on table ',v_schemaname,'.',v_tablename,' is ','''',v_comment,'''');
+   
+begin
+select case when t3.description is null or t3.description='' then true else false end
+        into flag
+from pg_class t1
+join pg_namespace t2 on t1.relnamespace=t2.oid
+left join pg_description t3 on t1.oid=t3.objoid
+where 1=1
+      and t1.relname = v_tablename
+	  and t2.nspname = v_schemaname;
+
+if flag
+then
+   raise notice 'flag=%',flag;
+   execute v_sql;
+else
+   raise notice '表存在注释！！！';
+end if;
+end comment_test$$;
+
+
+
+
+-- 函数
+create or replace function comment_test(
+v_schemaname varchar(50),
+v_tablename varchar(50),
+v_comment varchar(200)
+) returns varchar(100)
+as $$
+declare
+   flag boolean;
+   v_sql text := concat('comment on table ',v_schemaname,'.',v_tablename,' is ','''',v_comment,'''');
+begin
+select case when t3.description is null or t3.description='' then true else false end
+        into flag
+from pg_class t1
+join pg_namespace t2 on t1.relnamespace=t2.oid
+left join pg_description t3 on t1.oid=t3.objoid
+where 1=1
+      and t1.relname = v_tablename
+	  and t2.nspname = v_schemaname;
+if flag
+then
+   execute v_sql;
+   return '注释已添加！！！';
+else
+   return '表存在注释！！！';
+end if;
+end;
+$$ language plpgsql;
+
+-- 调用函数
+select comment_test('test','test_t','This is a test!');
+~~~
+
+
 

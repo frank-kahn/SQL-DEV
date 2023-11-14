@@ -24,3 +24,19 @@ export LANG="en_US.UTF-8"
 
 echo 'LANG=en_US.UTF-8' >> ~/.bash_profile
 source ~/.bash_profile
+
+
+# windows
+set nls_lang=SIMPLIFIED CHINESE_CHINA.ZHS16GBK
+set nls_lang=AMERICAN_AMERICA.ZHS16GBK
+
+#Linux/Unix下的设置
+export NLS_LANG=AMERICAN_AMERICA.ZHS16GBK
+export NLS_LANG=SIMPLIFIED CHINESE_CHINA.ZHS16GBK
+
+#Microsoft Windows 环境中NLS_LANG的正确设置 (Doc ID 1577370.1)
+https://support.oracle.com/epmos/faces/DocumentDisplay?_afrLoop=512019719196279&id=1577370.1&_afrWindowMode=0&_adf.ctrl-state=ne4zgl26r_4
+#在 Unix 环境中正确设置 NLS_LANG (Doc ID 1548858.1)
+https://support.oracle.com/epmos/faces/DocumentDisplay?_adf.ctrl-state=ne4zgl26r_94&id=1548858.1&_afrLoop=514010379016514
+#NLS_LANG Explained (How does Client-Server Character Conversion Work?) (Doc ID 158577.1)
+https://support.oracle.com/epmos/faces/DocumentDisplay?_afrLoop=512593191012446&parent=DOCUMENT&sourceId=1577370.1&id=158577.1&_afrWindowMode=0&_adf.ctrl-state=ne4zgl26r_49

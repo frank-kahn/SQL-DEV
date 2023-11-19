@@ -1,3 +1,15 @@
+sqlplus sys/oracle@"(DESCRIPTION =(ADDRESS = (PROTOCOL = TCP)(HOST = 192.168.1.205)(PORT = 1521))(CONNECT_DATA =(SERVER = DEDICATED)(SERVICE_NAME = pdb1)))" as sysdba
+
+sqlplus sys/oracle@tnsnames as sysdba
+
+sqlplus sys/oracle@192.168.1.100:1521/sid as sysdba
+
+sqlplus /nolog
+conn hr/hr
+
+sqlplus hr/hr
+
+
 -- 数据库状态
 select DBID,NAME,DB_UNIQUE_NAME,OPEN_MODE,CREATED,LOG_MODE,PLATFORM_NAME from v$database;
 -- 实例状态

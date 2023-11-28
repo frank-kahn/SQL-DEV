@@ -14,3 +14,11 @@ select * from information_schema.data_type_privileges ;
 select * from information_schema.udt_privileges where grantee='test';
 --查看一个表的授权信息
 SELECT grantee, privilege_type FROM information_schema.role_table_grants WHERE table_name='test_tb';
+
+
+-- 默认权限
+alter default privileges for role test_user in schema test revoke all on functions from public;
+
+-- PostgreSQL 设置用户绕过RLS（行级安全策略）
+alter user <user_name> BYPASSRLS;
+

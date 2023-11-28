@@ -51,6 +51,11 @@ https://www.cnblogs.com/xzdblogs/p/6495755.html
 -- MySQL调优实践系列课程
 https://edu.51cto.com/course/34235.html
 
+-- Mysql进阶篇（二）之索引
+https://zhuanlan.zhihu.com/p/643924600?utm_id=0
+
+
+
 -- Oracle待学习
 rac下各个日志的路径
 rman target / debug trace=rman_debug.log

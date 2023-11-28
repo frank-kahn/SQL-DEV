@@ -297,3 +297,110 @@ select comment_test('test','test_t','This is a test!');
 
 
 
+## 修改表的列名，列不存在不报错（重复执行）
+
+~~~sql
+-- 匿名块
+do $$ << rename_column >>
+declare
+   v_schema pg_namespace.nspname % type := 'test'; -- 模式名
+   v_table pg_class.relname % type :='test_t';     -- 表名
+   v_col_old pg_attribute.attname % type := 'name'; --旧字段名
+   v_col_new pg_attribute.attname % type := 'name1'; --新字段名
+   v_flag boolean;
+   v_sql text := concat('alter table ',v_schema,'.',v_table,' rename column ',v_col_old,' to ',v_col_new);
+   
+begin
+select (case when count(*)=0 then false else true end)
+        into v_flag
+from pg_class t1
+join pg_namespace t2 on t1.relnamespace=t2.oid
+join pg_attribute t3 on t1.oid=t3.attrelid
+where attnum > 0
+	  and t2.nspname = v_schema
+      and t1.relname = v_table
+	  and t3.attname = v_col_old;
+
+if v_flag
+then
+   execute v_sql;
+   raise notice '字段命名成功';
+else
+   raise notice '字段不存在，修改失败！！！';
+end if;
+end rename_column$$;
+
+
+
+-- 函数
+create or replace function rename_column(
+v_schema varchar(50),
+v_table varchar(50),
+v_col_old varchar(50),
+v_col_new varchar(50)
+) returns varchar(100)
+as $$
+declare
+   v_flag boolean;
+   v_sql text := concat('alter table ',v_schema,'.',v_table,' rename column ',v_col_old,' to ',v_col_new);
+begin
+select (case when count(*)=0 then false else true end)
+        into v_flag
+from pg_class t1
+join pg_namespace t2 on t1.relnamespace=t2.oid
+join pg_attribute t3 on t1.oid=t3.attrelid
+where attnum > 0
+	  and t2.nspname = v_schema
+      and t1.relname = v_table
+	  and t3.attname = v_col_old;
+if v_flag
+then
+   execute v_sql;
+   return '字段命名成功';
+else
+   return '字段不存在，修改失败！！！';
+end if;
+end;
+$$ language plpgsql;
+~~~
+
+
+
+测试
+
+~~~sql
+create table test_t (id int,name varchar(100));
+
+select t2.nspname,t1.relname,t3.attname
+from pg_class t1
+join pg_namespace t2 on t1.relnamespace=t2.oid
+join pg_attribute t3 on t1.oid=t3.attrelid
+where attnum > 0
+	  and t2.nspname = 'test'
+      and t1.relname = 'test_t';
+      
+ nspname | relname | attname 
+---------+---------+---------
+ test    | test_t  | id
+ test    | test_t  | name
+(2 rows)
+
+postgres=# select rename_column('test','test_t','name','name1');
+ rename_column 
+---------------
+ 字段命名成功
+(1 row)
+
+ nspname | relname | attname 
+---------+---------+---------
+ test    | test_t  | id
+ test    | test_t  | name1
+(2 rows)
+
+postgres=# select rename_column('test','test_t','name','name1');
+       rename_column        
+----------------------------
+ 字段不存在，修改失败！！！
+(1 row)
+~~~
+

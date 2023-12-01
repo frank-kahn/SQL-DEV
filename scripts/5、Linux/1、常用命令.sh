@@ -67,11 +67,14 @@ date "+%Y%m%d_%H%M%S"
 date "+%Y-%m-%d"
 date "+%H:%M:%S"
 date "+%Y-%m-%d %H:%M:%S"
-date "+%Y_%m_%d %H:%M:%S"  
+date "+%Y_%m_%d %H:%M:%S"
 date -d today 
 date -d now
 date -d tomorrow
 date -d yesterday
+#显示毫秒
+date "+%Y-%m-%d %H:%M:%S.%3N"
+
 
 #iptables
 iptables -VnL

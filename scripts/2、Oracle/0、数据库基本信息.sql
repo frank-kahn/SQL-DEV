@@ -24,3 +24,16 @@ col STATUS for a10
 
 select GROUP#,t1.MEMBERS,t1.SEQUENCE#,t2.MEMBER,t1.BYTES/1024/1024 as "SIZE/MB",t1.ARCHIVED,t1.STATUS,t2.TYPE
 from v$log t1 join v$logfile t2 using(GROUP#);
+
+
+-- 数据文件
+select * from v$dbfile;
+select name from v$datafile;
+select FILE_NAME from dba_data_files;
+
+-- 临时文件
+select NAME from v$tempfile;
+select FILE_NAME from dba_temp_files;
+
+-- 控制文件
+select name from v$controlfile;

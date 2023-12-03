@@ -30,3 +30,4 @@ set linesize 200
 set pagesize 200
 
 SQL> select * from v$recover_file;
+

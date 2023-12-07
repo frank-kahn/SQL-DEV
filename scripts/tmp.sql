@@ -6,7 +6,8 @@ mysqldump -uroot -proot testdb > testdb.sql
 -- 模板
 blog.csdn.net/xxx/article/details/xxx
 blog.51cto.com/xxx/xxx
-
+www.cnblogs.com/xxx/p/xxx.html
+zhuanlan.zhihu.com/p/xxx
 
 -- Oracle
 RAC巡检

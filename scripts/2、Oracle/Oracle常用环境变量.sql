@@ -1,3 +1,11 @@
+for i in 192.168.1.8{1..3};do
+echo $i
+sqlplus -s sys/oracle@$i:1521/rac_db as sysdba << EOF
+set line 100
+show parameter local_listener
+EOF
+done
+
 select to_char(sysdate,'yyyy-mm-dd hh24:mi:ss') as now from dual;
 alter session set nls_date_format='YYYY-MM-DD HH24:MI:SS'; 
 

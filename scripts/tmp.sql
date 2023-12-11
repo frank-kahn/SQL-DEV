@@ -1,3 +1,6 @@
+-- 巡检脚本
+https://github.com/dbbao/dbhealthcheck
+
 #云下数据库导出导入到云上并重名
 #1、导出
 #如下testdb为数据库名，如下方式导出不带创建数据库的命令

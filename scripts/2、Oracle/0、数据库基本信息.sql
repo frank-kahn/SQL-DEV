@@ -1,14 +1,14 @@
 sqlplus sys/oracle@"(DESCRIPTION =(ADDRESS = (PROTOCOL = TCP)(HOST = 192.168.1.205)(PORT = 1521))(CONNECT_DATA =(SERVER = DEDICATED)(SERVICE_NAME = pdb1)))" as sysdba
-
 sqlplus sys/oracle@tnsnames as sysdba
-
 sqlplus sys/oracle@192.168.1.100:1521/sid as sysdba
-
 sqlplus /nolog
 conn hr/hr
-
 sqlplus hr/hr
 
+-- 系统表/系统视图查询
+select TABLE_NAME from all_tables where regexp_like(TABLE_NAME,'tablespace','i')
+union all
+select VIEW_NAME from all_views where regexp_like(VIEW_NAME,'tablespace','i');
 
 -- 数据库状态
 select DBID,NAME,DB_UNIQUE_NAME,OPEN_MODE,CREATED,LOG_MODE,PLATFORM_NAME from v$database;

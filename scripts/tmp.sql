@@ -1,3 +1,6 @@
+-- MySQL配置SSL加密连接
+https://blog.csdn.net/qq_39572257/article/details/116227265
+
 -- 巡检脚本
 https://github.com/dbbao/dbhealthcheck
 

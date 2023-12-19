@@ -3,3 +3,11 @@ mysql -uroot -prootroot --socket=/mysql/data/3306/mysql.sock
 
 -- MySQL查看某个库下有哪些表
 show tables from dbname;
+
+-- 查看有哪些数据库
+select schema_name from information_schema.schemata
+where schema_name not in ('information_schema','mysql','performance_schema','sys');
+
+-- 查看表的预估数据量（不准确）
+select table_schema,table_name,table_rows from information_schema.tables
+where table_schema not in ('information_schema','mysql','performance_schema','sys');

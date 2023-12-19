@@ -24,6 +24,9 @@ select * from v$parameter where name like '%recover%';
 
 
 
+-- 密码文件视图（如果没有结果集返回，则说明密码文件有问题）
+v$pwfile_users
+
 -- 查询恢复视图
 col ERROR format a30
 set linesize 200

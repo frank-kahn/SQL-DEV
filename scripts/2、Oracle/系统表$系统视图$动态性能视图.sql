@@ -18,11 +18,12 @@ dba_dependencies
 -- 查询坏块信息
 v$database_block_corruption
 
---查看恢复区是使用情况 
+-- 查看恢复区是使用情况 
 select * from v$flash_recovery_area_usage;
 select * from v$parameter where name like '%recover%';
 
-
+-- 监听状态视图
+select * from V$LISTENER_STATUS;
 
 -- 密码文件视图（如果没有结果集返回，则说明密码文件有问题）
 v$pwfile_users

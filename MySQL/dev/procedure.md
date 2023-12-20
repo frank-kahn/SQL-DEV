@@ -129,7 +129,7 @@ call backuptable(@tablename);
 
 
 
-## 获取非系统库下每个表的行数
+## 获取非系统库下每个表的行数（报错待研究）
 
 ~~~sql
 DELIMITER //
@@ -179,4 +179,241 @@ BEGIN
 END //
 DELIMITER ;
 ~~~
+
+
+
+可用待研究（union all的方式）
+
+~~~sql
+drop PROCEDURE if exists GetAllTableCounts;
+
+DELIMITER //
+CREATE PROCEDURE GetAllTableCounts()
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE aDatabase CHAR(64);
+    DECLARE aTable CHAR(64);
+    DECLARE dateString VARCHAR(23);
+    DECLARE cur1 CURSOR FOR SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT IN ('information_schema', 'mysql', 'performance_schema', 'sys');
+    DECLARE cur2 CURSOR FOR SELECT table_name FROM information_schema.tables WHERE table_schema = aDatabase;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+    set @sqlString = 'select ''数据库名'' as dbname,''表名'' as tablename,''数量'' as count ';
+    OPEN cur1;
+
+    read_loop: LOOP
+        FETCH cur1 INTO aDatabase;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        OPEN cur2;
+        table_loop: LOOP
+            FETCH cur2 INTO aTable;
+            IF done THEN
+                LEAVE table_loop;
+            END IF;
+            
+            set @sqlString = CONCAT(@sqlString ,' union all select ''',aDatabase,''' as dbname, ''',aTable,''' as tablename, count(*) from ',aDatabase,'.',aTable);
+            
+        END LOOP table_loop;
+
+        CLOSE cur2;
+        SET done = FALSE;
+    END LOOP read_loop;
+    
+    CLOSE cur1;
+    select @sqlString;
+    
+    PREPARE stmt FROM @sqlString;
+    execute stmt;
+    DEALLOCATE PREPARE stmt;
+    
+END //
+DELIMITER ;
+
+
+-- 调用方式1
+call GetAllTableCounts();
+
+
+-- 结果
++---------+--------------------+-------+
+| dbname  | tablename          | count |
++---------+--------------------+-------+
+|         | 表                |   |
+| testdb1 | get_row_counts_tmp | 7     |
+| testdb1 | test_t1            | 21    |
+| testdb1 | test_t2            | 98    |
+| testdb1 | test_t3            | 49    |
+| testdb2 | test_t1            | 74    |
+| testdb2 | test_t2            | 62    |
+| testdb2 | test_t3            | 84    |
++---------+--------------------+-------+
+8 rows in set (0.00 sec)
+~~~
+
+
+
+## 获取非系统库下每个表的行数
+
+### 方法一：MySQL存过查数据库表数据量-直接输出
+
+~~~sql
+-- 创建存过
+drop PROCEDURE if exists GetRowCounts;
+
+DELIMITER //
+CREATE PROCEDURE GetRowCounts(OUT total_rows tinyint)
+BEGIN
+  DECLARE resultString VARCHAR(16383);
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE current_db VARCHAR(255);
+  DECLARE current_table VARCHAR(255);
+  DECLARE db_cursor CURSOR FOR
+    SELECT schema_name
+      FROM information_schema.schemata
+     WHERE schema_name NOT IN ('information_schema', 'mysql', 'performance_schema', 'sys');
+  DECLARE table_cursor CURSOR FOR
+      SELECT table_name
+      FROM information_schema.tables
+      WHERE binary table_schema = binary current_db;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+  OPEN db_cursor;
+  read_loop: LOOP
+    FETCH db_cursor INTO current_db;
+    IF done THEN
+      LEAVE read_loop;
+    END IF;
+    OPEN table_cursor;
+    table_loop: LOOP
+      FETCH table_cursor INTO current_table;
+      IF done THEN
+        LEAVE table_loop;
+      END IF;
+      set @total_rows = 0;
+      SET @sql = CONCAT('SELECT COUNT(*) INTO @total_rows FROM `', current_db, '`.`', current_table, '`');
+      PREPARE stmt FROM @sql;
+      EXECUTE stmt;
+      DEALLOCATE PREPARE stmt;
+      set resultString = CONCAT(IFNULL(resultString,''), 'DB: ', IFNULL(current_db,'null'), ', TB: ', IFNULL(current_table,'null'), ', RW : ', IFNULL(@total_rows,'NULL'), ' ; ',char(10));
+    END LOOP;
+    CLOSE table_cursor;
+    SET done = FALSE;
+  END LOOP;
+  CLOSE db_cursor;
+  select resultString;
+END //
+DELIMITER ;
+
+
+-- 调用方法
+set @total_rows = 0;
+call GetRowCounts(@total_rows);
+
+
+-- 结果示例
+DB: testdb1, TB: test_t1, RW : 21 ; 
+DB: testdb1, TB: test_t2, RW : 98 ; 
+DB: testdb1, TB: test_t3, RW : 49 ; 
+DB: testdb2, TB: test_t1, RW : 74 ; 
+DB: testdb2, TB: test_t2, RW : 62 ; 
+DB: testdb2, TB: test_t3, RW : 84 ; 
+~~~
+
+### 方法二：MySQL存过查数据库表数据量-输出到临时表
+
+~~~sql
+-- 创建临时表
+DROP TABLE IF EXISTS get_row_counts_tmp;
+CREATE TABLE `get_row_counts_tmp` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `dbname` varchar(100) NOT NULL COMMENT '数据库名',
+  `tablename` varchar(255) DEFAULT NULL COMMENT '表名',
+  `total_rows` int(11) DEFAULT NULL COMMENT '表数量',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+
+
+
+-- 创建存过GetRowCountsToTable()
+drop PROCEDURE if exists GetRowCountsToTable;
+DELIMITER //
+CREATE PROCEDURE GetRowCountsToTable(OUT total_rows tinyint)
+BEGIN
+  DECLARE resultString VARCHAR(16383);
+  DECLARE done INT DEFAULT FALSE;
+  DECLARE current_db VARCHAR(255);
+  DECLARE current_table VARCHAR(255);
+  DECLARE db_cursor CURSOR FOR
+    SELECT schema_name
+      FROM information_schema.schemata
+     WHERE schema_name NOT IN ('information_schema', 'mysql', 'performance_schema', 'sys');
+  DECLARE table_cursor CURSOR FOR
+      SELECT table_name
+      FROM information_schema.tables
+      WHERE binary table_schema = binary current_db;
+
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+  
+  /* 清空临时表数据 begin */
+  set @v_sql2 = 'truncate table get_row_counts_tmp';
+  PREPARE stmt3 FROM @v_sql2;
+  EXECUTE stmt3;
+  DEALLOCATE PREPARE stmt3;
+  /* 清空临时表数据 end */
+  
+  OPEN db_cursor;
+  read_loop: LOOP
+    FETCH db_cursor INTO current_db;
+    IF done THEN
+      LEAVE read_loop;
+    END IF;
+    OPEN table_cursor;
+    table_loop: LOOP
+      FETCH table_cursor INTO current_table;
+      IF done THEN
+        LEAVE table_loop;
+      END IF;
+      set @total_rows = 0;
+      SET @sql = CONCAT('SELECT COUNT(*) INTO @total_rows FROM `', current_db, '`.`', current_table, '`');
+      PREPARE stmt FROM @sql;
+      EXECUTE stmt;
+      DEALLOCATE PREPARE stmt;
+      set @v_sql = CONCAT('insert into get_row_counts_tmp (dbname,tablename,total_rows) select ''', current_db, ''' as dbname, ''', current_table, ''' as tablename, ', @total_rows, ' as total_rows');
+      PREPARE stmt2 FROM @v_sql;
+      EXECUTE stmt2;
+      DEALLOCATE PREPARE stmt2;
+      -- set resultString = CONCAT(IFNULL(resultString,''), 'DB: ', IFNULL(current_db,'null'), ', TB: ', IFNULL(current_table,'null'), ', RW : ', IFNULL(@total_rows,'NULL'), ' ; ',char(10));
+    END LOOP;
+    CLOSE table_cursor;
+    SET done = FALSE;
+  END LOOP;
+  CLOSE db_cursor;
+  -- select resultString;
+END //
+DELIMITER ;
+
+
+-- 调用
+set @total_rows = 0;
+call GetRowCountsToTable(@total_rows);
+
+
+-- 查询临时表结果
+mysql> select * from get_row_counts_tmp where tablename <> 'get_row_counts_tmp';
++----+---------+-----------+------------+
+| id | dbname  | tablename | total_rows |
++----+---------+-----------+------------+
+|  2 | testdb1 | test_t1   |         21 |
+|  3 | testdb1 | test_t2   |         98 |
+|  4 | testdb1 | test_t3   |         49 |
+|  5 | testdb2 | test_t1   |         74 |
+|  6 | testdb2 | test_t2   |         62 |
+|  7 | testdb2 | test_t3   |         84 |
++----+---------+-----------+------------+
+6 rows in set (0.00 sec)
+~~~
+
+
 

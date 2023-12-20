@@ -1,5 +1,8 @@
 #!/bin/bash
 
+password=rootroot
+sock=/mysql/data/3306/mysql.sock
+
 read -p '请输入想要创建的数据库的个数：' dbs
 read -p '请输入每个数据库下要创建的表的个数：' tbs
 

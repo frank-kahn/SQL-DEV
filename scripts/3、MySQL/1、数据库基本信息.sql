@@ -11,3 +11,13 @@ where schema_name not in ('information_schema','mysql','performance_schema','sys
 -- 查看表的预估数据量（不准确）
 select table_schema,table_name,table_rows from information_schema.tables
 where table_schema not in ('information_schema','mysql','performance_schema','sys');
+
+-- 查看非系统库表的排序规则
+select table_schema,table_name,table_collation from information_schema.tables
+where table_schema not in ('information_schema','mysql','performance_schema','sys');
+
+-- 查看非系统库表列的排序规则
+select table_schema,table_name,column_name,collation_name from information_schema.columns
+where table_schema not in ('information_schema','mysql','performance_schema','sys');
+
+

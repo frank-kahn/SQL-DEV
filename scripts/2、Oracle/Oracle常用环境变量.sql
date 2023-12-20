@@ -34,6 +34,7 @@ set serveroutput on size 1000000
 -- 设置选择LONG和CLOB列时显示的默认字节数
 set long 5000
 -- 设置SQLPLUS多久打印一次标题，将此参数设置大些这样每页只显示一次标题
+set pagesize 1000
 -- 设置显示的文本宽为100个字符
 set linesize 100
 -- 去除重定向（spool）输出每行的拖尾空格，缺省为off

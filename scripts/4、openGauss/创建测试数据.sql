@@ -29,4 +29,22 @@ select generate_series(1,1000) as key,
 	   (random()*(10-1)+1)::int;	
 
 
-	   
+-- 创建分区表
+
+create table test_range_t (id int8,name varchar(100))
+partition by range(id)
+(
+	partition p1 values less than(1000),
+	partition p2 values less than(2000),
+	partition p3 values less than(3000),
+	partition p4 values less than(4000),
+	partition p5 values less than(5000),
+	partition p6 values less than(6000),
+	partition p7 values less than(7000),
+	partition p8 values less than(maxvalue),
+);
+
+-- 插入数据
+insert into test_range_t select generate_series(1,8000),substr(md5(random()::text),2,5);
+
+

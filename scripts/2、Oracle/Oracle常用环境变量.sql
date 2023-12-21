@@ -64,7 +64,10 @@ set numwidth 7
 
 ~~~shell
 #同时会显示sql执行耗时
-
+set serveroutput on size 1000000
+set long 5000
+set pagesize 1000
+set linesize 100
 set timing on
 set time on
 set termout off
@@ -79,6 +82,10 @@ set termout on
 
 ~~~shell
 #instance_name是大写的
+set serveroutput on size 1000000
+set long 5000
+set pagesize 1000
+set linesize 100
 set termout off
 define gname=idle
 column global_name new_value gname
@@ -92,6 +99,10 @@ set termout on
 
 
 #instance_name是小写的
+set serveroutput on size 1000000
+set long 5000
+set pagesize 1000
+set linesize 100
 set termout off
 define gname=idle
 column global_name new_value gname
@@ -102,6 +113,10 @@ set termout on
 
 
 #用户是大写，instance_name是实际大小写
+set serveroutput on size 1000000
+set long 5000
+set pagesize 1000
+set linesize 100
 set termout off
 ALTER SESSION SET nls_date_format = 'YYYY-MM-DD HH24:MI:SS';
 SET SQLPROMPT "_USER'@'_CONNECT_IDENTIFIER _DATE> "
@@ -113,6 +128,10 @@ set termout on
 -- user@instance_name(会话ID)
 
 ~~~shell
+set serveroutput on size 1000000
+set long 5000
+set pagesize 1000
+set linesize 100
 set termout off
 define gname=idle
 column global_name new_value gname
@@ -126,6 +145,10 @@ set termout on
 -- user@instance_name(hostname)
 
 ~~~shell
+set serveroutput on size 1000000
+set long 5000
+set pagesize 1000
+set linesize 100
 set termout off
 define gname=idle
 column global_name new_value gname

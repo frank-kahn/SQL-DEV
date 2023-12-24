@@ -71,6 +71,8 @@ set linesize 100
 set timing on
 set time on
 set termout off
+alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss';
+alter session set nls_timestamp_format='yyyy-mm-dd hh24:mi:ss';
 define gname=SQL
 column global_name new_value gname
 select 'SQL('||(select distinct sid from v$mystat)||')' global_name from v$instance;
@@ -90,7 +92,8 @@ set termout off
 define gname=idle
 column global_name new_value gname
 select lower(user) || '@' || substr( global_name, 1, decode( dot, 0, length(global_name), dot-1) ) global_name from (select global_name, instr(global_name,'.') dot from global_name );
-ALTER SESSION SET nls_date_format = 'YYYY-MM-DD HH24:MI:SS';
+alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss';
+alter session set nls_timestamp_format='yyyy-mm-dd hh24:mi:ss';
 set sqlprompt '&gname _DATE> '
 set termout on
 
@@ -104,6 +107,8 @@ set long 5000
 set pagesize 1000
 set linesize 100
 set termout off
+alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss';
+alter session set nls_timestamp_format='yyyy-mm-dd hh24:mi:ss';
 define gname=idle
 column global_name new_value gname
 select lower(user)||'@'||lower(instance_name) global_name from v$instance;
@@ -118,7 +123,8 @@ set long 5000
 set pagesize 1000
 set linesize 100
 set termout off
-ALTER SESSION SET nls_date_format = 'YYYY-MM-DD HH24:MI:SS';
+alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss';
+alter session set nls_timestamp_format='yyyy-mm-dd hh24:mi:ss';
 SET SQLPROMPT "_USER'@'_CONNECT_IDENTIFIER _DATE> "
 set termout on
 ~~~
@@ -133,6 +139,8 @@ set long 5000
 set pagesize 1000
 set linesize 100
 set termout off
+alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss';
+alter session set nls_timestamp_format='yyyy-mm-dd hh24:mi:ss';
 define gname=idle
 column global_name new_value gname
 select lower(user)||'@'||lower(instance_name)||'('||(select distinct sid from v$mystat)||')' global_name from v$instance;
@@ -150,6 +158,8 @@ set long 5000
 set pagesize 1000
 set linesize 100
 set termout off
+alter session set nls_date_format='yyyy-mm-dd hh24:mi:ss';
+alter session set nls_timestamp_format='yyyy-mm-dd hh24:mi:ss';
 define gname=idle
 column global_name new_value gname
 select lower(user)||'@'||lower(instance_name)||'('||lower(host_name)||')' global_name from v$instance;

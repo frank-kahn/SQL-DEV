@@ -22,3 +22,8 @@ alter default privileges for role test_user in schema test revoke all on functio
 -- PostgreSQL 设置用户绕过RLS（行级安全策略）
 alter user <user_name> BYPASSRLS;
 
+
+
+-- 普通用户想要修改其他用户的密码需要什么权限
+alter user test createrole;
+

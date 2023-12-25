@@ -99,3 +99,16 @@ exit
 sh 0_rmanbak.sh
 #执行1级备份
 sh 1_rmanbak.sh
+
+
+
+
+#rman 并行参数
+https://blog.csdn.net/dzjun/article/details/50454374
+https://blog.csdn.net/hezuijiudexiaobai/article/details/118617060
+https://zhuanlan.zhihu.com/p/71514667
+
+
+
+#Oracle rman工具使用（真的细）
+https://blog.csdn.net/tttzzzqqq2018/article/details/132939674

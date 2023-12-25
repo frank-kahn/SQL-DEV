@@ -19,3 +19,7 @@ select MEMBER from v$logfile where rownum<=1 union all
 select FILE_NAME from dba_data_files where rownum<=1 union all 
 select FILE_NAME from dba_temp_files where rownum<=1 union all
 select NAME from v$archived_log where rownum<=1 and length(name)>0;
+
+-- 查询Oracle系统schema
+select username from dba_users where default_tablespace in ('SYS','SYSAUX');
+

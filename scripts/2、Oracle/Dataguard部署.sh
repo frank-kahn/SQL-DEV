@@ -32,3 +32,79 @@ alter database add logfile group 5 '/oracle/oradata/testdba/redo05.log' size 100
 
 #关闭omf特性（创建pfile后修改）
 *.db_create_file_dest=''
+
+
+
+
+
+
+
+
+
+#在线脱库
+run {
+allocate channel p1 type disk;
+allocate channel p2 type disk;
+allocate auxiliary channel s1 type disk;
+allocate auxiliary channel s2 type disk;
+duplicate target database for standby from active database nofilenamecheck;
+release channel p1;
+release channel p2;
+release channel s1;
+release channel s2;
+}
+
+
+
+#基于备份
+run {
+allocate auxiliary channel s1 type disk;
+allocate auxiliary channel s2 type disk;
+allocate auxiliary channel s3 type disk;
+allocate auxiliary channel s4 type disk;
+duplicate target database for standby nofilenamecheck;
+release channel s1;
+release channel s2;
+release channel s3;
+release channel s4;
+}
+
+
+
+#实时同步原理（real time apply）
+主库的lgwr进程负责写日志，把主库的所有数据变化写进redo log files里面
+在Dataguard日志同步模式下，还会把redo log files里面写入的信息镜像到备库，
+备库有RFS进程接收，写入到Standby redo log files，所以需要创建Standby redo log files（主库创建）
+
+#非实时同步
+主库的redo log files归档之后，同步到备库，再从备库做恢复
+
+
+
+
+
+#相关检查
+-- 数据库角色和状态查询
+select NAME,DATABASE_ROLE,OPEN_MODE,PROTECTION_MODE,SWITCHOVER_STATUS from v$database;
+-- 查询归档路径信息
+col DEST_NAME for a20
+col STATUS for a8
+select DEST_NAME,STATUS,ERROR from v$archive_dest;
+-- 查看进程信息
+select PROCESS,CLIENT_PROCESS,SEQUENCE#,STATUS from v$managed_standby;
+-- 查看最后的日志信息
+SELECT UNIQUE THREAD#, MAX(SEQUENCE#) OVER(PARTITION BY THREAD#) LAST FROM V$ARCHIVED_LOG;
+-- 是否归档间隙（仅在备库查询）
+SELECT THREAD#, LOW_SEQUENCE#, HIGH_SEQUENCE# FROM V$ARCHIVE_GAP;
+-- 是否存在未被应用的日志（仅在备库查询）
+select thread#,sequence#,first_time,next_time,applied from v$archived_log where applied='NO';
+
+
+
+
+
+
+
+
+
+

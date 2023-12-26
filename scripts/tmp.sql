@@ -10,6 +10,7 @@ https://github.com/dbbao/dbhealthcheck
 mysqldump -uroot -proot testdb > testdb.sql
 
 -- 模板
+download.csdn.net/download/xx/xxx
 blog.csdn.net/xxx/article/details/xxx
 blog.51cto.com/xxx/xxx
 blog.itpub.net/xxx/viewspace-xxxx

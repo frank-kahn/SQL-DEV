@@ -22,6 +22,23 @@ alias rman="rlwrap rman"
 alias alert="tail -100f /oracle/app/oracle/diag/rdbms/fghsdb/fghsdb/trace/alert_fghsdb.log"
 
 
+-- Windows
+setx /M NLS_LANG "SIMPLIFIED CHINESE_CHINA.UTF8"
+setx /M NLS_DATE_LANGUAGE "SIMPLIFIED CHINESE"
+setx /M NLS_DATE "YYYY-MM-DD HH24:MI:SS.FF6"
+setx /M NLS_TIMESTAMP_FORMAT "YYYY-MM-DD HH24:MI:SS.FF6"
+
+#命令行执行，或者编写为vbs脚本
+SETX "PGHOME"  "D:\db\PostgreSQL\13.2-2"
+SETX "PGHOST"  "localhost"
+SETX "PGLIB"   "%PGHOME%\lib"
+SETX "PGDATA"  "%PGHOME%\data"
+
+#设置环境path环境变量
+%PGHOME%\bin
+
+
+
 
 
 -- sqlplus常用设置

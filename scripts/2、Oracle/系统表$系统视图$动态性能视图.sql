@@ -18,6 +18,9 @@ dba_dependencies
 -- 查询坏块信息
 v$database_block_corruption
 
+-- 查看byte大小
+DBMS_XPLAN.FORMAT_SIZE(BYTES)
+
 -- 查看恢复区是使用情况 
 select * from v$flash_recovery_area_usage;
 select * from v$parameter where name like '%recover%';

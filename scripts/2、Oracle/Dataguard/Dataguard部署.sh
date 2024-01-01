@@ -102,8 +102,25 @@ select thread#,sequence#,first_time,next_time,applied from v$archived_log where 
 
 
 
+####################  测试数据
+-- 主库创建
+create tablespace test05 datafile '/oracle/oradata/testdba/test05.dbf' size 50m;
+create user test05 identified by test05 default tablespace test05;
+grant dba to test05;
+conn test05/test05;
+create table test05 (id number(2) primary key,name varchar2(10));
+insert into test05 values(1,'test01');
+insert into test05 values(2,'test02');
+insert into test05 values(3,'test03');
+insert into test05 values(4,'test04');
+insert into test05 values(5,'test05');
+commit;
+select * from test05.test05;
+alter system switch logfile;   -- 主库未归档前，备库是查询不到数据的
 
 
+-- 备库查询
+select * from test05.test05;
 
 
 

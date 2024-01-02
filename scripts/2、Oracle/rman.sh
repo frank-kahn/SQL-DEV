@@ -112,3 +112,6 @@ https://zhuanlan.zhihu.com/p/71514667
 
 #Oracle rman工具使用（真的细）
 https://blog.csdn.net/tttzzzqqq2018/article/details/132939674
+
+#RMAN异机恢复与复制数据库(归档和非归档模式区别，RMAN使用实例)
+https://www.cnblogs.com/muhai/p/15829986.html

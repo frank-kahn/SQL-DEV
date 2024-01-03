@@ -83,4 +83,3 @@ https://www.modb.pro/db/134451
 
 -- 强制日志各个字段说明
 SELECT  LOG_MODE,FORCE_LOGGING,SUPPLEMENTAL_LOG_DATA_MIN  FROM  V$DATABASE;
-

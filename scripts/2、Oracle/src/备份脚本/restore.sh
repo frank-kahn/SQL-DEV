@@ -1,19 +1,35 @@
+############### 当前逻辑有问题，多次输入错误的字符串，最后一次输入正确的时候，会多次去除尾部的字符
 check_path () {
-if [ -z $1 ];then
+if [ -z "$path" ];then
 echo "input is null"
-exit
+main
 fi
-if [ ! -d $1 ];then
-echo "$i is not exist！！！"
+if [ ! -d "$path" ];then
+echo "$path is not exist or not a directory! "
+main
 fi
-
+path=$(echo "$path"|awk -F "/" '{print $NF}')
+if [ -z "$path" ];then
+return 0
+else 
+return 1
+fi
 }
-check_path
+main(){
+echo "-------------------------------------main menu----------------------------------------"
+printf "\n"
+printf "please input the path of dir: \n"
+read dir 
+path=$dir
+if check_path ${path}
+then
+dir=${dir%?}
+fi
+# pass
+}
 
-
-
-
-
+main
+echo $dir
 
 
 

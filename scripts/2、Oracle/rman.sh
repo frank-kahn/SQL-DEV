@@ -115,3 +115,22 @@ https://blog.csdn.net/tttzzzqqq2018/article/details/132939674
 
 #RMAN异机恢复与复制数据库(归档和非归档模式区别，RMAN使用实例)
 https://www.cnblogs.com/muhai/p/15829986.html
+
+
+# 压缩备份
+https://blog.csdn.net/lihuarongaini/article/details/101299256
+
+
+# 全备的同时压缩备份
+#1、使用as compressed backupset子句
+backup as compressed backupset full database format ='D:\oracle\backup\dbprifull_%U';
+backup as compressed backupset full database format '/u01/app/oracle/rmanbak/full_bk1_%u%p%s.rmn';
+
+#2、使用 configure命令设置
+configure device type disk parallelism 2 backup type to compressed backupset;
+backup full database format ='d:\oracle\backup\dbprifull_%u';
+configure device type disk backup type to backupset;
+
+
+#使用RMAN传输数据_复制数据库
+https://blog.csdn.net/jetliu05/article/details/122701850

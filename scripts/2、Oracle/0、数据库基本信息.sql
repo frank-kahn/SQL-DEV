@@ -17,7 +17,7 @@ select INSTANCE_NUMBER,INSTANCE_NAME,HOST_NAME,STARTUP_TIME,STATUS,DATABASE_TYPE
 
 -- redo磁盘组信息
 set line 100
-col GROUP# for 9
+col GROUP# for 99
 col MEMBER for a35
 col SIZE for a4
 col STATUS for a10

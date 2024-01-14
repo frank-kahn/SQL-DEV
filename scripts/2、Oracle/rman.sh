@@ -134,3 +134,55 @@ configure device type disk backup type to backupset;
 
 #使用RMAN传输数据_复制数据库
 https://blog.csdn.net/jetliu05/article/details/122701850
+
+
+################################### 全备数据库 ##################################
+mkdir -p /oracle/backup
+
+#全备主库
+rman target /
+
+run {
+configure device type disk parallelism 2 backup type to compressed backupset;
+backup full database format ='/oracle/backup/db_backfull_%u';
+configure device type disk backup type to backupset;
+}
+
+
+#############################  全备和恢复 #######################################
+#全备
+sys@testdb(testos)> select min(checkpoint_change#) from v$datafile_header;
+MIN(CHECKPOINT_CHANGE#)
+-----------------------
+                 989878
+#整理rman cmdfile文件
+cat > rman_cmdfile << "EOF"
+configure controlfile autobackup on;
+configure controlfile autobackup format for device type disk to '/oracle/backup/autobak_CF_%F';
+run {
+allocate channel c1 type disk format '/oracle/backup/fullbak_%U' maxpiecesize 32g;
+allocate channel c2 type disk format '/oracle/backup/fullbak_%U' maxpiecesize 32g;
+allocate channel c3 type disk format '/oracle/backup/fullbak_%U' maxpiecesize 32g;
+allocate channel c4 type disk format '/oracle/backup/fullbak_%U' maxpiecesize 32g;
+backup current controlfile format '/oracle/backup/temp_01_control.bak';
+backup as compressed backupset full database;
+backup current controlfile format '/oracle/backup/use_this_control.bak';
+backup as compressed backupset archivelog from scn=989878 skip inaccessible;
+backup current controlfile format '/oracle/backup/temp_02_control.bak';
+}
+configure controlfile autobackup off;
+exit
+EOF
+#创建备份存放目录
+mkdir -p /oracle/backup
+#执行全备
+rman target / cmdfile rman_cmdfile msglog backup.log
+
+#恢复
+rman target /
+
+run {
+set until scn 989878;
+restore database;
+recover database;
+}

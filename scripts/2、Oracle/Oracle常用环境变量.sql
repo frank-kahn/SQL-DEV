@@ -49,7 +49,7 @@ define _editor=vi
 -- 默认打开DBMA_OUTPUT,这样不必要每次在输入这个命令，同时将默认缓冲池设置得尽可能大
 set serveroutput on size 1000000
 -- 设置选择LONG和CLOB列时显示的默认字节数
-set long 5000
+set long 99999
 -- 设置SQLPLUS多久打印一次标题，将此参数设置大些这样每页只显示一次标题
 set pagesize 1000
 -- 设置显示的文本宽为100个字符
@@ -82,7 +82,7 @@ set numwidth 7
 ~~~shell
 #同时会显示sql执行耗时
 set serveroutput on size 1000000
-set long 5000
+set long 99999
 set pagesize 1000
 set linesize 100
 set timing on
@@ -102,7 +102,7 @@ set termout on
 ~~~shell
 #instance_name是大写的
 set serveroutput on size 1000000
-set long 5000
+set long 99999
 set pagesize 1000
 set linesize 100
 set termout off
@@ -120,7 +120,7 @@ set termout on
 
 #instance_name是小写的
 set serveroutput on size 1000000
-set long 5000
+set long 99999
 set pagesize 1000
 set linesize 100
 set termout off
@@ -136,7 +136,7 @@ set termout on
 
 #用户是大写，instance_name是实际大小写
 set serveroutput on size 1000000
-set long 5000
+set long 99999
 set pagesize 1000
 set linesize 100
 set termout off
@@ -152,7 +152,7 @@ set termout on
 
 ~~~shell
 set serveroutput on size 1000000
-set long 5000
+set long 99999
 set pagesize 1000
 set linesize 100
 set termout off
@@ -171,7 +171,7 @@ set termout on
 
 ~~~shell
 set serveroutput on size 1000000
-set long 5000
+set long 99999
 set pagesize 1000
 set linesize 100
 set termout off

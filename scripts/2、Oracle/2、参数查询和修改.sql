@@ -11,6 +11,12 @@ where regexp_like(name,'db_files','i');
 
 _allow_resetlogs_corruption为true（目的是跳过使用resetlogs open数据库的一致性检查）
 
+-- 修改参数
+alter system set log_archive_dest_1='' scope=spfile sid='*';
+
+
+create pfile='/oracle/oradata/pfile.ora' from spfile;
+create spfile from pfile='/oracle/oradata/pfile.ora';
 
 
 

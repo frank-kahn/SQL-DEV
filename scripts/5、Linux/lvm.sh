@@ -8,7 +8,7 @@ lvcreate -n oralv -L 190G oravg
 mkfs.xfs /dev/oravg/oralv
 mkfs.ext4 /dev/oravg/oralv
 
-echo "/dev/oravg/oralv  /oracle  xfs  defaults  0 0">>/etc/fstab
+echo "/dev/oravg/oralv  /oracle  ext4  defaults  0 0">>/etc/fstab
 
 cat >> /etc/fstab << "EOF"
 /dev/oravg/oralv /oracle ext4 defaults 0 0

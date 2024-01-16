@@ -470,6 +470,26 @@ ALTER TABLE your_table EXCHANGE PARTITION p_to_truncate WITH TABLE empty_partiti
 - 最后，删除备份表。
 - 这种方法需要一定的额外存储空间来保存临时表和备份表，但可以实现在线清空分区而不锁定整个表。
 
+
+
+## mysql 函数按时间自动分区
+
+https://blog.51cto.com/u_16213377/7259532
+
+## MySQL 自动根据年份动态创建范围分区
+
+https://blog.csdn.net/One_piece111/article/details/132877720
+
+## MySQL创建分区表，并按天自动分区
+
+https://blog.csdn.net/yabingshi_tech/article/details/124170160
+
+
+
+
+
+
+
 # 参考资料
 
 https://www.jb51.net/database/302634f7y.htm

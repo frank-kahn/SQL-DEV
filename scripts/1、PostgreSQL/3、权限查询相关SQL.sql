@@ -145,3 +145,6 @@ alter user <user_name> BYPASSRLS;
 alter user test createrole;
 
 
+
+-- 备份postgresql用户的密码
+select 'alter role '|| usename || ' with password ' || '''' || passwd || ''';' from pg_shadow;

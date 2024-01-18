@@ -25,6 +25,9 @@ export LANG="en_US.UTF-8"
 echo 'LANG=en_US.UTF-8' >> ~/.bash_profile
 source ~/.bash_profile
 
+localectl set-locale LANG=en_US.UTF-8
+
+
 
 # windows
 set nls_lang=SIMPLIFIED CHINESE_CHINA.ZHS16GBK

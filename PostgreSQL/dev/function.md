@@ -666,3 +666,16 @@ $$
 LANGUAGE plpgsql;
 ~~~
 
+
+
+## 生成uuid
+
+~~~sql
+create or replace function random_string(integer)
+returns text as
+$body$
+   select array_to_string(array(select substring('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' FROM (ceil(random()*62))::int FOR 1) FROM generate_series(1, $1)), '');
+$body$
+language sql volatile;
+~~~
+

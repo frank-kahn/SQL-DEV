@@ -22,8 +22,18 @@ alias rman="rlwrap rman"
 alias alert="tail -100f /oracle/app/oracle/diag/rdbms/fghsdb/fghsdb/trace/alert_fghsdb.log"
 
 
+-- Windows系统注册 服务和开机自启动
+oradim -new -sid testdb
+oradim -delete -sid dgtestdb
+oradim -EDIT -SID testdb -STARTMODE auto -SRVCSTART system
+
+
+
 -- Windows（加上/M是系统变量，不加的话是用户变量）
 setx /M NLS_LANG "SIMPLIFIED CHINESE_CHINA.UTF8"
+setx /M NLS_LANG "AMERICAN_AMERICA.AL32UTF8"
+setx /M NLS_LANG "AMERICAN_AMERICA.ZHS16GBK"
+
 setx /M NLS_DATE_LANGUAGE "SIMPLIFIED CHINESE"
 setx /M NLS_DATE "YYYY-MM-DD HH24:MI:SS.FF6"
 setx /M NLS_TIMESTAMP_FORMAT "YYYY-MM-DD HH24:MI:SS.FF6"

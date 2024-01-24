@@ -677,5 +677,24 @@ $body$
    select array_to_string(array(select substring('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' FROM (ceil(random()*62))::int FOR 1) FROM generate_series(1, $1)), '');
 $body$
 language sql volatile;
+
+-- 调用
+postgres=# select random_string(5);
+ random_string
+---------------
+ qnpIn
+(1 row)
+
+postgres=# select random_string(10);
+ random_string
+---------------
+ AVrBZfqY5I
+(1 row)
+
+postgres=# select random_string(20);
+    random_string
+----------------------
+ ZpAqfLyZV5qC0B5rN9Dd
+(1 row)
 ~~~
 

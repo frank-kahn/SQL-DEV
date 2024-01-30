@@ -1,3 +1,11 @@
+--------------------------------------wal日志-------------------------------------------
+-- 获取 WAL 文件的数量，需要pg_monitor角色权限才能查询
+SELECT COUNT (*) FROM pg_ls_waldir();
+-- 检查未归档文件的数量
+SELECT count (*) AS count FROM pg_ls_dir('pg_wal/archive_status')
+WHERE pg_ls_dir ~ E'^[0-9A-F]{24}\.ready$';
+
+
 ----------------------------------------发布端-----------------------------------------
 -- 创建一个发布，发布两个表中所有更改：
 CREATE PUBLICATION mypublication FOR TABLE users, departments;
@@ -52,3 +60,4 @@ WITH replication_lag_mb AS (
 SELECT slot_name, active, replication_lag_mb,
        replication_lag_mb * 16 AS data_size_in_mb
 FROM replication_lag_mb;
+

@@ -1,5 +1,14 @@
+https://blog.csdn.net/tttzzzqqq2018/article/details/132157137
+https://blog.csdn.net/qq_45664055/article/details/128343454
+
+
+#Python 3.8.5
+Anaconda3-2020.11-Windows-x86_64.exe
+
 #conda查看安装源
 conda config --show
+#清理缓存
+conda clean -i
 #添加源
 conda config --add channels <parameters>
 conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
@@ -35,6 +44,8 @@ pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 
 #国内常用源
 https://mirror.tuna.tsinghua.edu.cn/help/pypi/
+https://mirrors.tuna.tsinghua.edu.cn/help/anaconda/
+
 
 
 

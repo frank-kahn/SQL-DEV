@@ -186,3 +186,9 @@ set until scn 989878;
 restore database;
 recover database;
 }
+
+
+
+
+#全备
+backup tag testdb_full format '/backup/full/full_testdb_%s_%p_%t' (database);

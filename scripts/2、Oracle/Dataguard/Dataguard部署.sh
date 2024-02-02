@@ -86,6 +86,7 @@ release channel s4;
 #相关检查
 -- 数据库角色和状态查询
 select NAME,DATABASE_ROLE,OPEN_MODE,PROTECTION_MODE,SWITCHOVER_STATUS from v$database;
+select dbid,name,current_scn,database_role,open_mode,protection_mode,force_logging,switchover_status from v$database;
 -- 查询归档路径信息
 col DEST_NAME for a20
 col STATUS for a8
@@ -125,3 +126,14 @@ select * from test05.test05;
 
 
 
+
+
+# 归档式同步（主库的redo记录归档后，才同步）
+alter database recover managed standby database disconnect from session;
+# 实时同步：
+alter database recover managed standby database using current logfile disconnect from session;
+# 取消恢复：
+alter database recover managed standby database cancel;
+
+
+alter system switch logfile;

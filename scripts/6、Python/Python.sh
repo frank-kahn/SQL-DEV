@@ -38,7 +38,10 @@ jupyter notebook
 pip install -U
 python -m pip install --upgrade pip
 #使用pip安装
-pip install -i https://pypi.tuna.tsinghua.edu.cn/simple some-package
+pip install some-package -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install --trusted-host pypi.tuna.tsinghua.edu.cn some-package -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+
 #设置默认安装源
 pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 

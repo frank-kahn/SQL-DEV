@@ -137,3 +137,17 @@ alter database recover managed standby database cancel;
 
 
 alter system switch logfile;
+
+
+
+
+########################################## 修复gap
+select current_scn from v$database;
+select min(checkpoint_change#) from v$datafile_header
+where file# not in (select file# from v$datafile where enabled = 'READ ONLY');
+
+run {
+allocate channel ch1 type disk maxpiecesize 30G;
+backup as compressed backupset incremental from scn xxx database format '/backup/inc_%d_%T_%s_%p_%u.bak' tag 'inc_bak';
+release channel ch1
+}

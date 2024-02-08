@@ -119,6 +119,10 @@ commit;
 select * from test05.test05;
 alter system switch logfile;   -- 主库未归档前，备库是查询不到数据的
 
+drop tablespace ts01 including contents and datafiles CASCADE CONSTRAINTS;
+
+
+
 
 -- 备库查询
 select * from test05.test05;

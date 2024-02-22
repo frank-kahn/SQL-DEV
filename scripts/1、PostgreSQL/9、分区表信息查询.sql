@@ -56,3 +56,32 @@ where inhparent='tbp'::regclass;
 -- 查看分区表的子表
 select inhrelid::regclass from pg_inherits
 where inhparent = 'tbp'::regclass;
+
+
+-- 获取分区类型和KEY（查询的是主表）         
+SELECT pg_get_partkeydef('tbp'::regclass); 
+
+-- 获取分区范围（查询的是子表）
+SELECT pg_get_partition_constraintdef('tbp_1'::regclass) ;
+
+
+-- 查询分区表的记录数（查询的是主表，预估行数）
+SELECT
+    nspname AS schema_name,
+    relname AS partition_name,
+    pg_size_pretty(pg_relation_size(C.oid)) AS partition_size,
+    pg_size_pretty(pg_total_relation_size(C.oid)) AS total_partition_size,
+    (SELECT reltuples FROM pg_class WHERE oid = C.oid) AS row_estimate
+FROM pg_class C
+LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace)
+WHERE relkind in ('p','r')
+AND nspname NOT IN ('pg_catalog', 'information_schema')
+AND relname in (
+select relid::text from pg_partition_tree('tbp')
+)
+ORDER BY relname;
+
+
+-- 相关函数
+pg_partition_tree()   显示分区表信息
+https://blog.csdn.net/forrest_hu/article/details/133751842

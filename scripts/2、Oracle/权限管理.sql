@@ -8,7 +8,7 @@ grant datapump_exp_full_database to test01;
 
 -- 获取某个用户的全部权限：系统权限、对象权限
 -- 对象权限
-select OWNER,TABLE_NAME,GRANTOR,PRIVILEGE from user_tab_privs where GRANTEE='TEST_USER';
+select OWNER,TABLE_NAME,GRANTOR,PRIVILEGE from dba_tab_privs where GRANTEE='TEST_USER';
 
 
 
@@ -45,4 +45,4 @@ end;
 /
 
 
-select OWNER,TABLE_NAME,GRANTOR,PRIVILEGE from user_tab_privs where regexp_like(TABLE_NAME,'^test_t','i');
+select OWNER,TABLE_NAME,GRANTOR,PRIVILEGE from dba_tab_privs where regexp_like(TABLE_NAME,'^test_t','i');

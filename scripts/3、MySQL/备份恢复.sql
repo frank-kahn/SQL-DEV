@@ -1,0 +1,1 @@
+mysql truncate 表使用binlog日志恢复

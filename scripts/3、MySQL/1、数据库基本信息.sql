@@ -1,3 +1,11 @@
+-- 提示符设置
+select connection_id();
+-- 用户名 [数据库名](会话ID)
+prompt \u [\d](69)> 
+-- 用户名@主机名[数据库名](会话ID)>
+prompt \U [\d](69)> 
+
+
 -- 连接数据库
 mysql -uroot -prootroot --socket=/mysql/data/3306/mysql.sock
 

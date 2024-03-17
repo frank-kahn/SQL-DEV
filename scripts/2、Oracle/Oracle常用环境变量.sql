@@ -30,6 +30,9 @@ oradim -EDIT -SID testdb -STARTMODE auto -SRVCSTART system
 
 
 -- Windows（加上/M是系统变量，不加的话是用户变量）
+SETX "ORACLE_HOME" "D:\app\Administrator\product\11.2.0\dbhome_1"
+SETX "ORACLE_SID" "standbym"
+
 setx /M NLS_LANG "SIMPLIFIED CHINESE_CHINA.UTF8"
 setx /M NLS_LANG "AMERICAN_AMERICA.AL32UTF8"
 setx /M NLS_LANG "AMERICAN_AMERICA.ZHS16GBK"

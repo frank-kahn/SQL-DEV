@@ -40,3 +40,14 @@ select FILE_NAME from dba_temp_files;
 
 -- 控制文件
 select name from v$controlfile;
+
+
+
+---------------------------------  无效对象查询，编译无效对象 ------------------------
+-- 查看当前无效对象
+select * from  dba_objects t where t.status = 'INVALID' order by 1;
+-- 编译无效对象：
+-- 方式1
+select 'alter '||object_type||' '||owner||'.'||object_name||' compile;' from dba_objects t where t.status = 'INVALID' order by 1;
+-- 方式2
+sqlplus / as sysdba @?/rdbms/admin/utlrp.sql

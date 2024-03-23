@@ -61,3 +61,25 @@ SELECT slot_name, active, replication_lag_mb,
        replication_lag_mb * 16 AS data_size_in_mb
 FROM replication_lag_mb;
 
+-- 复制延迟
+select database,
+       slot_type,
+       slot_name,
+       pg_size_pretty(replication_lag_bytes) as lag_size,
+       active,
+       active_pid
+from (select pg_wal_lsn_diff(pg_current_wal_lsn() - restart_lsn) as replication_lag_bytes,
+             slot_name,
+             slot_type,
+             database,
+             active,
+             active_pid
+        from pg_replication_slots) as t;
+
+
+
+
+-- 设置表的发布订阅详细程度
+alter table test_t replica identity full;
+-- 设置的属性信息查询以下系统表字段
+pg_class.relreplident

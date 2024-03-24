@@ -1,108 +1,6 @@
-# 用户管理
-
-~~~sql
---创建用户
-create user test password 'test@123';
-create user test identified by 'test@123';
---修改用户密码
-alter user oracle identified by oracle;
-alter user oracle with password 'Test123~!';
---解锁账户
-ALTER USER user_name
-    ACCOUNT UNLOCK ;
-
---查看哪些用户被锁定了 
-select b.usename,a.rolstatus,a.locktime 
-from pg_user_status a 
-join pg_user b on a.roloid=b.usesysid; 
-
-rolstatus 为0表示用户状态正常 
-rolstatus 为1表示用户登录失败次数过多（默认10次，受failed_login_attempts参数控制），被锁定一段时间 
-rolstatus 为2表示用户被管理员锁定
-~~~
-
-
-
 # 管理命令
 
 ~~~shell
-#数据库启停
-gs_ctl status/start/stop/restart -D /opt/software/openGauss/data/single_node
-gs_om -t status --detail --time-out=1
-gs_om -t start/stop/restart
-
-#修改参数
-#查询参数
-select name,setting,unit,context from pg_settings where name ~ '';
-#修改集群参数
-gs_guc reload -N all -I all -c "password_encryption_type=1"
-gs_guc reload -N all -I all -c "enable_ustore=off"
-#修改单节点参数
-gs_guc reload -N hostname1 -c "enable_ustore=off"
-gs_guc reload -D /home/omm/openGauss-server/dest/dn1 -c "session_timeout = 86400s" 
-gs_guc set -D /home/omm/openGauss-server/dest/dn1 -c "session_timeout = 86400s" 
-#修改会话参数，第三个参数为true，只应用于当前事务，应用于当前会话，可以使用false，和SQL语句SET是等效的
-SELECT set_config('log_statement_stats', 'off', false);
-
-#修改hba文件
-gs_guc reload -N all -I all -h "host all all 100.113.130.164/24 sha256"
-#取消修改hba文件
-gs_guc reload -N all -I all -h "host all all 100.113.130.164/24"
-
-#检查参数值
-gsql -d postgres -p 5432 -c 'show shared_buffers' 
-gsql -d postgres -p 5432 -c "select name,setting,context from pg_settings where name ~ 'shared_buffers'"
-gsql -d postgres -p 5432 -c "select current_setting('shared_buffers')"
-gs_guc check -N all -I all -c "password_encryption_type"
-gs_ssh -c "gsql -d postgres -p 5432 -c 'show shared_buffers' "
-
-
-
-
-#主备同步相关的参数
-select name,setting,unit,context from 
-pg_settings where name in 
-( 
-'synchronous_commit', 
-'synchronous_standby_names', 
-'most_available_sync', 
-'catchup2normal_wait_time', 
-'keep_sync_window', 
-'wal_sender_timeout' );
-
-#查看是主节点还是备节点
-select (case when pg_is_in_recovery()='f' then 'primary' else 'standby' end ) as  primary_or_standby;
-select local_role from pg_stat_get_stream_replication();
-
-#查看集群同步备、异步备（主节点查询）
-select client_addr,client_hostname,sync_state from pg_stat_replication;
-
-#内存相关参数
-select name,setting,unit,context from pg_settings where name in ('max_process_memory','shared_buffers','enable_memory_limit');
-+---------------------+---------+------+------------+
-|        name         | setting | unit |  context   |
-+---------------------+---------+------+------------+
-| enable_memory_limit | off     |      | postmaster |
-| max_process_memory  | 2097152 | kB   | postmaster |
-| shared_buffers      | 91648   | 8kB  | postmaster |
-+---------------------+---------+------+------------+
-#查询内存的视图（需要修改enable_memory_limit=on）
-select * from pg_total_memory_detail;
-•若max_process_memory-shared_buffers-cstore_buffers-元数据少于2G，openGauss强制把enable_memory_limit设置为off。其中元>
-数据是openGauss内部使用的内存，和部分并发参数，如max_connections，thread_pool_attr，max_prepared_transactions等参数相>
-关。
-•当该值为off时，不对数据库使用的内存做限制，在大并发或者复杂查询时，使用内存过多，可能导致操作系统OOM问题。
-
-
-
-
-#获取当前事务日志的写入位置（LSN）
-select pg_current_xlog_location();
-#获取当前事务日志的写入位置，并转换成对应的文件命名格式
-select * from pg_xlogfile_name(pg_current_xlog_location());
-#pg_controldata工具查看checkpoint位点
-pg_controldata $GAUSSDATA
-
 #慢SQL阈值（对应pg_catalog.statement_history的slow_sql_threshold字段）
 omm@postgres=#select name,setting,unit,context from pg_settings where name ~ 'log_min_duration_statement';
 +----------------------------+---------+------+-----------+
@@ -137,12 +35,7 @@ omm@postgres=#select name,setting,unit,context from pg_settings where name ~ 'tr
 #说明可能还需要调整instr_unique_sql_count参数
 
 
-#查询连接的sessionid
-select pg_current_sessid();
-#查看后台进程的pid
-select pg_backend_pid();
-#数据库启动时间
-select pg_postmaster_start_time();
+
 
 #根据字段名查询系统表/系统视图
 select 
@@ -155,17 +48,6 @@ from
   join pg_type t3 on t1.atttypid = t3.oid 
 where 
   t1.attname = 'query';
-
-#查看数据库编码
-select datname,pg_catalog.pg_encoding_to_char(encoding) as encoding
-from pg_database;
-
-#查询表存放的本地位置
-select pg_relation_filepath('employees');
-
-#查看操作系统块的大小，操作系统页面缓冲区中空闲页面的数量
-select * from pgsysconf();
-select * from pgsysconf_pretty();
 ~~~
 
 # 插件
@@ -183,18 +65,7 @@ cd $GAUSSHOME/share/postgresql/extension
 cd $GAUSSHOME/lib/postgresql
 ~~~
 
-# gsql
 
-~~~shell
-#提示符设置
-cd
-cat >.gsqlrc <<EOF
-\set PROMPT1 '%n@%~%R%#'
-\pset border 2
-EOF
-
-#元命令的真实命令 -E
-~~~
 
 
 
@@ -212,112 +83,9 @@ where proname ~* 'regexp_replace';
 SELECT pg_size_pretty(pg_column_size("Values")::bigint) valcolsize,"Id","Values" 
 FROM mdm.concept 
 ORDER BY pg_column_size("Values") DESC;
--- 内存详细信息查询
-select
-    b.client_addr,
-	b.sessionid,
-	a.contextname,
-	a.totalsize/1024/1024 totalsize
-from gs_session_memory_detail a
-     join pg_stat_activity b
-	 on b.sessionid=substr(a.sessid,position('.' in a.sessid)+1,100);
 ~~~
 
 # 对象信息查询
-
-```sql
---查询schema下的对象信息
-select t2.nspname as schema_name,
-       t3.usename as user,
-       t1.relname as object,
-       case when t1.relkind = 'r' then 'table'
-            when t1.relkind = 'i' then 'index'
-            when t1.relkind = 'I' then 'partion_table'
-            when t1.relkind = 'S' then 'sequence'
-            when t1.relkind = 'v' then 'view'
-            when t1.relkind = 'c' then 'compound_type'
-            when t1.relkind = 't' then 'TOAST_table'
-            when t1.relkind = 'f' then 'foreign_table'
-            when t1.relkind = 'm' then 'MaterializedView' end as object_type
-from pg_class t1
-join pg_namespace t2 on t1.relnamespace=t2.oid
-join pg_user t3 on t1.relowner = t3.usesysid
-where 1=1
-and t1.relname ~ 'test'
-and t2.nspname ~ 'test'
-and t3.usename ~ 'test';
-
---查看数据库信息
-SELECT d.datname as "DATABASE",
-       pg_catalog.pg_get_userbyid(d.datdba) as "Owner",
-       pg_catalog.pg_encoding_to_char(d.encoding) as "Encoding",
-       CASE WHEN pg_catalog.has_database_privilege(d.datname, 'CONNECT')
-            THEN pg_catalog.pg_size_pretty(pg_catalog.pg_database_size(d.datname))
-            ELSE 'No Access'
-       END as "Size",
-       t.spcname as "Tablespace"
-FROM pg_catalog.pg_database d
-  JOIN pg_catalog.pg_tablespace t on d.dattablespace = t.oid
-ORDER BY 1;
-
---查看Schema下所有表的大小：
-select relname, 
-	   pg_size_pretty(pg_total_relation_size(relid)) 
-from pg_stat_user_tables 
-where schemaname='pentaho_dilogs' 
-order by pg_relation_size (relid) desc;
-
---查询数据库中的所有表： 
-SELECT         
-    pg_catalog.pg_relation_filenode(c.oid) as "Filenode",
-    relname as "Table Name"  
-FROM     
-    pg_class c  
-    LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace  
-    LEFT JOIN pg_catalog.pg_database d ON d.datname = 'postgres'      
-WHERE     
-    relkind IN ('r') 
-    AND n.nspname NOT IN ('pg_catalog', 'information_schema')
-    AND n.nspname !~ '^pg_toast'
-ORDER BY    
-     relname;
-
-
---查看当前库sehcma大小,并按schema大小排序
-SELECT schema_name, 
-    pg_size_pretty(sum(table_size)::bigint) as "disk space",
-    round((sum(table_size) / pg_database_size(current_database())) * 100,2)
-        as "percent(%)"
-FROM (
-     SELECT pg_catalog.pg_namespace.nspname as schema_name,
-         pg_total_relation_size(pg_catalog.pg_class.oid) as table_size
-     FROM   pg_catalog.pg_class
-         JOIN pg_catalog.pg_namespace 
-             ON relnamespace = pg_catalog.pg_namespace.oid
-) t
-GROUP BY schema_name
-ORDER BY "percent(%)" desc;
-
-
---查看当前库中所有表大小,并按降序排列
-SELECT
-    table_catalog AS database_name,
-    table_schema AS schema_name,
-    table_name,
-    pg_size_pretty(relation_size) AS table_size
-FROM (
-    SELECT
-        table_catalog,
-        table_schema,
-        table_name,
-        pg_total_relation_size(('"' || table_schema || '"."' || table_name || '"')) AS relation_size
-    FROM information_schema.tables
-    WHERE table_schema not in ('pg_catalog', 'public', 'public_rb', 'topology', 'tiger', 'tiger_data', 'information_schema')
-    ORDER BY relation_size DESC
-    )
-    AS all_tables
-WHERE relation_size >= 1073741824;    --筛选大于10GB的表
-```
 
 ## 通过系统线程id查对应的query
 
@@ -370,50 +138,11 @@ and d.objsubid=0
 and nspname not in('pg_catalog','db4ai');
 ~~~
 
-## 查看复制槽
 
-~~~shell
-select slot_name,coalesce(plugin,'_') as plugin,slot_type,datoid,coalesce(database,'_') as database,
-       (case active when 't' then 1 else 0 end)as active,coalesce(xmin,'_') as xmin,dummy_standby,
-       pg_xlog_location_diff(CASE WHEN pg_is_in_recovery() THEN restart_lsn ELSE pg_current_xlog_location() END , restart_lsn)  AS delay_lsn
-from pg_replication_slots;
-~~~
 
-## 查看信息
 
-~~~sql
---主备延迟
---主库
-select client_addr,sync_state,pg_xlog_location_diff(pg_current_xlog_location(),receiver_replay_location) from pg_stat_replication;
 
---备库
-select now() AS now, 
-       coalesce(pg_last_xact_replay_timestamp(), now()) replay,
-       extract(EPOCH FROM (now() - coalesce(pg_last_xact_replay_timestamp(), now()))) AS diff;
-       
---主备同步状态（同步备、异步备）
-select client_addr,client_hostname,sync_state from pg_stat_replication;
-~~~
 
-## 慢SQL
-
-~~~shell
-#查看执行计划
-explain(analyze true,verbose true,costs true,buffers true,timing true,format text)
-
-select datname,usename,client_addr,pid,query_start::text,extract(epoch from (now() - query_start)) as query_runtime,xact_start::text,extract(epoch from(now() - xact_start)) as xact_runtime,state,query 
-from pg_stat_activity 
-where state not in('idle') and query_start is not null;
-
-select
-db_name,
-user_name,
-round(db_time/1000,2) as "db_name/ms" ,
-start_time,
-finish_time,
-pg_catalog.statement_detail_decode(details,'plaintext',true)
-from statement_history;
-~~~
 
 ## 锁阻塞信息
 
@@ -469,27 +198,6 @@ select CURRENT_CATALOG AS datname,schemaname,relname,n_live_tup,n_dead_tup,round
 from pg_stat_user_tables
 where (n_live_tup + n_dead_tup) > 10000
 order by 5 desc limit 100;
-~~~
-
-## session按状态分类所占用内存大小
-
-~~~shell
-select state,sum(totalsize)::bigint as totalsize
-from gs_session_memory_detail m,pg_stat_activity a 
-where substring_inner(sessid,position('.' in sessid) +1)=a.sessionid and usename<>'mondb' and pid != pg_backend_pid() 
-group by state order by sum(totalsize) desc;
-~~~
-
-## 查看session中query占用内存大小
-
-~~~shell
-select sessionid, coalesce(application_name,'')as application_name,
-       coalesce(client_addr::text,'') as client_addr,sum(usedsize)::bigint as usedsize, 
-       sum(totalsize)::bigint as totalsize,query 
-from gs_session_memory_detail s,pg_stat_activity a 
-where substring_inner(sessid,position('.' in sessid) +1)=a.sessionid 
-group by sessionid,query,application_name,client_addr 
-order by sum(totalsize) desc limit 10;
 ~~~
 
 ## 分表汇总大小
@@ -906,13 +614,6 @@ where
 
 [(80条消息) postgresql数据库 查询慢的原因之一（死元祖太多） postgresql表清理收缩_yang_z_1的博客-CSDN博客_postgres 死元组](https://blog.csdn.net/yang_z_1/article/details/115716901)
 
-# 慢SQL查询
-
-~~~shell
---慢SQL查询
-dbe_perf.standby_statement_history(true,'2023-01-01 12:01:01','2023-01-01 12:01:01')
-~~~
-
 # 并发创建索引
 
 ~~~shell
@@ -1020,12 +721,6 @@ ORDER BY 1;
 
 # 常用`SQL`
 
-## 判断当前是否主库
-
-```sql
-select pg_is_in_recovery();
-```
-
 
 
 ## 统计表行数
@@ -1047,133 +742,6 @@ from (
   from information_schema.tables
   where table_schema = 'public' --<< change here for the schema you want
 ) t order by 3 DESC
-```
-
-
-
-## 统计表大小
-
-```sql
-pg_table_size: The size of a table, excluding indexes.
-pg_total_relation_size: Total size of a table.
-pg_relation_size: The size of an object (table index, etc.) on disk. It is possible to get more detailed information from this function with additional parameters.
-pg_size_pretty: Other functions return results in bytes. Converts this into readable format (kb, mb, gb)
-
-SELECT pg_table_size('size_test_table') AS data_size,
-pg_relation_size('size_test_table_pkey') AS index_size,
-pg_table_size('size_test_table') + pg_relation_size('size_test_table_pkey') AS total_size1,
-pg_total_relation_size('size_test_table') AS total_size2;
-
-SELECT pg_size_pretty(pg_total_relation_size('size_test_table'));
--- 获取当前库所有表的大小
-WITH tbl_spc AS (
-SELECT ts.spcname AS spcname
-FROM pg_tablespace ts 
-JOIN pg_database db ON db.dattablespace = ts.oid
-WHERE db.datname = current_database()
-)
-(
-SELECT
-t.schemaname,
-t.tablename,
-pg_table_size('"' || t.schemaname || '"."' || t.tablename || '"') AS table_disc_size,
-NULL as index,
-0 as index_disc_size,
-COALESCE(t.tablespace, ts.spcname) AS tablespace
-FROM pg_tables t, tbl_spc ts
-UNION ALL
-SELECT
-i.schemaname,
-i.tablename,
-0,
-i.indexname,
-pg_relation_size('"' || i.schemaname || '"."' || i.indexname || '"'),
-COALESCE(i.tablespace, ts.spcname)
-FROM pg_indexes i, tbl_spc ts
-)
-ORDER BY table_disc_size DESC,index_disc_size DESC;
--- 获取前10大表
-SELECT
-t.tablename,
-pg_size_pretty(pg_total_relation_size('"' || t.schemaname || '"."' || t.tablename || '"')) AS table_total_disc_size
-FROM pg_tables t
-WHERE
-t.schemaname = 'public'  -- current_schema
-ORDER BY
-pg_total_relation_size('"' || t.schemaname || '"."' || t.tablename || '"') DESC
-LIMIT 10;
-
-
---统计一类表的总大小
-select relowner from pg_class where relname = 'tb_business_assembly_status_005';
-select pg_size_pretty(sum(relpages::bigint*8*1024)) as size from pg_catalog.pg_class where relkind = 'r' and relowner = ''
-and relname like "tb_business_assembly_status%" and relpages != 0;
-
---取表大小前500的表
-select relname,pg_catalog.pg_relation_size(relid)/1024/1024 as size(MB) from pg_stat_user_tables order by size(MB) limit 1,500;
---取表大小前501-1000的表
-select relname,pg_catalog.pg_relation_size(relid)/1024/1024 as size(MB) from pg_stat_user_tables order by size(MB) limit 501,500;
-
--- 分表统计样例
-/* 
-create table t1(id int ,name varchar, num int) ;
-delete from t1; 
-insert into t1 values (1,'a_a_a_1_00',1) ;
-insert into t1 values (2,'a_a_a_1_02',2) ;
-insert into t1 values (3,'b_b_01',3) ;
-insert into t1 values (4,'b_b_02',4) ;
-insert into t1 values (5,'c_c_01',5) ;
-insert into t1 values (6,'d_01',6) ;
-insert into t1 values (6,'d_02',6) ;
-*/
-select * from t1; 
-select name,reverse(substring(reverse(name),position('_' in reverse(name))+1)) from t1; 
--- 去除最后的"下划线和数字部分"
-select reverse(substring(reverse(name),position('_' in reverse(name))+1)),sum(num) as aall from t1 group by 
-reverse(substring(reverse(name),position('_' in reverse(name))+1)) order by aall desc ;
--- 去除所有的"下划线和数字部分"
-select regexp_replace(name, '_\d{1,10}', '', 'g') namec,sum(num) aall from t1
-group by regexp_replace(name, '_\d{1,10}', '', 'g') order by aall desc ; 
-
-
--- 最终SQL
--- 获取库大小
-select sum(pg_catlog.pg_relation_size(relid)/1024/1024/1024) sizegb from pg_stat_user_tables ; -- 表大小不含索引
-select sum(pg_catlog.pg_total_relation_size(relid)/1024/1024/1024) sizegb from pg_stat_user_tables ; -- 表大小含索引
-
--- top前20的表明细
-select regexp_replace(relname,'_\d{1,10}','','g') as "表名",round(sum(sizegb),2) as "总大小GB" from (select relname,pg_catlog.pg_relation_size(relid)/1024/1024/1024 as sizegb from pg_stat_user_tables ) group by regexp_replace(relname,'_\d{1,10}','','g') order by 2 desc limit 20 ;  -- 表大小(不包含索引)
-
-
-select regexp_replace(relname,'_\d{1,10}','','g') as "表名",round(sum(sizegb),2) as "总大小GB" from (select relname,pg_catlog.pg_total_relation_size(relid)/1024/1024/1024 as sizegb from pg_stat_user_tables ) group by regexp_replace(relname,'_\d{1,10}','','g') order by 2 desc limit 20 ;  -- 表大小(包含索引)
-
--- 数据库中单个表的大小（不包含索引）
-select pg_size_pretty(pg_relation_size('表名'));
-
--- 查出所有表（包含索引）并排序
-SELECT table_schema || '.' || table_name AS table_full_name, pg_size_pretty(pg_total_relation_size('"' || table_schema || '"."' || table_name || '"')) AS size
-FROM information_schema.tables
-ORDER BY
-pg_total_relation_size('"' || table_schema || '"."' || table_name || '"') DESC limit 20
-
--- 查出表大小按大小排序并分离data与index
-SELECT
-table_name,
-pg_size_pretty(table_size) AS table_size,
-pg_size_pretty(indexes_size) AS indexes_size,
-pg_size_pretty(total_size) AS total_size
-FROM (
-SELECT
-table_name,
-pg_table_size(table_name) AS table_size,
-pg_indexes_size(table_name) AS indexes_size,
-pg_total_relation_size(table_name) AS total_size
-FROM (
-SELECT ('"' || table_schema || '"."' || table_name || '"') AS table_name
-FROM information_schema.tables
-) AS all_tables
-ORDER BY total_size DESC
-) AS pretty_sizes
 ```
 
 
@@ -1426,38 +994,6 @@ FROM (
 > WHERE
 >     tablename = 'customer';
 > ```
-
-### `pg_stat_replication`
-
->pid: WAL发送进程的进程号。
->
->username: WAL发送进程的数据库用户名。
->
->application_name： 连接WAL发送进程的应用别名，此参数显示值为备库recovery。
->
->client_addr: 连接到WAL发送进程的客户端IP地址，也就是备库的IP。
->
->backend_start: 显示WAL发送进程的状态，startup表示WAL进程在启动过程中；catchup表示备库正在追赶主库；streaming表示备库已经追赶上了主库，并且主库向备库发送WAL日志流，这个状态是流复制的常规状态；backup表示通过pg_basebackup正在进行备份；stopping表示WAL发送进程正在关闭。
->
->sent_lsn: WAL发送进程最近发送的WAL日志位置。
->
->write_lsn: 备库最近写入的WAL日志位置，这时WAL日志还在操作系统缓存中，还没写入备库WAL日志文件。
->
->flush_lsn: 备库最近写入的WAL日志位置，这时WAL日志流已写入备库WAL日志文件。
->
->replay_lsn: 备库最近应用的WAL日志位置。
->
->write_lag: 主库上WAL日志落盘后等待备库接收WAL日志（这时WAL日志流还没有写入备库WAL日志文件，还在操作系统缓存中）并返回确认信息的时间。
->
->flush_lag: 主库上WAL日志落盘后等待备库接收WAL日志（这时WAL日志流已写入备库WAL日志文件，但还没有应用WAL日志）并返回确认信息的时间。
->
->replay_lag: 主库上WAL日志落盘后等待备库接收WAL日志（这时WAL日志流已经写入备库WAL日志文件，并且已经写入WAL日志）并返回确认信息的时间。
->
->sync_priority: 基于优先级的模式中备库被选中成为同步库的优先级，对于基于quorum的选举模式此字段无影响。
->
->sync_stat: 同步状态，有以下状态值，async表示备库为异步同步模式；potential表示备库当前为异步同步模式，如果当前的同步备宕机，异步备可升级为同步备库；sync表示当前备库为同步模式；quorum表示备库为quorum standbys的候选。
->
->
 
 ## `SQL大全`
 

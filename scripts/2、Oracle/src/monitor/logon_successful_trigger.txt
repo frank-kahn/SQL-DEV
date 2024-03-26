@@ -1,0 +1,83 @@
+-- Create table
+create table SYS.A_DB_SUCCESSFUL_LOGINS
+(
+  inst_id    NUMBER,
+  username   VARCHAR2(30),
+  osuser     VARCHAR2(30),
+  machine    VARCHAR2(64),
+  terminal   VARCHAR2(30),
+  ipaddr     VARCHAR2(30),
+  program    VARCHAR2(48),
+  module     VARCHAR2(48),
+  isdba      VARCHAR2(10),
+  logon_time DATE
+)
+ 
+ 
+---CREATE TRIGGER
+CREATE OR REPLACE TRIGGER SYSTEM.a_db_successful_login_trg
+ 
+AFTER logon ON DATABASE
+ 
+DECLARE
+ 
+   v_inst_id    a_db_successful_logins.inst_id%TYPE;
+   v_ipaddr     a_db_successful_logins.ipaddr%TYPE;
+   v_logon_user a_db_successful_logins.username%TYPE;
+   v_machine    a_db_successful_logins.machine%TYPE;
+   v_terminal   a_db_successful_logins.terminal%TYPE;
+   v_osuser     a_db_successful_logins.osuser%TYPE;
+   v_program    a_db_successful_logins.program%TYPE;
+   v_module     a_db_successful_logins.module%TYPE;
+   v_isdba      a_db_successful_logins.isdba%TYPE;
+/************************************************************************
+   name:  a_db_successful_login_trg
+   purpose: log and check the database LOGON action.
+   revisions:
+   ver        DATE         author           description
+   1.0        2012         xiaoxiangqin      record logon info
+   ---------  ----------  ---------------  ---------------------------------
+   
+   ************************************************************************/
+ BEGIN
+   -- read the context
+ 
+    v_inst_id    := sys_context('USERENV','INSTANCE');
+    v_osuser     := sys_context('USERENV','OS_USER');
+    v_machine    := sys_context('USERENV','HOST');
+    v_terminal   := sys_context('USERENV','TERMINAL');
+    v_ipaddr     := sys_context('USERENV','IP_ADDRESS');
+    v_logon_user := sys_context('USERENV','SESSION_USER');
+    v_isdba      := sys_context('USERENV','ISDBA');
+--cut strange char for windows server.
+    v_machine := REPLACE(v_machine,chr(0),'');
+ 
+	IF v_machine <> sys_context('USERENV','SERVER_HOST') --List the local ap or database server.
+ 
+     THEN
+  --fetch additional session info.
+    SELECT program,module
+    INTO v_program,v_module
+    FROM v$session
+    WHERE sid IN (SELECT m.sid FROM v$mystat m WHERE rownum < 2);
+    --record the logon record.
+ 
+    INSERT INTO sys.a_db_successful_logins
+     (inst_id,username,osuser,
+	 machine,terminal,ipaddr,
+	 program,module,isdba,
+	 logon_time)
+ 
+     VALUES(v_inst_id
+           ,v_logon_user
+           ,v_osuser
+           ,v_machine
+           ,v_terminal
+           ,v_ipaddr
+           ,v_program
+           ,v_module
+           ,v_isdba
+           ,SYSDATE);
+   END IF;
+ 
+END a_db_successful_login_trg;

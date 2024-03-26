@@ -1,0 +1,111 @@
+-- Create table
+create table SYS.A_DB_UNSUCCESSFUL_LOGINS
+(
+  username   VARCHAR2(30),
+  osuser     VARCHAR2(30),
+  machine    VARCHAR2(64),
+  terminal   VARCHAR2(30),
+  ipaddr     VARCHAR2(30),
+  program    VARCHAR2(48),
+  module     VARCHAR2(48),
+  isdba      VARCHAR2(10),
+  errormsg   VARCHAR2(60),
+  logon_time DATE default SYSDATE
+)
+ 
+---create trigger
+ 
+CREATE OR REPLACE TRIGGER SYS.a_db_unsuccessful_login_trg
+ 
+AFTER servererror ON DATABASE
+ 
+DECLARE
+ 
+    v_ipaddr     a_db_unsuccessful_logins.ipaddr%TYPE;
+    v_logon_user a_db_unsuccessful_logins.username%TYPE;
+    v_machine    a_db_unsuccessful_logins.machine%TYPE;
+    v_terminal   a_db_unsuccessful_logins.terminal%TYPE;
+    v_osuser     a_db_unsuccessful_logins.osuser%TYPE;
+    v_program    a_db_unsuccessful_logins.program%TYPE;
+    v_module     a_db_unsuccessful_logins.module%TYPE;
+    v_errormsg   a_db_unsuccessful_logins.errormsg%TYPE;
+    v_isdba      a_db_unsuccessful_logins.isdba%TYPE;
+    v_log_error  BOOLEAN DEFAULT FALSE;
+ 
+    /************************************************************************
+ 
+    name:  a_db_unsuccessful_login_trg
+ 
+    purpose: log unsuccessful LOGON action.
+ 
+	revisions:
+ 
+    ver        DATE         author           description
+ 
+    ---------  ----------  ---------------  ---------------------------------
+ 
+    1.0        2023/11/01    norton.fan   create this TRIGGER.
+ 
+    ************************************************************************/
+BEGIN
+ 
+    -- read the context
+ 
+    v_osuser     := sys_context('USERENV','OS_USER');
+    v_machine    := sys_context('USERENV','HOST');
+    v_terminal   := sys_context('USERENV','TERMINAL');
+    v_ipaddr     := sys_context('USERENV','IP_ADDRESS');
+    v_logon_user := sys_context('USERENV','SESSION_USER');
+    v_isdba      := sys_context('USERENV','ISDBA');
+    --cut strange char for windows server.
+ 
+    v_machine := REPLACE(v_machine,chr(0),'');
+ 
+--fetch additional session info.
+ 
+    SELECT program ,module
+      INTO v_program ,v_module
+      FROM v$session
+     WHERE sid = (SELECT sid FROM v$mystat WHERE rownum = 1);
+ 
+    IF is_servererror(1017)
+    THEN
+       v_log_error := TRUE;
+       v_errormsg  := 'ORA-01017: invalid username/password; logon denied';
+    END IF;
+ 
+    IF is_servererror(20017)
+    THEN
+       v_log_error := TRUE;
+       v_errormsg  := 'ORA-20017: invalid access privilege; logon denied';
+    END IF;
+ 
+    IF v_log_error
+    THEN
+       --record the unsuccessful logon
+       INSERT INTO system.a_db_unsuccessful_logins
+          (username
+          ,osuser
+          ,machine
+          ,terminal
+          ,ipaddr
+          ,program
+          ,module
+          ,isdba
+          ,errormsg
+          ,logon_time)
+       VALUES
+          (v_logon_user
+          ,v_osuser
+          ,v_machine
+          ,v_terminal
+          ,v_ipaddr
+          ,v_program
+          ,v_module
+          ,v_isdba
+          ,v_errormsg
+          ,SYSDATE);
+ 
+    END IF;
+ END a_db_unsuccessful_login_trg;
+/

@@ -1,0 +1,49 @@
+-- Create table 存储授权登陆的osuser和ip
+create table mtr.PERMIT_USER
+(
+  user_ad VARCHAR2(20),
+  ip      VARCHAR2(30)
+)
+ 
+ 
+create or replace trigger sys.check_user after logon on database      ----logon trigger
+DECLARE
+   v_osuser  VARCHAR2(16);
+   v_program VARCHAR2(50);
+   v_cnt     NUMBER;
+   v_user    VARCHAR2(10);
+   v_mac     VARCHAR2(30);
+   v_ipaddr  VARCHAR2(30);
+BEGIN
+   v_osuser := sys_context('USERENV'
+                          ,'OS_USER');
+   v_user   := sys_context('USERENV'
+                          ,'SESSION_USER');
+   v_mac    := sys_context('USERENV'
+                          ,'TERMINAL');  
+   v_ipaddr     := sys_context('USERENV'
+                              ,'IP_ADDRESS');                                                 ----logon terminal info
+   SELECT upper(module)
+     INTO v_program
+     FROM v$session
+    WHERE sid = (SELECT sid
+                   FROM v$mystat
+                  WHERE rownum = 1);
+   SELECT COUNT(*)
+     INTO v_cnt
+     FROM mtr.permit_user          ----table storge
+    WHERE upper(osuser) = upper(v_osuser) and ip=v_ipaddr;
+   IF v_cnt = 0
+   THEN
+      IF (substr(v_program,1,4) = 'PLSQ' OR
+          substr(v_program,1,4) = 'TOAD' OR
+          substr(v_program,1,7) = 'SQLPLUS') AND
+         v_user in ('MTR')   ---被审计用户
+      THEN
+         raise_application_error(-20001
+                                ,'you are not permitted.');
+      END IF;
+ 
+   END IF;
+ 
+END;

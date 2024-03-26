@@ -1,0 +1,111 @@
+-- Create table
+create table SYSTEM.A_SYSTEM_DDL_LOG
+(
+  db_name    VARCHAR2(50),
+  inst_num   NUMBER,
+  event_name VARCHAR2(20),
+  login_user VARCHAR2(30),
+  obj_type   VARCHAR2(20),
+  obj_owner  VARCHAR2(30),
+  obj_name   VARCHAR2(30),
+  osuser     VARCHAR2(30),
+  machine    VARCHAR2(64),
+  client_ip  VARCHAR2(15),
+  program    VARCHAR2(64),
+  module     VARCHAR2(48),
+  event_date DATE default SYSDATE,
+  sql_text   VARCHAR2(4000)
+)
+ 
+----
+CREATE OR REPLACE TRIGGER SYSTEM.a_system_ddl_trigger
+   AFTER CREATE OR ALTER OR DROP OR TRUNCATE ON DATABASE
+DECLARE
+   v_event      a_system_ddl_log.event_name%TYPE;
+   v_inst_num   a_system_ddl_log.inst_num%TYPE;
+   v_db_name    a_system_ddl_log.db_name%TYPE;
+   v_type       a_system_ddl_log.obj_type%TYPE;
+   v_name       a_system_ddl_log.obj_name%TYPE;
+   v_owner      a_system_ddl_log.obj_owner%TYPE;
+   v_client_ip  a_system_ddl_log.client_ip%TYPE;
+   v_login_user a_system_ddl_log.login_user%TYPE;
+   v_machine    a_system_ddl_log.machine%TYPE;
+   v_osuser     a_system_ddl_log.osuser%TYPE;
+   v_program    a_system_ddl_log.program%TYPE;
+   v_module     a_system_ddl_log.module%TYPE;
+   v_sqltext    a_system_ddl_log.sql_text%TYPE; --varchar2(4000)
+   sql_text     ora_name_list_t;
+   n            NUMBER;
+   i            NUMBER;
+   /************************************************************************
+   name:  a_system_ddl_trigger
+   purpose: monitor the database DDL statement
+ 
+   revisions:
+   ver        DATE         author           description
+   ---------  ----------  ---------------  ---------------------------------
+   1.0        2012    xiaoxiangqin       created this TRIGGER.
+   ************************************************************************/
+BEGIN
+   -- read the event first
+   v_event      := ora_sysevent;
+   v_inst_num   := ora_instance_num;
+   v_db_name    := ora_database_name;
+   v_type       := ora_dict_obj_type;
+   v_name       := ora_dict_obj_name;
+   v_owner      := ora_dict_obj_owner;
+   v_client_ip  := sys_context('USERENV' ,'IP_ADDRESS');
+   v_login_user := ora_login_user;
+   n            := ora_sql_txt(sql_text);
+ 
+   --get the sql text
+   i := 1;
+   LOOP
+      v_sqltext := v_sqltext || sql_text(i);
+      i         := i + 1;
+      EXIT WHEN (i > n OR (length(v_sqltext || sql_text(i)) > 2000));
+   END LOOP;
+ 
+   SELECT osuser
+         ,machine
+         ,program
+         ,module
+     INTO v_osuser
+         ,v_machine
+         ,v_program
+         ,v_module
+     FROM v$session
+    WHERE sid IN (SELECT m.sid
+                    FROM v$mystat m
+                   WHERE rownum < 2);
+ 
+   --record the event to the log
+   INSERT INTO system.a_system_ddl_log
+      (event_name
+      ,inst_num
+      ,db_name
+      ,obj_type
+      ,obj_name
+      ,obj_owner
+      ,client_ip
+      ,login_user
+      ,osuser
+      ,machine
+      ,program
+      ,module
+      ,sql_text)
+   VALUES
+      (v_event
+      ,v_inst_num
+      ,v_db_name
+      ,v_type
+      ,v_name
+      ,v_owner
+      ,v_client_ip
+      ,v_login_user
+      ,v_osuser
+      ,v_machine
+      ,v_program
+      ,v_module
+      ,v_sqltext);
+END a_system_ddl_trigger;

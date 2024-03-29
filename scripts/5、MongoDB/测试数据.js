@@ -13,3 +13,9 @@ for(var i = 0; i < 10000; i++) {
 	}
 db.test_info.find().count();
 
+
+
+// testdb.test_t
+use testdb
+db.test_t.insertOne({id:1,name:'zhangsan'});
+db.test_t.insertOne({id:2,name:'lisi'});

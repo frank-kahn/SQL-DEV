@@ -30,6 +30,4 @@ select NAME from v$archived_log;
 
 
 
--- 查询Oracle系统schema
-select username from dba_users where default_tablespace in ('SYS','SYSAUX');
 

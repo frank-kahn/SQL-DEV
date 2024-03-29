@@ -46,3 +46,7 @@ end;
 
 
 select OWNER,TABLE_NAME,GRANTOR,PRIVILEGE from dba_tab_privs where regexp_like(TABLE_NAME,'^test_t','i');
+
+
+-- 查询Oracle系统schema
+select username from dba_users where default_tablespace in ('SYSTEM','SYSAUX');

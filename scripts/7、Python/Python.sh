@@ -149,4 +149,7 @@ with open("connections.ncx", 'w') as f1, open('vgroup.xml', 'w') as f2:
     f2.write(''.join(navicat_group))
     f2.write('\n</VGroup>')
 
+
+#Python多版本管理工具-pyenv
+https://juejin.cn/post/7000975238880051230
 	

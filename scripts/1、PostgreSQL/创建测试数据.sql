@@ -63,3 +63,17 @@ insert into employees values (1001,'张三','李四','王五@qq.com',12345678912
 
 
 
+-- 范围分区
+create table tbp(id int,date timestamp(6),col2 text) partition by range(date);
+
+create table tbp_2020 partition of tbp for values from ('2020-01-01') to ('2021-01-01');
+create table tbp_2021 partition of tbp for values from ('2021-01-01') to ('2022-01-01');
+create table tbp_2022 partition of tbp for values from ('2022-01-01') to ('2023-01-01');
+create table tbp_2023 partition of tbp for values from ('2023-01-01') to ('2024-01-01');
+-- default
+create table tbp_default partition of tbp default;
+
+
+insert into tbp(id,date,col2)
+select generate_series(1,400000) as id ,date((random()*(2023-2020)+2020)::int||'-'||(random()*(12-1)+1)::int||'-'||(random()*(28-1)+1)::int),'test';
+

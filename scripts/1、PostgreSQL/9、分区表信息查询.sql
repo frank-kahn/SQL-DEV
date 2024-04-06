@@ -49,6 +49,21 @@ join pg_namespace t3 on t1.relnamespace=t3.oid
 where t1.relname ~ 'tbp';
 
 
+
+-- 查询普通表和分区表的主表（不查询分区表子表）
+select t2.nspname as schema,
+       t1.relname as tablename,
+	   case when t1.relkind='r' then '普通表'
+	        when t1.relkind='p' then '分区表主表' end as table_type
+from pg_class t1
+join pg_namespace t2 on t1.relnamespace=t2.oid
+ where t1.relkind in ('r','p')
+ and t1.relispartition='f'
+ and t2.nspname = '模式名';
+
+
+
+
 -- 查看分区表的分区数量
 select count(*) from pg_inherits
 where inhparent='tbp'::regclass;

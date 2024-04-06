@@ -1,3 +1,7 @@
+-- postgresql基本操作：查看数据库、索引、表、表空间大小
+https://www.cnblogs.com/xiaodf/p/5027188.html
+
+
 -- 数据库大小查询
 SELECT d.datname as "Name",
        pg_catalog.pg_get_userbyid(d.datdba) as "Owner",

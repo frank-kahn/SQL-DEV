@@ -67,6 +67,8 @@ set long 99999
 set pagesize 1000
 -- 设置显示的文本宽为100个字符
 set linesize 100
+-- 将spool输出中每行后面多余的空格去掉，缺省为off
+set trimsout on
 -- 去除重定向（spool）输出每行的拖尾空格，缺省为off
 set trimspool on
 -- 显示执行sql语句耗时信息，默认是off状态
@@ -85,7 +87,8 @@ set verify off
 set feedback off
 -- 数字长度
 set numwidth 7
-
+-- 页与页之间没有任何间隔
+set newpage none
 
 
 

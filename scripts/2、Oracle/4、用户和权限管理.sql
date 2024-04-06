@@ -1,5 +1,9 @@
 -- 创建用户
 create user yaokang identified by yaokang;
+alter user yaokang quota unlimited on users;
+grant connect,resource to yaokang;
+
+
 -- 给用户授权所有数据字典的查询权限
 grant select any dictionary to test_user;
 
@@ -9,7 +13,13 @@ grant datapump_exp_full_database to test01;
 -- 获取某个用户的全部权限：系统权限、对象权限
 -- 对象权限
 select OWNER,TABLE_NAME,GRANTOR,PRIVILEGE from dba_tab_privs where GRANTEE='TEST_USER';
-
+select 'grant '||t.privilege||' on '||t.owner||'.'||t.table_name||' to '||t.grantee||decode(grantable,'YES','with grant option','')||';'
+ from dba_tab_privs t
+ where t.grantee in ('TEST1','TEST2');
+-- 系统权限
+select 'grant '||t.privilege||' to '||t.grantee||';'
+ from dba_sys_privs t
+ where t.grantee in ('TEST1','TEST2');
 
 
 

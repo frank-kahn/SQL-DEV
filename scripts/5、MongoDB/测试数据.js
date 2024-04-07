@@ -2,9 +2,10 @@
 use testdb
 show collections
 for(i=1;i<=150000;i++){
-	db.test_user.insertOne({"id":i,"name":"test"+i})
+	db.test_user.insertOne({"id":i,"name":"test"+i,"date":new Date()})
 	}
 db.test_user.find().count();
+db.test_user.find().limit(5)
 
 //或者：
 use testdb

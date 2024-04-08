@@ -49,6 +49,57 @@
 	- 增加功能：单机 ASM 模式
 - `2023/06/08`
 	- 增加功能：在麒麟 V10 国产系统安装单机版 Oracle 11GR2，12CR2，19C 版本
+- `2023/11/09`
+	- 增加功能：支持在 RHEL/OEL 9 安装 Oracle 19C（必须打 RU 补丁至少 19.19 版本以上，rlwrap 版本至少 v0.44）
+- `2024/03/18`
+	- 增加功能：在欧拉 openEuler 22.03 国产系统安装单机版 Oracle 11GR2，12CR2，19C 版本
+- `2024/03/21`
+	- 增加功能：在欧拉 openEuler 22.03 国产系统安装 Oracle 19C RAC
+- `2024/03/25`
+	- 适配龙蜥 Anolis 7.9 安装 Oracle 11GR2 单机版
+	- 适配龙蜥 Anolis 8.8 安装 Oracle 19C 单机版
+- `2024/03/26`
+	- 适配 suse 15 sp5 安装 Oracle 19C 单机版
+- `2024/03/27`
+	- 适配 suse 15 sp5 安装 Oracle 12CR2 单机版	
+	- 适配龙蜥 Anolis 8.8 安装 Oracle 12CR2 单机版
+- `2024/03/28`
+	- 修复麒麟 V10 国产系统安装单机版 Oracle 11GR2 BUG
+- `2024/03/29`
+	- 适配统信 UOS V20 安装 Oracle 11GR2，12CR2，19C 版本
+
+# 目前确定不支持列表
+- 龙蜥 Anolis7.9 版本不支持安装 12CR2/19C/21C，无法解决，建库报错：[FATAL] [DBT-05509] Failed to connect to the specified database 和 ORA-12547: TNS:lost contact
+- RHEL9/OEL9/CENTOS9 版本不支持安装 11GR2,12CR2，官方没有认证
+- RHEL8/OEL8/CENTOS8 版本不支持安装 11GR2 RAC Grid，官方只认证单机
+- RHEL6/OEL6/CENTOS6 版本不支持安装 19C，21C，官方没有认证
+- 麒麟 Kylin V10 版本不支持安装 11GR2 RAC Grid，同 RHEL8/OEL8/CENTOS8
+
+# 实操参考
+- [Redhat 8.4 一键安装 Oracle 11GR2 单机版](https://www.modb.pro/db/627155)
+- [11GR2 rac 2节点一键安装演示](https://www.modb.pro/db/1767103571552702464)
+- [11GR2 rac 5节点一键安装演示](https://www.modb.pro/db/626761)
+- [Redhat 9.3 一键安装 Oracle 19C 19.21 单机版](https://www.modb.pro/db/1722500845915430912)
+- [19C 19.22 RAC 2节点一键安装演示](https://www.modb.pro/db/1767425920041848832)
+- [openEuler 22.03（华为欧拉）一键安装 Oracle 11G（231017）单机版](https://www.modb.pro/db/1769591803778535424)
+- [openEuler 22.03（华为欧拉）一键安装 Oracle 12CR2（220118）数据库](https://www.modb.pro/db/1772864352247451648)
+- [openEuler 22.03（华为欧拉）一键安装 Oracle 19C（19.22） 数据库](https://www.modb.pro/db/1769539674624823296)
+- [openEuler 22.03（华为欧拉）一键安装 Oracle 19C RAC（19.22） 数据库](https://www.modb.pro/db/1770329115010338816)
+- [麒麟 V10 一键安装 Oracle 11GR2（231017）单机版](https://www.modb.pro/db/1762008192972820480)
+- [麒麟 V10 一键安装 Oracle 12CR2（220118）单机版](https://www.modb.pro/db/1773265001669824512)
+- [麒麟 V10 一键安装 Oracle 19C 19.22 单机版](https://www.modb.pro/db/1761982554933587968)
+- [龙蜥 Anolis OS 7.9 一键安装 Oracle 11GR2（231017）单机版](https://www.modb.pro/db/1772081728022188032)
+- [龙蜥 Anolis OS 7.9 一键安装 Oracle 12CR2（220118）单机版【失败，OS 不支持】](https://www.modb.pro/db/1772845918450159616)
+- [龙蜥 Anolis OS 7.9 一键安装 Oracle 19C（19.22）单机版【失败，OS 不支持】](https://www.modb.pro/db/1772105823525900288)
+- [龙蜥 Anolis OS 8.8 一键安装 Oracle 11GR2（231017）单机版](https://www.modb.pro/db/1772131084879368192)
+- [龙蜥 Anolis OS 8.8 一键安装 Oracle 12CR2（220118）单机版](https://www.modb.pro/db/1772858229067943936)
+- [龙蜥 Anolis OS 8.8 一键安装 Oracle 19C（19.22）单机版](https://www.modb.pro/db/1772107172300820480)
+- [SUSE 15 SP5 一键安装 Oracle 11GR2（231017）单机版](https://www.modb.pro/db/1773547168497995776)
+- [SUSE 15 SP5 一键安装 Oracle 12CR2（220118）单机版](https://www.modb.pro/db/1772860821603979264)
+- [SUSE 15 SP5 一键安装 Oracle 19C（19.22）单机版](https://www.modb.pro/db/1772452639086809088)
+- [统信 UOS V20 一键安装 Oracle 11GR2（231017）单机版](https://www.modb.pro/db/1773552274713972736)
+- [统信 UOS V20 一键安装 Oracle 12CR2（220118）单机版](https://www.modb.pro/db/1773270182230855680)
+- [统信 UOS V20 一键安装 Oracle 19C（19.22）单机版](https://www.modb.pro/db/1773564096011669504)
 
 # 脚本介绍
 继第二代更新一年左右，Oracle 一键安装脚本第三代强势登场了，脚本代码全部重构，优化逻辑，加快执行速度，全程无人工干预安装，支持不限节点安装，全部汉化。

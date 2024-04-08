@@ -1,1 +1,11 @@
-https://github.com/DBAutoTask/OracleShellInstall
+⚠️注意：问脚本相关问题，如果报错，请提供完整的安装过程，从输入安装命令到报错期间所有的屏幕输出内容，保存到 txt 文件，发到群里，只截图失败部分的问题一律无视！
+🔥 重要公告：
+项目组织改名后仓库请访问：
+https://github.com/DBAutoTask/OracleShellInstall 
+如果无法访问脚本，请私聊群主提供 Github 注册邮箱。
+Oracle 一键安装实操合集：https://www.modb.pro/topic/659299
+常见问题：
+1.安装 RAC，主节点外的 ISO 镜像请勿上传到 /soft 目录下挂载，否则会被脚本删除。
+2.安装 RAC 建议使用 starwind，用 ISCSI 网络挂载ASM 共享盘，经过多次测试没有问题。
+3.安装操作系统最好不要选择最小化安装，建议图形化话安装，否则可能会缺少依赖包。
+4.挂载本地 ISO 镜像源，必须使用 everything 的 ISO。

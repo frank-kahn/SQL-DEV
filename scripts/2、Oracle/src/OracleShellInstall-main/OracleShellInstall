@@ -21,9 +21,6 @@ software_dir=$(dirname $(readlink -f $0))
 current=$(date +%Y%m%d%H%M%S)
 # 脚本安装日志文件
 oracleinstalllog=$software_dir/print_ora_install_$current.log
-# 操作系统版本
-[[ -e /etc/kylin-release ]] && os_type=Kylin
-os_version=$(grep -oP '(?<=release\s|V)[[:digit:]]+' "$([ -f "/etc/system-release" ] && echo /etc/system-release || echo /etc/redhat-release)")
 # 物理内存（KB）
 os_memory_total=$(awk '/MemTotal/{print $2}' /proc/meminfo)
 # 数据库内存总和(MB) = 物理内存的 80%
@@ -287,7 +284,8 @@ function ssh_trust() {
     touch "$ssh_dir/known_hosts"
   fi
   for ip in "${host_ips[@]}"; do
-    ssh-keygen -F "$ip" >/dev/null || ssh-keyscan -t rsa,dsa,ecdsa "$ip" >>"$ssh_dir/known_hosts" 2>/dev/null
+    # openEuler 22.03 需要增加 ed25519 认证
+    ssh-keygen -F "$ip" >/dev/null || ssh-keyscan -t rsa,dsa,ecdsa,ed25519 "$ip" >>"$ssh_dir/known_hosts" 2>/dev/null
   done
   # 将 SSH 目录分发到远程主机，并设置 SSH 无密码登录
   for ip in "${host_ips[@]}"; do
@@ -437,26 +435,23 @@ function help() {
 #==============================================================#
 function conf_yum() {
   log_print "配置本地 YUM 源"
-  # 避免Linux主机提示注册
-  [[ -e /etc/yum/pluginconf.d/subscription-manager.conf ]] && sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/subscription-manager.conf
-  # 避免Kylin主机提示注册
-  [[ -e /etc/yum/pluginconf.d/debuginfo-install.conf ]] && sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/debuginfo-install.conf
-  # 备份原有YUM配置文件
-  mkdir /etc/yum.repos.d/bak -p && nohup mv /etc/yum.repos.d/* /etc/yum.repos.d/bak >/dev/null 2>&1
-  # 根据不同版本号创建本地YUM源配置文件
-  case "$os_version" in
-  6 | 7)
-    cat <<-EOF >/etc/yum.repos.d/local.repo
-[server]
-name=server
-baseurl=file://$mountPatch
-enabled=1
-gpgcheck=0
-EOF
-    ;;
-  8)
-    # 麒麟 V10 对标 redhat8，但是使用 redhat7 的 yum 配置方式
-    if [[ "$os_type" = "Kylin" ]]; then
+  if [[ "$os_type" = "sles" ]]; then
+    # 备份原有YUM配置文件
+    mkdir /etc/zypp/repos.d/bak -p && nohup mv /etc/zypp/repos.d/* /etc/zypp/repos.d/bak >/dev/null 2>&1
+    zypper ar -f $mountPatch/Module-Basesystem sles
+    zypper ar -f $mountPatch/Module-Legacy sles-Legacy
+    zypper ar -f $mountPatch/Module-Development-Tools sles-Tools
+  else
+    # 避免Linux主机提示注册
+    [[ -e /etc/yum/pluginconf.d/subscription-manager.conf ]] && sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/subscription-manager.conf
+    # 避免Kyli/openEuler主机提示注册
+    [[ -e /etc/yum/pluginconf.d/debuginfo-install.conf ]] && sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/debuginfo-install.conf
+    # 备份原有YUM配置文件
+    mkdir /etc/yum.repos.d/bak -p && nohup mv /etc/yum.repos.d/* /etc/yum.repos.d/bak >/dev/null 2>&1
+    # 根据不同版本号创建本地YUM源配置文件
+    case "$os_type" in
+    kylin)
+      # 麒麟 V10 对标 redhat8，但是使用 redhat7 的 yum 配置方式
       cat <<-EOF >/etc/yum.repos.d/local.repo
 [server]
 name=server
@@ -464,8 +459,28 @@ baseurl=file://$mountPatch
 enabled=1
 gpgcheck=0
 EOF
-    else
+      ;;
+    openEuler)
       cat <<-EOF >/etc/yum.repos.d/local.repo
+[openEuler]
+name=openEuler
+baseurl=file:///$mountPatch
+enabled=1
+gpgcheck=1
+gpgkey=file:///$mountPatch/RPM-GPG-KEY-openEuler
+EOF
+      ;;
+    rhel)
+      if [[ "$os_version" = 6 ]] || [[ "$os_version" = 7 ]]; then
+        cat <<-EOF >/etc/yum.repos.d/local.repo
+[server]
+name=server
+baseurl=file://$mountPatch
+enabled=1
+gpgcheck=0
+EOF
+      elif [[ "$os_version" = 8 ]] || [[ "$os_version" = 9 ]]; then
+        cat <<-EOF >/etc/yum.repos.d/local.repo
 [BaseOS]
 name=BaseOS
 baseurl=file://$mountPatch/BaseOS
@@ -477,11 +492,13 @@ baseurl=file://$mountPatch/AppStream
 enabled=1
 gpgcheck=0
 EOF
-    fi
-    ;;
-  esac
-  # 打印 yum 配置文件内容
-  cat /etc/yum.repos.d/local.repo
+      fi
+      ;;
+    esac
+
+    # 打印 yum 配置文件内容
+    cat /etc/yum.repos.d/local.repo
+  fi
 }
 #==============================================================#
 #                         RPM Install                          #
@@ -490,9 +507,34 @@ EOF
 function install_packages_if_not_present() {
   for package in "$@"; do
     if ! rpm -q "$package" >/dev/null; then
-      yum install -y -q "$package" --skip-broken >/dev/null 2>&1
+      if [[ "$os_type" = "sles" ]]; then
+        zypper in -y "$package" >/dev/null 2>&1
+      else
+        yum install -y -q "$package" --skip-broken >/dev/null 2>&1
+      fi
     fi
   done
+
+  ## openEuler 22.03 安装 12CR2 报错 jskm.c:(.text+0x4081): undefined reference to `stat'，eobtl.c:(.text+0x3ba): undefined reference to `fstat' 解决方案
+  case "$os_type-$os_version" in
+  "openEuler-8")
+    if check_file $software_dir/compat-glibc-2.12-4.el7.centos.x86_64.rpm; then
+      # 解压并提取软件包内容
+      rpm2cpio $software_dir/compat-glibc-2.12-4.el7.centos.x86_64.rpm | cpio -idmvu -D $software_dir >/dev/null 2>&1
+      # 创建并进入目录
+      mkdir -p $software_dir/oS && cd $software_dir/oS
+      # 提取对象文件
+      ar x $software_dir/usr/lib/x86_64-redhat-linux6E/lib64/libc_nonshared.a
+      # 添加特定的对象文件到 libc_nonshared.a 中
+      ar r /usr/lib64/libc_nonshared.a stat*.oS
+      ar r /usr/lib64/libc_nonshared.a fstat*.oS
+      # 返回 /soft 目录
+      cd ..
+      # 删除不必要的文件夹和文件
+      rm -rf $software_dir/usr && rm -rf $software_dir/oS
+    fi
+    ;;
+  esac
 }
 #==============================================================#
 #                         获取磁盘容量                         #
@@ -547,15 +589,17 @@ function filter_disk() {
 #==============================================================#
 # 定义名为 get_uuid 的函数
 function get_uuid() {
-  # 如果操作系统版本为 6，则执行以下命令
-  if [[ "$os_version" = "6" ]]; then
+  case "$os_version" in
+  "6")
     # 获取指定设备的 UUID 并输出
-    /sbin/scsi_id -g -u $1
-  # 否则，如果操作系统版本为 7 或 8，则执行以下命令
-  elif [[ "$os_version" = "7" || "$os_version" = "8" ]]; then
+    /sbin/scsi_id -g -u "$1"
+    ;;
+  *)
     # 获取指定设备的 UUID 并输出
-    /usr/lib/udev/scsi_id -g -u $1
-  fi
+    /usr/lib/udev/scsi_id -g -u "$1"
+    ;;
+  esac
+
 }
 #==============================================================#
 #                   Clean Disk && GET UUID                     #
@@ -644,6 +688,8 @@ function bak_file() {
       # 恢复原始文件，将其替换回原始的备份文件
       nohup \cp -rv $file_path{.original,} >/dev/null 2>&1
     fi
+  else
+    touch $file_path.original
   fi
 }
 #==============================================================#
@@ -684,8 +730,8 @@ function conf_swap() {
 #==============================================================#
 function conf_firewall() {
   log_print "禁用防火墙"
-  case "$os_version" in
   # CentOS/RHEL 6
+  case "$os_version" in
   "6")
     chkconfig iptables off
     chkconfig ip6tables off
@@ -697,8 +743,8 @@ function conf_firewall() {
       color_printf blue "防火墙服务未启动，无需禁用。"
     fi
     ;;
-  # CentOS/RHEL 7 and 8
-  "7" | "8")
+  *)
+    # 包含 sles 版本
     systemctl disable firewalld.service -q
     if systemctl is-active firewalld.service >/dev/null; then
       systemctl stop firewalld.service
@@ -779,7 +825,7 @@ function rpm_install() {
     install_packages_if_not_present "${packages[@]}"
     log_print "检查 RPM 包" "$(rpm -q ${packages[@]})"
     ;;
-  "7" | "8")
+  "7" | "8" | "9")
     # 如果需要图形界面，则安装 GUI 软件包
     if [[ $isgui == "Y" ]]; then
       install_packages_if_not_present "tigervnc-server"
@@ -793,13 +839,46 @@ function rpm_install() {
       policycoreutils-python # SELinux 系统管理工具 Python 接口
     )
     case "$os_version" in
-    "8")
+    "8" | "9")
+      if [[ "$os_type" = "sles" ]]; then
+        packages+=(
+          insserv-compat              # 兼容旧版 insserv 系统初始化脚本管理工具
+          libXext-devel               # X Window System 扩展库的开发文件
+          libXi-devel                 # X Input 扩展库的开发文件
+          libcap-ng-utils             # Linux 的用户空间接口，用于设置和检查 Linux 内核的能力和名称空间
+          libcap-progs                # Linux 的用户空间接口，用于设置和检查 Linux 内核的能力和名称空间
+          libcap1                     # POSIX 1003.1e（POSIX 操作系统）的访问控制列表（ACL）和能力支持库
+          libpcap1                    # 网络数据包捕获库
+          libpcre16-0                 # Perl 兼容的正则表达式库（16 位支持）
+          pixz                        # 多线程压缩工具，用于处理 .xz 文件
+          rdma-core-devel             # 远程直接内存访问（RDMA）核心库的开发文件
+          xorg-x11-libs               # X Window System 核心图形库
+          compat-libpthread-nonshared # 兼容性库，用于在旧版系统中提供 pthread 功能
+        )
+      elif [[ "$os_type" = "openEuler" ]]; then
+        packages+=(
+          libcap-devel      # 提供了开发 libcap 库所需的头文件和静态库
+          xorg-x11-utils    # 提供了与 X Window System 相关的实用工具集
+          xorg-x11-xauth    # 用于管理 X11 授权信息的工具
+          glibc-compat-2.17 # 提供了与 GNU C 库版本 2.17 兼容的兼容性库
+          elfutils
+          elfutils-devel
+          #glibc-*
+        )
+      fi
       packages+=(
         librdmacm                    # RDMA 网络协议栈的用户态库和开发文件
-        libnsl*                      # 网络服务库和头文件
+        libnsl                       # 网络服务库和头文件
         libibverbs                   # InfiniBand 接口管理库
         compat-openssl10             # OpenSSL 1.0.x 库和应用程序
         policycoreutils-python-utils # SELinux 系统管理工具的 Python 实用程序
+      )
+      ;;
+    "9")
+      packages+=(
+        ipmiutil
+        glibc-headers
+        unixODBC
       )
       ;;
     esac
@@ -813,32 +892,40 @@ function rpm_install() {
 #==============================================================#
 function conf_hostname() {
   log_print "配置主机名"
-  case "$os_version" in
-  6)
-    local hostname_file="/etc/sysconfig/network"
-    ;;
-  7 | 8)
+  if [[ "$os_type" = "sles" ]]; then
     local hostname_file="/etc/hostname"
-    ;;
-  esac
+  else
+    case "$os_version" in
+    "6")
+      local hostname_file="/etc/sysconfig/network"
+      ;;
+    *)
+      local hostname_file="/etc/hostname"
+      ;;
+    esac
+  fi
   # 检查新主机名是否已设置，并且不存在于相应的主机名文件中
   if ! grep -Fxq "$HOSTNAME" "$hostname_file"; then
     # 备份主机名文件
     bak_file "$hostname_file"
     # 设置新主机名
-    if [[ "$os_version" = "6" ]]; then
+    case "$os_version" in
+    "6")
       /bin/hostname "$HOSTNAME"
       sysctl kernel.hostname="$HOSTNAME"
       echo "$HOSTNAME" >/proc/sys/kernel/hostname
       sed -i "s/^HOSTNAME=.*/HOSTNAME=$HOSTNAME/" "$hostname_file"
       # 记录日志
       hostname
-    else
+      ;;
+    *)
+      # 包含了 sles 版本
       /usr/bin/hostnamectl set-hostname "$HOSTNAME"
       echo "$HOSTNAME" >"$hostname_file"
       # 记录日志
       hostnamectl
-    fi
+      ;;
+    esac
   else
     cat "$hostname_file"
   fi
@@ -910,14 +997,17 @@ EOF
     fi
   else
     # 配置单实例 hosts 文件
-    cat <<EOF >>/etc/hosts
+    # sles 不需要配置主机名，自动配置
+    if [[ "$os_type" != "sles" ]]; then
+      cat <<EOF >>/etc/hosts
 
 ## OracleBegin
 ## Public IP
 $local_ip	$hostname
 EOF
+    fi
   fi
-  cat /etc/hosts
+  grep -v "^\s*\(#\|$\)" /etc/hosts
 }
 #==============================================================#
 #                        创建用户和组                            #
@@ -993,6 +1083,7 @@ function create_dir() {
 # 安装并配置 Avahi 服务
 function conf_avahi() {
   log_print "配置 Avahi-daemon 服务"
+  install_packages_if_not_present "avahi*"
   case "$os_version" in
   "6")
     # 如果 avahi-daemon 已经启用，则停止并禁用它
@@ -1003,7 +1094,7 @@ function conf_avahi() {
     # 记录 avahi-daemon 状态
     service avahi-daemon status
     ;;
-  "7" | "8")
+  *)
     # 停止 avahi-daemon 服务，并使用 "pgrep" 命令杀死任何残留进程
     if [[ $(systemctl status avahi-daemon | grep -c running) > 0 ]]; then
       systemctl stop avahi-daemon.socket >/dev/null 2>&1
@@ -1027,14 +1118,21 @@ function set_kernel_option() {
     return 0
   fi
   grubby --update-kernel=ALL --args="$option"
+
 }
 function conf_grub() {
   log_print "配置透明大页 && NUMA && 磁盘 IO 调度器"
-  local options=("numa=off" "transparent_hugepage=never" "elevator=deadline")
-  for option in "${options[@]}"; do
-    set_kernel_option "$option"
-  done
-  grubby --info=ALL | awk '/numa/{print $0 "\n-" $(NR-1) "\n-" $(NR-2)}'
+  if [[ "$os_type" = "sles" ]]; then
+    sed -i 's/quiet/quiet transparent_hugepage=never numa=off tsx=off elevator=deadline/' /etc/default/grub
+    sed -i 's/GRUB_DISABLE_OS_PROBER="true"/GRUB_DISABLE_OS_PROBER="false"/' /etc/default/grub
+    grub2-mkconfig -o /boot/grub2/grub.cfg
+  else
+    local options=("numa=off" "transparent_hugepage=never" "elevator=deadline")
+    for option in "${options[@]}"; do
+      set_kernel_option "$option"
+    done
+    grubby --info=ALL | awk '/numa/{print $0 "\n-" $(NR-1) "\n-" $(NR-2)}'
+  fi
 }
 #==============================================================#
 #                        配置 sysctl.conf                       #
@@ -1107,23 +1205,25 @@ function conf_nsysctl() {
 function conf_ipc() {
   log_print "配置 RemoveIPC"
   # redhat6 版本无需配置
-  case "$os_version" in
-  "7" | "8")
+  if [[ "$os_version" != "6" ]]; then
     # 检查是否需要设置 RemoveIPC=no。如果不需要设置则直接返回。
     if grep -Fq "#RemoveIPC=no" /etc/systemd/logind.conf; then
       # 备份原始配置文件
       bak_file /etc/systemd/logind.conf
       # Failed Install of RAC with ASM: ORA-27300 ORA-27302 ORA-27300 ORA-27301 ORA-27302 (文档 ID 2099563.1)
       # ORA-27300 ORA-27301 ORA-27302 ORA-27157 Database Crash (文档 ID 438205.1)
-      # 将 "#RemoveIPC=no" 行替换为 "RemoveIPC=no"
-      sed -i 's/#RemoveIPC=no/RemoveIPC=no/' /etc/systemd/logind.conf
+      if [[ "$os_type" = "sles" ]]; then
+        sed -i 's/#RemoveIPC=yes/RemoveIPC=no/' /etc/systemd/logind.conf
+      else
+        # 将 "#RemoveIPC=no" 行替换为 "RemoveIPC=no"
+        sed -i 's/#RemoveIPC=no/RemoveIPC=no/' /etc/systemd/logind.conf
+      fi
       # 重新加载 systemd 守护进程并重启 systemd-logind 服务
       (systemctl daemon-reload && systemctl restart systemd-logind) >/dev/null 2>&1
     fi
     # 检查是否已修改成功
     grep -v "^\s*\(#\|$\)" /etc/systemd/logind.conf
-    ;;
-  esac
+  fi
 }
 #==============================================================#
 #                         配置 limits.conf                     #
@@ -1207,6 +1307,15 @@ function conf_asm() {
     log_print "配置 multipath 多路径"
     # 启用多路径
     mpathconf --enable --with_multipathd y
+    # 配置多路径开机自启
+    case "$os_version" in
+    "6")
+      chkconfig multipathd.service on
+      ;;
+    *)
+      systemctl enable multipathd.service >/dev/null 2>&1
+      ;;
+    esac
     bak_file /etc/multipath.conf
     # 配置 multipath.conf
     cat <<-EOF >/etc/multipath.conf
@@ -1291,7 +1400,7 @@ EOF
       # 在 CentOS 6上启动 UDEV 服务
       start_udev
     else
-      # 在 CentOS 7/8 上启动 UDEV 服务
+      # 在 CentOS 7/8/9 上启动 UDEV 服务
       # 重新加载udev规则
       /sbin/udevadm control --reload-rules
       # 触发设备变化事件
@@ -1318,6 +1427,10 @@ function conf_ntp() {
     # 备份 ntp 配置文件和 sysconfig 配置文件
     bak_file /etc/ntp.conf
     bak_file /etc/sysconfig/ntpd
+    # 将容忍时钟偏差修改至30，单位为S，该值默认为1.5. 当偏差大于此限定值时,ntp不会同步时钟。
+    echo "tos maxdist 30" >>/etc/ntp.conf
+    # 当服务器时钟与本地时钟偏差大于1000时，ntp客户端会视为此偏差过大，不会同步时钟，且会退出ntpd服务，设置为0可忽略此限制。
+    echo "tinker panic 0" >>/etc/ntp.conf
     # 删除 ntp 配置文件中已有的时间服务器信息，并添加新的时间服务器信息
     sed -i '/^server/d' /etc/ntp.conf
     echo "server $timeserver_ip iburst" >>/etc/ntp.conf
@@ -1329,7 +1442,7 @@ OPTIONS="-g -x -p /var/run/ntpd.pid"
 SYNC_HWCLOCK=yes
 EOF
     ;;
-  8)
+  *)
     # 备份 chrony 配置文件
     bak_file /etc/chrony.conf
     # 删除 ntp 配置文件中已有的时间服务器信息，并添加新的时间服务器信息
@@ -1378,7 +1491,7 @@ function conf_timesync() {
       echo
       ntpq -p -n
       ;;
-    8)
+    *)
       # 关闭并禁用 ntpd 服务，备份 ntpd 配置文件
       systemctl disable ntpd.service
       if systemctl is-active --quiet ntpd.service; then
@@ -1407,7 +1520,7 @@ function conf_dns() {
   log_print "配置 DNS 解析"
   # 检查是否已安装 bind，如果未安装则安装相关软件包
   if ! rpm -q bind >/dev/null; then
-    yum install -q -y bind-libs bind bind-utils --skip-broken >/dev/null 2>&1
+    install_packages_if_not_present "bind-libs" "bind" "bind-utils"
   fi
   # 配置 DNS 文件
   cat <<-EOF >/etc/resolv.conf
@@ -1458,13 +1571,19 @@ function install_rlwrap() {
   fi
 }
 #==============================================================#
-#                         配置 bash_profile                     #
+#                         配置 profile                          #
 #==============================================================#
 function conf_profile() {
+  # 获取 profile 名称
+  if [[ "$os_type" = "sles" ]]; then
+    profile_name=.profile
+  else
+    profile_name=.bash_profile
+  fi
   log_print "Root 用户环境变量"
   # 配置root用户环境变量
-  bak_file /root/.bash_profile
-  cat <<-EOF >>/root/.bash_profile
+  bak_file /root/$profile_name
+  cat <<-EOF >>/root/$profile_name
 # OracleBegin
 alias so='su - oracle'
 export PS1="[\`whoami\`@\`hostname\`:"'\$PWD]\$ '
@@ -1486,18 +1605,18 @@ export LANG="en_US.UTF-8"
 EOF
   # RAC模式增加集群相关
   if [[ $oracle_install_mode =~ ^(rac|standalone)$ ]]; then
-    cat <<-EOF >>/root/.bash_profile
+    cat <<-EOF >>/root/$profile_name
 alias sg='su - grid'
 alias crsctl='$env_grid_home/bin/crsctl'
 alias srvctl='$env_grid_home/bin/srvctl'
 EOF
   fi
-  grep -v "^\s*\(#\|$\)" /root/.bash_profile
+  grep -v "^\s*\(#\|$\)" /root/$profile_name
   # 配置oracle用户环境变量
   log_print "Oracle 用户环境变量"
   # Patching fails during relink , with error code 102 :: Fatal error: Command failed for target `javavm_refresh' (Doc ID 2002334.1)
-  bak_file /home/oracle/.bash_profile
-  cat <<-EOF >>/home/oracle/.bash_profile
+  bak_file /home/oracle/$profile_name
+  cat <<-EOF >>/home/oracle/$profile_name
 # OracleBegin
 umask 022
 export TMP=/tmp
@@ -1519,30 +1638,29 @@ alias alert='vi \$ORACLE_BASE/diag/rdbms/*/\$ORACLE_SID/trace/alert_\$ORACLE_SID
 export PS1="[\`whoami\`@\`hostname\`:"'\$PWD]\$ '
 EOF
   # Users are strongly recommended to go with 19.9 DB RU (or later) to minimize the number of Patches to be installed.19.9 OJVM & OCW RU Patches are also recommended to be applied,during/after the Installation.
-  if [[ $os_version = "8" ]]; then
-    cat <<-EOF >>/home/oracle/.bash_profile
+  if [[ $os_version = "8" || $os_version = "9" ]]; then
+    cat <<-EOF >>/home/oracle/$profile_name
 export CV_ASSUME_DISTID=OL7
 EOF
   fi
   # 检查 rlwrap 是否已经安装，并显示无误信息
   if hash rlwrap 2>/dev/null; then
-    cat <<-EOF >>/home/oracle/.bash_profile
+    cat <<-EOF >>/home/oracle/$profile_name
 alias sqlplus='rlwrap sqlplus'
 alias rman='rlwrap rman'
 alias adrci='rlwrap adrci'
 EOF
-  else
-    # 退格优化
-    cat <<-EOF >>/home/oracle/.bash_profile
-stty erase ^H
-EOF
   fi
-  grep -v "^\s*\(#\|$\)" /home/oracle/.bash_profile
+  # sles 授予目录权限
+  if [[ "$os_type" = "sles" ]]; then
+    chown -R oracle:oinstall /home/oracle/
+  fi
+  grep -v "^\s*\(#\|$\)" /home/oracle/$profile_name
   # grid
   if [[ $oracle_install_mode =~ ^(rac|standalone)$ ]]; then
     log_print "Grid 用户环境变量"
-    bak_file /home/grid/.bash_profile
-    cat <<-EOF >>/home/grid/.bash_profile
+    bak_file /home/grid/$profile_name
+    cat <<-EOF >>/home/grid/$profile_name
 # OracleBegin
 umask 022
 export TMP=/tmp
@@ -1560,25 +1678,24 @@ alias sas='sqlplus / as sysasm'
 export PS1="[\`whoami\`@\`hostname\`:"'\$PWD]\$ '
 EOF
     # Users are strongly recommended to go with 19.9 DB RU (or later) to minimize the number of Patches to be installed.19.9 OJVM & OCW RU Patches are also recommended to be applied,during/after the Installation.
-    if [[ $os_version = "8" ]]; then
-      cat <<-EOF >>/home/grid/.bash_profile
+    if [[ $os_version = "8" || $os_version = "9" ]]; then
+      cat <<-EOF >>/home/grid/$profile_name
 export CV_ASSUME_DISTID=OL7
 EOF
     fi
     # 检查 rlwrap 是否已经安装，并显示无误信息
     if hash rlwrap 2>/dev/null; then
-      cat <<-EOF >>/home/grid/.bash_profile
+      cat <<-EOF >>/home/grid/$profile_name
 alias sqlplus='rlwrap sqlplus'
 alias asmcmd='rlwrap asmcmd'
 alias adrci='rlwrap adrci'
 EOF
-    else
-      # 退格优化
-      cat <<-EOF >>/home/oracle/.bash_profile
-stty erase ^H
-EOF
     fi
-    grep -v "^\s*\(#\|$\)" /home/grid/.bash_profile
+    # sles 授予目录权限
+    if [[ "$os_type" = "sles" ]]; then
+      chown -R grid:oinstall /home/grid/
+    fi
+    grep -v "^\s*\(#\|$\)" /home/grid/$profile_name
   fi
 }
 #==============================================================#
@@ -1958,7 +2075,7 @@ function unzip_dbsoft() {
       fi
     fi
     # 修改 Kylin 10 安装 11GR2 和 12CR2 报错 unzip 问题，Oralce 内置 unzip 版本太低
-    if [[ "$os_type" = "Kylin" ]]; then
+    if [[ "$os_type" = "kylin" ]]; then
       mv $software_dir/database/install/unzip $software_dir/database/install/unzipbak
       ln -s /usr/bin/unzip $software_dir/database/install/unzip
     fi
@@ -1999,6 +2116,17 @@ function unzip_dbsoft() {
       echo
       color_printf green "静默解压 Oracle 软件补丁包： $db_patch_name"
       su - oracle -c "unzip -oq $db_patch_name -d $software_dir"
+    fi
+    # 如果是 RAC 部署模式，需要在其他节点上也应用补丁
+    if [[ "$oracle_install_mode" = "rac" ]]; then
+      # 拷贝 oracle opatch/patch 到其他节点
+      if [[ "$db_version" =~ ^(11|12)$ ]]; then
+        for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+          # 将 oracle 补丁包和 opatch 包拷贝到其他节点的指定目录下，并修改目录所有者和所属组
+          scp -q $db_patch_name $opatch_name ${rac_public_ips[i]}:$software_dir
+          ssh -q ${rac_public_ips[i]} "chown -R oracle:oinstall \"$software_dir\" && su - oracle -c \"unzip -oq '$db_patch_name' -d '$software_dir'\""
+        done
+      fi
     fi
   fi
   # 如果 Linux8 安装 ORACLE 11GR2，需要解压必须补丁包
@@ -2129,7 +2257,7 @@ function install_dbsoft() {
       exit 1
     fi
     # 修改 Kylin 10 安装 11GR2 和 12CR2 报错 unzip 问题，Oralce 内置 unzip 版本太低
-    if [[ "$os_type" = "Kylin" ]]; then
+    if [[ "$os_type" = "kylin" ]]; then
       mv $env_oracle_home/bin/unzip $env_oracle_home/bin/unzipbak
       ln -s /usr/bin/unzip $env_oracle_home/bin/unzip
     fi
@@ -2528,15 +2656,29 @@ function db_autostart() {
   else
     # 修改 dbstart 脚本，将变量 ORACLE_HOME_LISTNER 的值改为 $ORACLE_HOME
     sed -i 's/ORACLE_HOME_LISTNER=$1/ORACLE_HOME_LISTNER=$ORACLE_HOME/' $env_oracle_home/bin/dbstart
-    # 备份 rc.local 文件
-    bak_file /etc/rc.d/rc.local
-    # 在 rc.local 文件中添加启动监听器和数据库的命令，并配置权限为可执行
-    cat <<-EOF >>/etc/rc.d/rc.local
+    # sles 没有 rc.local 文件，需要使用 after.local
+    if [[ "$os_type" = "sles" ]]; then
+      # 备份 after.local 文件
+      bak_file /etc/rc.d/after.local
+      # 在 after.local 文件中添加启动监听器和数据库的命令，并配置权限为可执行
+      cat <<-EOF >>/etc/rc.d/after.local
+#!/bin/bash
 # OracleBegin
 su oracle -lc "$env_oracle_home/bin/lsnrctl start"
 su oracle -lc "$env_oracle_home/bin/dbstart"
 EOF
-    chmod +x /etc/rc.d/rc.local
+      chmod +x /etc/rc.d/after.local
+    else
+      # 备份 rc.local 文件
+      bak_file /etc/rc.d/rc.local
+      # 在 rc.local 文件中添加启动监听器和数据库的命令，并配置权限为可执行
+      cat <<-EOF >>/etc/rc.d/rc.local
+# OracleBegin
+su oracle -lc "$env_oracle_home/bin/lsnrctl start"
+su oracle -lc "$env_oracle_home/bin/dbstart"
+EOF
+      chmod +x /etc/rc.d/rc.local
+    fi
   fi
 }
 #==============================================================#
@@ -2563,7 +2705,7 @@ RMAN
   del_arch_script="$scripts_dir/del_arch.sh"
   cat >"$del_arch_script" <<DELARCH
 #!/bin/bash
-source ~/.bash_profile
+source ~/$profile_name
 deltime=\$(date +"20%y%m%d%H%M%S")
 rman target / nocatalog msglog $scripts_dir/del_arch_\$deltime.log <<-EOF
 crosscheck archivelog all;
@@ -2576,7 +2718,7 @@ DELARCH
   lv0_backup_script="$scripts_dir/dbbackup_lv0.sh"
   cat >"$lv0_backup_script" <<LV0BACKUP
 #!/bin/bash
-source ~/.bash_profile
+source ~/$profile_name
 backtime=\$(date +"20%y%m%d%H%M%S")
 rman target / log=$rman_log_dir/level0_backup_\$backtime.log<<-EOF
 run {
@@ -2590,7 +2732,7 @@ LV0BACKUP
   lv1_backup_script="$scripts_dir/dbbackup_lv1.sh"
   cat >"$lv1_backup_script" <<LV1BACKUP
 #!/bin/bash
-source ~/.bash_profile
+source ~/$profile_name
 backtime=\$(date +"20%y%m%d%H%M%S")
 rman target / log=$rman_log_dir/level1_backup_\$backtime.log<<-EOF
 run {
@@ -3450,28 +3592,103 @@ function main() {
       fi
     done
   fi
-  # 针对麒麟系统，麒麟 V10 对标 redhat8，为了匹配 Oracle 脚本，修改版本
-  if [[ "$os_type" = "Kylin" && "$os_version" = 10 ]]; then
-    os_version=8
-    if [[ "$oracle_install_mode" =~ ^(rac|standalone)$ ]]; then
-      color_printf red "本脚本只支持在 Kylin V10 版本安装单机版!"
+  # 获取操作系统类型，目前支持：openEuler,anolis,sles,rhel,centos,ol,kylin,uos
+  if [[ -e /etc/os-release ]]; then
+    os_type=$(grep -oP '^ID="?(\K[^"]+|[^"]+$)' /etc/os-release)
+  fi
+
+  # 获取操作系统大版本
+  if [[ "$os_type" = "kylin" ]]; then
+    # 获取到值为 V10
+    os_version=$(grep -oP '(?<=VERSION_ID=").*(?=")' /etc/os-release)
+  else
+    # 只获取大版本号
+    os_version=$(grep -oP '^VERSION_ID="?(\K[0-9]+|[0-9]+$)' /etc/os-release)
+  fi
+
+  # anolis7.9 安装 Oracle19C 报错 [FATAL] [DBT-05509] Failed to connect to the specified database，无法安装
+  case "$os_type-$os_version" in
+  "anolis-7")
+    if [[ "$db_version" =~ ^(12|19|21)$ ]]; then
+      echo
+      color_printf red "本脚本不支持在龙蜥 Anolis7.9 版本安装 12CR2/19C/21C，建库时报错：ORA-12547: TNS:lost contact！"
       echo
       exit 1
     fi
-    # 11GR2 和 12CR2 版本会检测操作系统版本
+    ;;
+  esac
+
+  ## openEuler 22.03 安装 12CR2 报错 jskm.c:(.text+0x4081): undefined reference to `stat'，eobtl.c:(.text+0x3ba): undefined reference to `fstat' 解决方案
+  case "$os_type-$os_version" in
+  "openEuler-22")
+    if [[ "$db_version" = 12 ]]; then
+      if ! check_file $software_dir/compat-glibc-2.12-4.el7.centos.x86_64.rpm; then
+        echo
+        color_printf red "本脚本在 openEuler 22.03 安装 12CR2 单机版需要上传 compat-glibc-2.12-4.el7.centos.x86_64.rpm 到 $software_dir 目录下！"
+        echo
+        exit 1
+      fi
+    fi
+    ;;
+  esac
+
+  # 去除密码复杂度设置
+  if [[ "$os_type" = "sles" ]]; then
+    sed -i 's/^password\+[[:space:]]\+requisite[[:space:]]\+pam_cracklib.so/#&/g' /etc/pam.d/common-password
+    sed -i '/^password.*pam_unix\.so/s/use_authtok //' /etc/pam.d/common-password
+  elif [[ "$os_type" = "uos" ]]; then
+    sed -i 's/^password    requisite     pam_deepin_pw_check.so try_first_pass local_users_only retry=1 enforce_for_root authtok_type=/#&/' /etc/pam.d/system-auth
+    sed -i 's/use_authtok$//' /etc/pam.d/system-auth
+  elif [[ "$os_type" =~ ^(kylin|openEuler)$ ]]; then
+    sed -i 's/^password\+[[:space:]]\+requisite[[:space:]]\+pam_pwquality.so/#&/g' /etc/pam.d/system-auth
+    sed -i 's/use_authtok$//' /etc/pam.d/system-auth
+  fi
+
+  # 适配麒麟 V10 系统和 openEuler 22.03 系统，suse 15
+  case "$os_type-$os_version" in
+  "kylin-V10" | "openEuler-22" | "sles-15" | "uos-20")
+    # 将系统版本调整为对应的 Red Hat 版本
+    os_version=8
+    # 检查是否是 Oracle 11GR2 或 12CR2
     if [[ "$db_version" =~ ^(11|12)$ ]]; then
+      # 检查是否是集群安装模式
+      if [[ "$oracle_install_mode" =~ ^(rac|standalone)$ ]]; then
+        echo
+        case "$os_type" in
+        "kylin")
+          color_printf red "本脚本只支持在 Kylin V10 版本安装 19C RAC!"
+          ;;
+        "openEuler")
+          color_printf red "本脚本只支持在 openEuler 22.03 版本安装 19C RAC!"
+          ;;
+        "sles")
+          color_printf red "本脚本只支持在 suse 15 版本安装 19C RAC!"
+          ;;
+        "uos")
+          color_printf red "本脚本只支持在 uos V20 版本安装 19C RAC!"
+          ;;
+        esac
+        echo
+        exit 1
+      fi
+      # 修改系统版本信息为 Red Hat Enterprise Linux Server release 7.9 (Maipo)
       cat <<-\EOF >/etc/redhat-release
 Red Hat Enterprise Linux Server release 7.9 (Maipo)
 EOF
     fi
-    # 去除密码复杂度
-    sed -i 's/^password\+[[:space:]]\+requisite[[:space:]]\+pam_pwquality.so/#&/g' /etc/pam.d/system-auth
-    sed -i 's/use_authtok$//' /etc/pam.d/system-auth
-    # libnsl 修复
+
+    # 修复 libnsl
     if ! check_file /usr/lib64/libnsl.so.1; then
-      ln -s /usr/lib64/libnsl.so.2.0.1 /usr/lib64/libnsl.so.1
+      ln -s /usr/lib64/libnsl.so.2.0.1 /usr/lib64/libnsl.so.1 >/dev/null 2>&1
     fi
+    ;;
+  esac
+
+  # rhel 系列的统一为 rhel
+  if [[ "$os_type" =~ ^(rhel|centos|ol|anolis|uos)$ ]]; then
+    os_type=rhel
   fi
+
   # 切换用户时不显示 Last Login 信息
   sed -i 's/^session\+[[:space:]]\+include[[:space:]]\+postlogin/#&/g' /etc/pam.d/su
   # 删除 /etc 目录下所有的 ora 开头文件以及文件夹
@@ -3480,9 +3697,9 @@ EOF
   fi
   # 检查是否需要挂载 ISO 镜像源
   if [[ $iso = "Y" ]]; then
-    # 获取ISO镜像挂载路径，排除光盘挂载的路径
+    # 获取ISO镜像挂载路径，排除光盘挂载的路径 iso9660
     mountPatch=$(
-      mount | awk '/iso|ISO/ && !/run\/media\/root/{print $3}'
+      mount | awk '/iso9660/ && !/run\/media/{print $3}'
     )
     if [[ $mountPatch ]]; then
       # 配置 YUM 源(提前配置YUM源，确保 RAC 安装 root ssh 互信需要安装 expect 软件)
@@ -3498,7 +3715,7 @@ EOF
   # rac 需要安装 expect 和 openssh-clients
   if [[ "$oracle_install_mode" = "rac" ]]; then
     # 如果需要配置互信，则安装 expect 软件
-    yum install -y -q expect openssh-clients --skip-broken >/dev/null 2>&1
+    install_packages_if_not_present "expect" "openssh-clients"
     # 避免ssh连接远程主机输入 yes/no
     if [[ $(grep -E -c "StrictHostKeyChecking no" /etc/ssh/ssh_config) = 0 ]]; then
       echo "StrictHostKeyChecking no" >>/etc/ssh/ssh_config
@@ -3535,6 +3752,14 @@ EOF
     if [[ "$os_version" = 6 ]]; then
       if [[ "$db_version" =~ ^(19|21|23)$ ]]; then
         color_printf red "Oracle 19C/21C/23C 官方不支持 Linux 6 版本!"
+        echo
+        exit 1
+      fi
+    fi
+    # 9 版本的操作系统官方只支持 19C 以后的版本
+    if [[ "$os_version" = 9 ]]; then
+      if [[ "$db_version" =~ ^(11|12)$ ]]; then
+        color_printf red "Oracle 11G/12C 官方不支持 Linux 9 版本!"
         echo
         exit 1
       fi
@@ -3879,7 +4104,10 @@ EOF
   # 系统配置
   conf_swap
   conf_firewall
-  conf_selinux
+  if [[ "$os_type" != "sles" ]]; then
+    conf_selinux
+    conf_nsysctl
+  fi
   rpm_install
   conf_hostname
   conf_hosts
@@ -3888,7 +4116,6 @@ EOF
   conf_avahi
   conf_grub
   conf_sysctl
-  conf_nsysctl
   conf_ipc
   conf_limits
   conf_shm

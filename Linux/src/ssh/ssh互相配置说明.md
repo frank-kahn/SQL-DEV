@@ -86,6 +86,43 @@ chmod +x ssh.sh
 chmod 600 /home/root/.ssh/config
 ~~~
 
+
+
+## expect模块自动输入密码(互相未配置成功)
+
+```shell
+#每个节点都生成公钥、私钥、ip信息
+cd
+ssh-keygen -t rsa 
+
+cat > /tmp/ip.txt << "EOF"
+192.168.1.191:rootroot
+192.168.1.192:rootroot
+192.168.1.193:rootroot
+EOF
+
+
+
+cat > 1.sh << "EOF"
+for p in $(cat /tmp/ip.txt)
+do
+ip=$(echo "$p"|cut -f1 -d ":")
+password=$(echo "$p"|cut -f2 -d ":")
+
+expect -c "
+spawn ssh-copy-id -i /root/.ssh/id_rsa.pub root@$ip
+expect {
+\"*yes/no*\" {send \"yes\r\";exp_continue}
+\"*password*\r\" {send \"$password\r\";exp_continue}
+\"*Password*\r\" {send \"$password\r\";}
+}
+"
+done
+EOF
+```
+
+
+
 ## 互信检查
 
 ~~~shell
@@ -94,6 +131,11 @@ node_cnt=3
 
 #互信检查
 for i in `tail -$node_cnt /etc/hosts |xargs -n1`;do
+ssh $i hostname
+done
+
+
+for i in 192.168.1.19{1..3};do
 ssh $i hostname
 done
 ~~~

@@ -1,3 +1,6 @@
+-- 授予表空间的create权限
+grant create on tablespace pg_default to test_user;
+
 -- 数据库权限授予
 grant all privileges on database testdb to user1;
 grant create,connect,temporary on database testdb to user1;

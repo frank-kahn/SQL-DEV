@@ -51,3 +51,27 @@ select * from  dba_objects t where t.status = 'INVALID' order by 1;
 select 'alter '||object_type||' '||owner||'.'||object_name||' compile;' from dba_objects t where t.status = 'INVALID' order by 1;
 -- 方式2
 sqlplus / as sysdba @?/rdbms/admin/utlrp.sql
+
+
+
+-- 查看三个自动维护任务
+select * from dba_autotask_operation;
+
+-- 关闭3个自动维护任务
+-- 参考：  https://cloud.tencent.com/developer/article/1605034
+BEGIN
+ dbms_auto_task_admin.disable(
+   client_name => 'auto optimizer stats collection',
+   operation   => NULL,
+   window_name => NULL);
+ dbms_auto_task_admin.disable(
+   client_name => 'auto space advisor',
+   operation   => NULL,
+   window_name => NULL);
+ dbms_auto_task_admin.disable(
+   client_name => 'sql tuning advisor',
+   operation   => NULL,
+   window_name => NULL);
+END;
+
+

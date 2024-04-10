@@ -40,3 +40,9 @@ db.createUser(
   roles: [ { role: "readWrite", db: "testdb" } ]
 }
 )
+
+
+
+// MongoDB中remove和drop的区别
+remove用于将集合中的文档删除，但不删除集合本身，也不删除集合的索引。
+drop不仅删除集合的文档，也会删除集合本身，同时也会删除在集合上创建的索引。

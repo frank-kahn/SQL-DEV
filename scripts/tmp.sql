@@ -12,8 +12,8 @@ mysqldump -uroot -proot testdb > testdb.sql
 -- 模板
 download.csdn.net/download/xx/xxx
 blog.csdn.net/xxx/article/details/xxx
-blog.51cto.com/xxx/xxx
 www.cnblogs.com/xxx/p/xxx.html
+blog.51cto.com/xxx/xxx
 blog.itpub.net/xxx/viewspace-xxxx
 zhuanlan.zhihu.com/p/xxx
 docs.oracle.com/en/database/oracle/oracle-database/12.2/admin/creating-and-removing-pdbs-with-sql-plus.html

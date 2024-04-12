@@ -39,3 +39,32 @@ where 1=1
 select pg_get_serial_sequence('表名','字段名');
 
 
+-- PostgreSQL查询索引字段的类型（不适用于索引字段使用了函数表达式的场景）
+-- 查询索引字段的类型（不适用于索引字段使用了函数表达式的场景）
+SELECT indrelid::regclass as table_name,
+       pc1.relname as index_name,
+       pi1.indisprimary as primary_key,
+       pi1.indisunique as unique_key,
+       pi1.indisvalid as valid,
+       pi1.indkey as index_column_seq,
+       -- pa.attnum,
+       -- pa.attname,
+       -- pt.typname,
+       string_agg(concat(pa.attname,' ',pt.typname),',' order by pa.attnum) as column_type,
+       pg_get_indexdef(pi1.indexrelid,0,TRUE) as create_index_sql
+  FROM pg_class pc1
+  join pg_index pi1
+    on (pc1.oid = pi1.indexrelid )
+  join pg_class pc2
+    on (pc2.oid = pi1.indrelid)
+  join pg_namespace pn
+    on (pc1.relnamespace=pn.oid)
+  join pg_attribute pa
+    on (pa.attrelid=pc1.oid)
+  join pg_type pt
+    on (pa.atttypid=pt.oid)
+ where  1=1
+   and pn.nspname=CURRENT_SCHEMA
+    --and pc2.relname ~~* 't%'
+ group by (table_name,index_name,primary_key,unique_key,valid,index_column_seq,create_index_sql);
+

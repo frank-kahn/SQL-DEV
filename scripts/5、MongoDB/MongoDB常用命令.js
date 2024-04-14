@@ -1,3 +1,9 @@
+// 单节点启动
+// 单节点启动和连接
+su - mongodb
+mongod --config /mongodb/data/mongo.conf
+mongosh 192.168.1.190:27017
+
 // 三节点shard集群启停
 /mongodb/scripts/start-all.sh
 /mongodb/scripts/stop-all.sh

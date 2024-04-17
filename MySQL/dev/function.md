@@ -58,3 +58,20 @@ delimiter ;
 select nextval('seq_test');
 ~~~
 
+# 创建限制表行数的触发器
+
+```sql
+delimiter //
+create function create_trigger(tablename varchar(100),rowlimit int) returns text
+begin
+  declare trigger_name varchar(100);
+  set trigger_name = concat('limit_',tablename);
+  set @sql = concat('create trigger ',trigger_name,' before insert on ',tablename,' for each row ');
+  prepare stmt from @sql;
+  execute stmt;
+  deallocate prepare stmt;
+  return "触发器创建成功"
+//
+delimiter ;
+```
+

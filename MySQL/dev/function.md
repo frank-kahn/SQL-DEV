@@ -60,18 +60,46 @@ select nextval('seq_test');
 
 # 创建限制表行数的触发器
 
+创建测试表
+
+~~~sql
+drop table if exists test_t;
+create table test_t (id int,name varchar(100));
+insert into test_t values
+(1,'zhangsan'),
+(2,'lisi'),
+(3,'wangwu'),
+(4,'zhaoliu'),
+(5,'qiqi'),
+(6,'zhuba');
+~~~
+
+
+
+创建函数
+
 ```sql
 delimiter //
 create function create_trigger(tablename varchar(100),rowlimit int) returns text
 begin
   declare trigger_name varchar(100);
   set trigger_name = concat('limit_',tablename);
-  set @sql = concat('create trigger ',trigger_name,' before insert on ',tablename,' for each row ');
-  prepare stmt from @sql;
-  execute stmt;
-  deallocate prepare stmt;
-  return "触发器创建成功"
+  set @sql = concat('create trigger ',trigger_name,' before insert on ',tablename,' for each row begin declare row_count int;select count(*) into row_count from ',tablename,';if row_count >',rowlimit,' then signal sqlstate ''45000'' set message_text = ''Exceeded maximun row count'';end if;end;');
+  -- prepare stmt from @sql;
+  -- execute stmt;
+  -- deallocate prepare stmt;
+  return @sql;
+  end;
 //
 delimiter ;
+
+-- 执行函数
+select create_trigger('test_t',5);
 ```
+
+<font color='red'>动态SQL不能在函数中创建，所以此处只是把创建触发器的创建命令返回了</font>
+
+~~~sql
+ERROR 1336 (0A000): Dynamic SQL is not allowed in stored function or trigger
+~~~
 

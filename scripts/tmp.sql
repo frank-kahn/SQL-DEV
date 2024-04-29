@@ -13,6 +13,7 @@ mysqldump -uroot -proot testdb > testdb.sql
 download.csdn.net/download/xx/xxx
 blog.csdn.net/xxx/article/details/xxx
 www.cnblogs.com/xxx/p/xxx.html
+www.cnblogs.com/xxx/archive/2010/06/24/1764067.html
 blog.51cto.com/xxx/xxx
 blog.itpub.net/xxx/viewspace-xxxx
 zhuanlan.zhihu.com/p/xxx

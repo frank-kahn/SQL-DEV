@@ -77,3 +77,13 @@ create table tbp_default partition of tbp default;
 insert into tbp(id,date,col2)
 select generate_series(1,400000) as id ,date((random()*(2023-2020)+2020)::int||'-'||(random()*(12-1)+1)::int||'-'||(random()*(28-1)+1)::int),'test';
 
+
+
+
+-- 创建测试数据和用户
+create user fgedu with password 'fgedu123' nocreatedb;
+create database fgedudb with owner=fgedu template=template0 encoding='UTF8' lc_collate='C' lc_ctype='en_US.UTF8' connection limit=-1;
+
+-- 导入测试表
+psql -d fgedudb -U fgedu -f /tmp/fgedudb.sql
+psql -d fgedudb -U fgedu -f /tmp/itpux_member_1kw.sql

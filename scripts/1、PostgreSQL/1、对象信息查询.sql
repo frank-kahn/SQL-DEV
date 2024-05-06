@@ -68,3 +68,7 @@ SELECT indrelid::regclass as table_name,
     --and pc2.relname ~~* 't%'
  group by (table_name,index_name,primary_key,unique_key,valid,index_column_seq,create_index_sql);
 
+
+-- 获得原表的DDL
+pg_dump -U fgedu -d fgedudb -s -t itpux_m5|egrep -v "^--|^$|^SET"
+

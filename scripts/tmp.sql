@@ -19,6 +19,7 @@ blog.itpub.net/xxx/viewspace-xxxx
 zhuanlan.zhihu.com/p/xxx
 docs.oracle.com/en/database/oracle/oracle-database/12.2/admin/creating-and-removing-pdbs-with-sql-plus.html
 www.modb.pro/db/14344
+stackoverflow.com/questions/xxx/xxx
 
 -- Oracle
 RAC巡检

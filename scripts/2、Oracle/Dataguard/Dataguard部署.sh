@@ -155,3 +155,20 @@ allocate channel ch1 type disk maxpiecesize 30G;
 backup as compressed backupset incremental from scn xxx database format '/backup/inc_%d_%T_%s_%p_%u.bak' tag 'inc_bak';
 release channel ch1
 }
+
+
+
+
+
+
+
+
+
+Oracle Data Guard 折腾记（一）
+https://www.cnblogs.com/killkill/archive/2010/12/18/1910267.html
+https://www.cnblogs.com/killkill/archive/2010/12/20/1911172.html
+
+
+
+
+

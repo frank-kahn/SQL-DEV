@@ -68,6 +68,22 @@ commit;
 create table test02 as select * from test01;
 
 
+-- 创建普通测试用户标准命令
+create tablespace test_ts
+datafile 
+  '/oracle/oradata/testdb/test01.dbf' size 180K autoextend off
+logging
+segment space management auto
+extent management local;
+create user test identified by test default tablespace test_ts;
+grant connect to test;
+grant resource to test;
+revoke unlimited tablespace from test;
+alter user test quota unlimited on test_ts;
+
+
+
+
 -- 做个检查点：把缓存数据全部写进数据文件：
 alter system checkpoint;
 -- 切换日志

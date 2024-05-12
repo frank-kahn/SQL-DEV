@@ -11,3 +11,6 @@ select host,user,plugin,authentication_string,sha('rootroot') from mysql.user wh
 
 -- 刷权限
 flush privileges;
+
+https://www.jb51.net/database/318148q0l.htm
+https://blog.csdn.net/qq_35746739/article/details/132868461

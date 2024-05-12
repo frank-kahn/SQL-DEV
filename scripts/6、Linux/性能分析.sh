@@ -70,3 +70,28 @@ vmstat 1 查看第一列（CPU运行进程数），第二列（I/O等待进程�
 ps -elLf|awk '$2~/D/{print $0}'
 ps -elLf|awk '$2~/R/{print $0}'
 
+
+#消耗CPU资源的shell脚本: 使用死循环消耗CPU资源，如果服务器是有多颗CPU，可以选择消耗多少颗CPU的资源：
+
+#! /bin/sh 
+# filename killcpu.sh
+if [ $# != 1 ] ; then
+  echo "USAGE: $0 <CPUs>"
+  exit 1;
+fi
+for i in `seq $1`
+do
+  echo -ne " 
+i=0; 
+while true
+do
+i=i+1; 
+done" | /bin/sh &
+  pid_array[$i]=$! ;
+done
+ 
+for i in "${pid_array[@]}"; do
+  echo 'kill ' $i ';';
+done
+
+

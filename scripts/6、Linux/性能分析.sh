@@ -95,3 +95,18 @@ for i in "${pid_array[@]}"; do
 done
 
 
+
+
+#top 按照CPU使用率降序排序
+输入大写P
+#top 按照内存使用率降序排序
+输入大写M
+############################top 按照TIME+ 排序
+# 获取top内容保存到文本
+top -n 1 -b > /tmp/top.tmp
+# 获取文本行数
+TPMNUM=`wc -l /tmp/top.tmp | awk '{print $1}'` 
+# 获取去除头部信息的实际行数 
+NUM=$(( TPMNUM - 7 ))
+# 获取除去头部内容的信息,获取最后两列,根据TIME+排序,提取前五的进程
+tail -$NUM /tmp/top.tmp | awk '{print $11,$12}' |sort -k1nr| tail -5

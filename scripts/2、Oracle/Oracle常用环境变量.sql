@@ -89,7 +89,14 @@ set feedback off
 set numwidth 7
 -- 页与页之间没有任何间隔
 set newpage none
-
+-- 替代变量相关
+set define off     -- 关闭替代变量，&将作为普通字符
+set define on      -- 开启替代变量
+set define *       -- 将默认替代变量标识符改为 * （也可以设置为其它字符）
+-- 允许脚本文件的多行处理
+set sqlblanklines on
+-- 允许脚本块（存储过程，函数等）结束后的';'作为执行符号
+set sqlterminate on
 
 
 

@@ -1,4 +1,4 @@
-查看锁等待
+-- 查看锁等待
 set line 1000
 col oracle_username for a20
 col object_name for a20
@@ -13,7 +13,8 @@ select sess.sid,
     dba_objects ao, 
     v$session sess 
 where ao.object_id = lo.object_id and lo.session_id = sess.sid; 
-查询SQL语句
+
+-- 查询SQL语句
 select * from v$session t1, v$locked_object t2 where t1.sid = t2.SESSION_ID; 
 
 SELECT DISTINCT  
@@ -142,7 +143,7 @@ from   v$lock b, v$enqueue_lock c, v$session a
 where  a.sid = b.sid and    b.id1= c.id1(+) and b.id2 = c.id2(+) and c.type(+) = 'TX' and  b.type = 'TX' and  b.block   = 1 order by time_held, time_waited;
 
 
-最优的解锁脚本
+-- 最优的解锁脚本
 #version1
 set linesize 500
 col username for a9

@@ -1,7 +1,7 @@
 -- 创建用户
-create user yaokang identified by yaokang;
-alter user yaokang quota unlimited on users;
-grant connect,resource to yaokang;
+create user test_user identified by test;
+alter user test_user quota unlimited on users;
+grant connect,resource to test_user;
 
 ------------------------------------------常用权限授予----------------------------------
 -- 给用户授权所有数据字典的查询权限
@@ -22,6 +22,15 @@ select 'grant '||t.privilege||' on '||t.owner||'.'||t.table_name||' to '||t.gran
 select 'grant '||t.privilege||' to '||t.grantee||';'
  from dba_sys_privs t
  where t.grantee in ('TEST1','TEST2');
+
+
+-- 检查用户所有的系统权限（系统权限和角色权限都要查询）
+SELECT DBMS_METADATA.GET_GRANTED_DDL('SYSTEM_GRANT','TEST_USER') from dual
+SELECT DBMS_METADATA.GET_GRANTED_DDL('ROLE_GRANT','TEST_USER') from dual;
+
+select PRIVILEGE from dba_sys_privs t where t.grantee = 'TEST_USER'
+union
+select PRIVILEGE from ROLE_SYS_PRIVS where role in (select GRANTED_ROLE from DBA_ROLE_PRIVS where grantee = 'TEST_USER');
 
 
 

@@ -8,3 +8,6 @@ where h.user_id=du.user_id
 select distinct username,machine,osuser from gv$session;
 
 
+
+-- 杀会话
+ALTER SYSTEM KILL SESSION 'sid,serial#,@inst_id' IMMEDIATE;

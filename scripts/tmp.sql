@@ -2,18 +2,6 @@
 https://www.modb.pro/issue/34884
 
 
-在Oracle中，coe_load_sql_profile.sql脚本的作用是什么？
-https://cloud.tencent.com/developer/article/1515898
-
-
-关于 utlirplscope.sql 脚本
-https://www.oracle.com/technetwork/database/utlirplscope-087912-zhs.html
-
-
-
-
-
-
 Linux如何用脚本监控Oracle发送警告日志ORA-报错发送邮件
 https://www.cnblogs.com/PiscesCanon/p/13281926.html
 

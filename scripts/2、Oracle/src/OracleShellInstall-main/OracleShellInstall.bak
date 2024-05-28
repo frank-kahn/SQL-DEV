@@ -1,0 +1,4232 @@
+#!/bin/bash
+#==============================================================#
+# File       :   OracleShellInstall
+# Ctime      :   2022-06-18 12:32:09
+# Mtime      :   2023-05-01 12:36:18
+# Desc       :   Oracle Database Install script for single/rac
+# Path       :   /soft/OracleShellInstall
+# Version    :   3.0.0
+# Author     :   Lucifer(pc1107750981@163.com)
+# Copyright (C) 2021-2023 Pengcheng Liu
+#==============================================================#
+
+#==============================================================#
+#                         全局变量定义                           #
+#==============================================================#
+# 获取安装软件以及脚本目录（当前目录）
+software_dir=$(dirname $(readlink -f $0))
+# 删除脚本生成的LOG日志文件
+[[ $(find $software_dir -name "print_ora_install_*.log" 2>/dev/null) ]] && rm -f $software_dir/print_ora_install_*.log
+# 当前执行脚本系统时间
+current=$(date +%Y%m%d%H%M%S)
+# 脚本安装日志文件
+oracleinstalllog=$software_dir/print_ora_install_$current.log
+# 物理内存（KB）
+os_memory_total=$(awk '/MemTotal/{print $2}' /proc/meminfo)
+# 数据库内存总和(MB) = 物理内存的 80%
+let db_memory_total=os_memory_total*1/2/1024
+# 主机名称，默认值为 orcl
+hostname=orcl
+# 数据库名称，默认值为 orcl
+db_name=orcl
+# 是否 CDB 架构
+declare -l iscdb=false
+# PDB 名称，如果 PDB 名称有值，则默认为 CDB 架构，默认值为 pdb01，如果传入多个 PDB 名称，则创建多个 PDB，传参以逗号隔开：pdb01,pdb02,pdb03
+pdbname=pdb01
+# 系统用户 oracle 密码，默认值为 oracle
+oracle_passwd=oracle
+# 数据库用户 sys/system 密码, 默认值为 oracle
+database_passwd=oracle
+# 数据库软件安装根目录，默认值为 /u01
+env_base_dir=/u01
+# 单机数据库参数，数据文件目录，默认值为 /oradata
+oradata_dir=/oradata
+# 数据库备份目录，默认值为 /backup
+backup_dir=/backup
+# 数据库脚本目录，默认值为 /home/oracle/scripts
+scripts_dir=/home/oracle/scripts
+# 数据库字符集，默认值为 AL32UTF8
+declare -u db_characterset=AL32UTF8
+# 数据库国家字符集，默认值为 AL16UTF16
+declare -u nation_characterset=AL16UTF16
+# 数据库在线重做日志大小，默认值为 1024，单位 MB
+redosize=1024
+# 数据库是否开启归档模式
+declare -l enable_arch=true
+# 仅配置操作系统，默认值为 N，包括配置操作系统以及解压软件安装包
+declare -u only_conf_os=N
+# 安装到 Grid 软件结束，默认值为 N
+declare -u install_until_grid=N
+# 安装到 Oracle 软件结束，默认值为 N
+declare -u install_until_db=N
+# 是否优化数据库参数，默认值为 N
+declare -u optimize_db=N
+# OPatch 补丁包名称
+opatch_name="$software_dir"/p6880880_*.zip
+# 数据库安装架构，分为单机和RAC
+declare -l oracle_install_mode
+# 是否安装图形化界面，默认值为 N
+declare -u isgui=N
+# 是否挂载 ISO 镜像，默认值为 Y，如果不需要脚本配置 YUM 源，则无需挂载 ISO
+declare -u iso=Y
+#==============================================================#
+#                      RAC 模式全局变量定义                       #
+#==============================================================#
+# RAC 节点号，默认为 1
+node_num=1
+# 定义一个存放公网IP的数组
+declare -a rac_public_ips
+# 定义一个存放主机名的数组
+declare -a rac_hostnames
+# 定义一个存放virtual ip的数组
+declare -a rac_virtual_ips
+# 定义一个存放心跳网卡名称的数组
+declare -a rac_priv_ifnames
+# 定义一个存放 scan ip 的数组
+declare -a rac_scan_ips
+# 新建一个空的数组，用于保存 root 用户需要设置 SSH 信任的 IP 地址
+declare -a ssh_ips
+# 定义用于保存心跳IP的关联数组
+declare -A rac_priv_ips
+# 定义数组 rac_priv_ifnames_sorted 用于存放排序后的 rac_priv_ifnames 数组
+declare -a rac_priv_ifnames_sorted
+# 用于存放grid静默文件 networkinterfacelist 数组
+declare -a networkinterfacelist_array
+# 存放集群节点数组
+declare -a clusternodes_array
+# 存放SSH互信IP数组
+declare -a hosts_array
+# 系统用户 grid 密码，默认值为 oracle
+grid_passwd=oracle
+# 是否配置 DNS 解析，默认值为 N
+declare -u dns=N
+# 是否配置 multipath 多路径，默认值为 Y
+declare -u multipath=Y
+# asm diskstring，默认值为 /dev/asm*
+asmdisk_string=/dev/asm*
+# 是否配置 ASM 磁盘 UDEV 绑盘，默认值为 Y
+declare -u asm_disk_conf=Y
+# ASM 磁盘组名称，默认为 DATA,OCR,ARCH
+declare -u ocr_asm_group=OCR
+declare -u data_asm_group=DATA
+declare -u arch_asm_group=ARCH
+# ASM 磁盘组冗余度，默认值为 EXTERNAL，可选值为 [EXTERNAL|NORMAL|HIGH]
+declare -u ocr_redun=EXTERNAL
+declare -u data_redun=EXTERNAL
+declare -u arch_redun=EXTERNAL
+# 是否配置 AFD，默认值为 false
+declare -l afd=false
+# 修复 VBOX BUG，如果使用 VBOX 划盘安装 RAC，则需要设置为 Y，默认值为 N
+declare -u virtualbox=N
+# 磁盘列表
+declare -a all_disk=$(lsblk -l | awk '/^sd|vd/{print $1}' | sed -n '/[0-9]$/!p')
+#==============================================================#
+#                          UPPERCASE                           #
+#==============================================================#
+# 转换大写函数
+function upper() {
+  echo "${1^^}"
+}
+#==============================================================#
+#                          LOWERCASE                           #
+#==============================================================#
+# 转换小写函数
+function lower() {
+  echo "${1,,}"
+}
+#==============================================================#
+#                         Printf Color                         #
+#==============================================================#
+function color_printf() {
+  declare -A color_map=(
+    ["red"]='\E[1;31m'
+    ["green"]='\E[1;32m'
+    ["blue"]='\E[1;34m'
+  )
+  local res='\E[0m'
+  local color=${color_map[$1]:-'$2'}
+  printf "${color}%-20s %-30s %-50s\n${res}" "$2" "$3" "$4"
+}
+#==============================================================#
+#                          Log Print                           #
+#==============================================================#
+function log_print() {
+  echo
+  color_printf green "#==============================================================#"
+  color_printf green "$1"
+  color_printf green "#==============================================================#"
+  [[ -n $2 ]] && echo -e "\n$2"
+  echo
+}
+#==============================================================#
+#                          Art Print                           #
+#==============================================================#
+function art_print() {
+  # 输出 小火车
+  cat <<ASCII_ART
+
+.---- -. -. .  .   .        .
+( .',----- - - ' '      '                                         __
+ \_/      ;--:-          __--------------------___  ____=========_||___
+__U__n_^_''__[.  ooo___  | |_!_||_!_||_!_||_!_| |   |..|_i_|..|_i_|..|
+c(_ ..(_ ..(_ ..( /,,,,,,] | |___||___||___||___| |   |                |
+,_\___________'_|,L______],|______________________|_i,!________________!_i
+/;_(@)(@)==(@)(@)   (o)(o)      (o)^(o)--(o)^(o)          (o)(o)-(o)(o)
+""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"""~"'""
+
+ASCII_ART
+}
+#==============================================================#
+#                          Art Print                           #
+#==============================================================#
+function logo_print() {
+  cat <<-EOF
+
+   ███████                             ██          ████████ ██               ██  ██ ██                    ██              ██  ██
+  ██░░░░░██                           ░██         ██░░░░░░ ░██              ░██ ░██░██                   ░██             ░██ ░██
+ ██     ░░██ ██████  ██████    █████  ░██  █████ ░██       ░██       █████  ░██ ░██░██ ███████   ██████ ██████  ██████   ░██ ░██
+░██      ░██░░██░░█ ░░░░░░██  ██░░░██ ░██ ██░░░██░█████████░██████  ██░░░██ ░██ ░██░██░░██░░░██ ██░░░░ ░░░██░  ░░░░░░██  ░██ ░██
+░██      ░██ ░██ ░   ███████ ░██  ░░  ░██░███████░░░░░░░░██░██░░░██░███████ ░██ ░██░██ ░██  ░██░░█████   ░██    ███████  ░██ ░██
+░░██     ██  ░██    ██░░░░██ ░██   ██ ░██░██░░░░        ░██░██  ░██░██░░░░  ░██ ░██░██ ░██  ░██ ░░░░░██  ░██   ██░░░░██  ░██ ░██
+ ░░███████  ░███   ░░████████░░█████  ███░░██████ ████████ ░██  ░██░░██████ ███ ███░██ ███  ░██ ██████   ░░██ ░░████████ ███ ███
+  ░░░░░░░   ░░░     ░░░░░░░░  ░░░░░  ░░░  ░░░░░░ ░░░░░░░░  ░░   ░░  ░░░░░░ ░░░ ░░░ ░░ ░░░   ░░ ░░░░░░     ░░   ░░░░░░░░ ░░░ ░░░ 
+
+EOF
+}
+
+#==============================================================#
+#                          传参校验                             #
+#==============================================================#
+# 判断参数值为空或者-开头
+function checkpara_NULL() {
+  if [[ -z $2 || $2 == -* ]]; then
+    color_printf red "参数 [ $1 ] 的值为空，请检查!"
+    echo
+    exit 1
+  fi
+}
+# 判断参数值是否为 Y/N
+function checkpara_YN() {
+  if ! [[ $2 =~ ^[YN]$ ]]; then
+    color_printf red "参数 [ $1 ] 的值必须为 Y 或者 N，请检查!"
+    echo
+    exit 1
+  fi
+}
+# 判断磁盘组冗余度
+function checkpara_REDUN() {
+  REDUN="EXTERNAL|NORMAL|HIGH"
+  if ! [[ $2 =~ ^($REDUN)$ ]]; then
+    color_printf red "RAC 参数 [ $1 ] 的值必须为 EXTERNAL，NORMAL 或者 HIGH，请检查!"
+    echo
+    exit 1
+  fi
+}
+# 判断所需文件是否存在的函数
+function check_file {
+  if [[ -e "$1" ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+#==============================================================#
+#                         Check IP                             #
+#==============================================================#
+# 检查 IP 地址的有效性
+function check_ip() {
+  local ip=$1
+  # 使用正则表达式和 awk 判断 IP 地址是否有效
+  if [[ $(echo "$ip" | grep -E "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$") && $(echo "$ip" | awk -F. '$1<=255&&$2<=255&&$3<=255&&$4<=255') ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+#==============================================================#
+#                         SSH Check                            #
+#==============================================================#
+function ssh_check() {
+  # 检查 ssh 连接是否正常
+  local flag=true
+  declare -a IPs=("${@:2}") # 远程主机 IP 地址数组
+  # 遍历所有 IP 地址，逐个进行 SSH 连接测试
+  for ip in "${IPs[@]}"; do
+    # 利用 su 命令切换至指定用户执行 ssh 命令，测试连接是否正常
+    if ! su - $1 -c "ssh -q -o ConnectTimeout=1 -o ConnectionAttempts=1 -o PreferredAuthentications=publickey -o StrictHostKeyChecking=no $ip echo 'true'" >/dev/null 2>&1; then
+      # 如果某个连接失败，则标识 flag 置为 false，并跳出循环
+      flag=false
+      break
+    fi
+  done
+  # 输出整体连接状态
+  echo $flag
+}
+#==============================================================#
+#                         SSH Trust                            #
+#==============================================================#
+# 函数：创建并分发 SSH 密钥对，以实现 SSH 免密登录
+function ssh_trust() {
+  local dest_user=$1             # 远程主机登录用户名
+  local passwd=$2                # 远程主机登录密码
+  declare -a host_ips=("${@:3}") # 远程主机 IP 地址数组
+  # 根据不同用户设置 SSH 目录
+  [[ $dest_user = "root" ]] && ssh_dir="/root/.ssh" || ssh_dir="/home/$dest_user/.ssh"
+  # 准备 SSH 目录
+  rm -rf "$ssh_dir"
+  mkdir -p "$ssh_dir" && chmod 755 "$ssh_dir"
+  # 生成 SSH 密钥对，并将公钥添加到 authorized_hosts 文件
+  ssh-keygen -t rsa -P '' -f "$ssh_dir/id_rsa"
+  cat "$ssh_dir/id_rsa.pub" >>"$ssh_dir/authorized_keys" && chmod 644 "$ssh_dir/authorized_keys"
+  # 将主机密钥添加到 known_hosts 文件
+  if [[ ! -f "$ssh_dir/known_hosts" ]]; then
+    # 如果 known_hosts 文件不存在，则创建它
+    touch "$ssh_dir/known_hosts"
+  fi
+  for ip in "${host_ips[@]}"; do
+    # openEuler 22.03 需要增加 ed25519 认证
+    ssh-keygen -F "$ip" >/dev/null || ssh-keyscan -t rsa,dsa,ecdsa,ed25519 "$ip" >>"$ssh_dir/known_hosts" 2>/dev/null
+  done
+  # 将 SSH 目录分发到远程主机，并设置 SSH 无密码登录
+  for ip in "${host_ips[@]}"; do
+    /usr/bin/expect <<-EOF >/dev/null 2>&1
+      spawn scp -r -q "$ssh_dir" "$dest_user@$ip:~"
+      expect "password:" { sleep 1; send "$passwd\r"; exp_continue } eof { exit }
+EOF
+  done
+}
+#==============================================================#
+#                             Usage                            #
+#==============================================================#
+function help() {
+  # 打印参数
+  print_options() {
+    local options=("$@")
+    # 调用 color_printf 函数，输出绿色字体
+    # ${option%% *} 表示从 option 变量中删除最后一个空格及其后面的字符，保留前面的部分
+    # ${option#* } 表示从 option 变量中删除第一个空格及其前面的字符，保留后面的部分
+    for option in "${options[@]}"; do
+      color_printf green "${option%% *}" "${option#* }"
+    done
+  }
+  echo
+  # 单机模式
+  color_printf red "用法: OracleShellInstall [选项] 对象 { 命令 | help }"
+  echo
+  color_printf blue "单机模式："
+  echo
+  options=(
+    "-iso 不需要配置本地YUM源时，请配置该参数为：N，默认值：[Y]"
+    "-lf [必填] 公网 IP 的网卡名称"
+    "-n 主机名，默认值：[orcl]"
+    "-op 系统 oracle 用户密码，默认值：[oracle]"
+    "-d Oracle 软件安装根目录，默认值：[/u01]"
+    "-ord Oracle 数据文件目录，默认值：[/oradata]"
+    "-o Oracle 数据库名称，默认值：[orcl]"
+    "-dp Oracle 数据库 sys/system 密码，默认值：[oracle]"
+    "-ds 数据库字符集，默认值：[AL32UTF8]"
+    "-ns 数据库国家字符集，默认值：[AL16UTF16]"
+    "-er 是否启用归档日志，默认值：[true]"
+    "-pdb 用于 CDB 架构，PDB 名称，支持传入多个PDB：-pdb pdb01,pdb02，默认值：[pdb01]"
+    "-redo 数据库 redo 日志文件大小，单位为 MB，默认值[1024]"
+    "-opa Oracle PSU/RU 补丁编号"
+    "-jpa Oracle OJVM PSU/RU 补丁编号"
+    "-m 仅配置操作系统，默认值：[N]"
+    "-ud 安装到 Oracle 软件结束，默认值：[N]"
+    "-gui 是否安装系统图形界面，默认值：[N]"
+    "-opd 安装完成是否优化 Oracle 数据库，默认值：[N]"
+  )
+  print_options "${options[@]}"
+  # 单机 ASM 模式
+  echo
+  color_printf blue "单机 ASM 模式："
+  echo
+  options=(
+    "-iso 不需要配置本地YUM源时，请配置该参数为：N，默认值：[Y]"
+    "-lf [必填] 公网 IP 的网卡名称"
+    "-n 主机名，默认值：[orcl]"
+    "-op 系统 oracle 用户密码，默认值：[oracle]"
+    "-d Oracle 软件安装根目录，默认值：[/u01]"
+    "-ord Oracle 数据文件目录，默认值：[/oradata]"
+    "-o Oracle 数据库名称，默认值：[orcl]"
+    "-gp 系统 grid 用户密码，建议不要包含特殊字符，默认值：[oracle]"
+    "-dp Oracle 数据库 sys/system 密码，默认值：[oracle]"
+    "-adc 是否需要脚本配置 ASM 磁盘，如果不需要配置，则需要自行提前配置好，默认值：[Y]"
+    "-mp 是否需要脚本配置 multipath 多路径，如果不需要配置多路径，则使用UDEV直接绑盘，默认值：[Y]"
+    "-dd [必填] ASM DATA 磁盘组的磁盘列表，默认传参为(sd名称)：-dd /dev/sdb；若设置参数 -adc N，则传入已配置好的磁盘列表：-dd /dev/asm_data1"
+    "-dn ASM DATA 磁盘组名称，默认值：[DATA]"
+    "-dr ASM DATA 磁盘组冗余度，默认值：[EXTERNAL]"
+    "-ds 数据库字符集，默认值：[AL32UTF8]"
+    "-ns 数据库国家字符集，默认值：[AL16UTF16]"
+    "-er 是否启用归档日志，默认值：[true]"
+    "-pdb 用于 CDB 架构，PDB 名称，支持传入多个PDB：-pdb pdb01,pdb02，默认值：[pdb01]"
+    "-redo 数据库 redo 日志文件大小，单位为 MB，默认值[1024]"
+    "-gpa Grid PSU/RU 补丁编号"
+    "-opa Oracle PSU/RU 补丁编号"
+    "-jpa Oracle OJVM PSU/RU 补丁编号"
+    "-m 仅配置操作系统，默认值：[N]"
+    "-ud 安装到 Oracle 软件结束，默认值：[N]"
+    "-gui 是否安装系统图形界面，默认值：[N]"
+    "-opd 安装完成是否优化 Oracle 数据库，默认值：[N]"
+    "-vbox 在虚拟机 virtualbox 上安装 RAC 时需要设置 -vbox Y，用于修复 BUG，默认值：[N]"
+    "-fd 过滤多路径磁盘，去除重复路径，获取唯一盘符；参数值为非ASM盘符（系统盘等），例如：-fd /dev/sda，多个盘符用逗号拼接：-fd /dev/sda,/dev/sdb"
+  )
+  print_options "${options[@]}"
+  # RAC 集群模式
+  echo
+  color_printf blue "RAC 模式："
+  echo
+  options=(
+    "-iso 不需要配置本地YUM源时，请配置该参数为：N，默认值：[Y]"
+    "-lf [必填] RAC 所有节点公网 IP 的网卡名称，所有节点需要保持一致，例如：-lf team0"
+    "-pf [必填] RAC 所有节点心跳 IP 的网卡名称，最多支持2组心跳，所有节点需要保持一致，例如：-pf eth3,eth4"
+    "-n [必填] RAC 所有节点主机名前缀，参数值必须按照节点顺序排序，例如主机名为 orcl01,orcl02，则参数传值：-n orcl，默认值：[orcl]"
+    "-hn [必填] RAC 所有节点主机名，参数值必须按照节点顺序排序，例如：-hn orcl01,orcl02"
+    "-ri [必填] RAC 所有节点公网 IP 地址，参数值必须按照节点顺序排序，例如：-ri 10.211.55.100,10.211.55.101"
+    "-vi [必填] RAC 所有节点虚拟 IP 地址，参数值必须按照节点顺序排序，例如：-ri 10.211.55.102,10.211.55.103"
+    "-si [必填] RAC scan IP 地址，单个scan ip无需配置 DNS，3个scan ip则必须配置 DNS，例如：-si 10.211.55.105,10.211.55.106,10.211.55.107"
+    "-d Oracle 数据库软件安装根目录 [/u01]"
+    "-rp [必填] 系统 root 用户密码，所有节点必须保持一致，用于建立互信，建议不要包含特殊字符"
+    "-gp 系统 grid 用户密码，建议不要包含特殊字符，默认值：[oracle]"
+    "-op 系统 oracle 用户密码，建议不要包含特殊字符，默认值：[oracle]"
+    "-cn RAC 集群名称，长度不能超过15位，可自定义，默认值：主机名前缀(-n参数)-cluser [orcl-cluster]"
+    "-sn RAC scan名称，可自定义，默认值：主机名前缀(-n参数)-scan [orcl-scan]"
+    "-adc 是否需要脚本配置 ASM 磁盘，如果不需要配置，则需要自行提前配置好，默认值：[Y]"
+    "-mp 是否需要脚本配置 multipath 多路径，如果不需要配置多路径，则使用UDEV直接绑盘，默认值：[Y]"
+    "-od [必填] ASM OCR 磁盘组的磁盘列表，默认传参为(sd名称)：-od /dev/sdb；若设置参数 -adc N，则传入已配置好的磁盘列表：-od /dev/asm_ocr1"
+    "-dd [必填] ASM DATA 磁盘组的磁盘列表，传参方式同 -od"
+    "-ad ASM 归档日志磁盘组的磁盘列表，传参方式同 -od"
+    "-on ASM OCR 磁盘组名称，默认值：[OCR]"
+    "-dn ASM DATA 磁盘组名称，默认值：[DATA]"
+    "-an ASM ARCH 磁盘组名称，默认值：[ARCH]"
+    "-or ASM OCR 磁盘组冗余度，默认值：[EXTERNAL]"
+    "-dr ASM DATA 磁盘组冗余度，默认值：[EXTERNAL]"
+    "-ar ASM ARCH 磁盘组冗余度，默认值：[EXTERNAL]"
+    "-o Oracle 数据库名称，默认值：[orcl]"
+    "-dp Oracle 数据库 sys/system 密码，默认值：[oracle]"
+    "-ds 数据库字符集，默认值：[AL32UTF8]"
+    "-ns 数据库国家字符集，默认值：[AL16UTF16]"
+    "-er 是否启用归档日志，默认值：[true]"
+    "-pdb 用于 CDB 架构，PDB 名称，支持传入多个PDB：-pdb pdb01,pdb02，默认值：[pdb01]"
+    "-redo 数据库 redo 日志文件大小，单位为 MB，默认值[1024]"
+    "-tsi RAC CTSS 的时间服务器 IP 地址，用于配置所有节点间的时间同步"
+    "-dns 是否配置 DNS，如果配置多个scan ip，则需要配置 -dns Y，默认值：[N]"
+    "-dnsn DNS 服务器名称"
+    "-dnsi DNS 服务器 IP 地址"
+    "-gpa Grid PSU/RU 补丁编号"
+    "-opa Oracle PSU/RU 补丁编号"
+    "-jpa Oracle OJVM PSU/RU 补丁编号"
+    "-m 仅配置操作系统，默认值：[N]"
+    "-ug 安装到 Grid 软件结束，默认值：[N]"
+    "-ud 安装到 Oracle 软件结束，默认值：[N]"
+    "-gui 是否安装系统图形界面，默认值：[N]"
+    "-opd 安装完成是否优化 Oracle 数据库，默认值：[N]"
+    "-vbox 在虚拟机 virtualbox 上安装 RAC 时需要设置 -vbox Y，用于修复 BUG，默认值：[N]"
+    "-fd 过滤多路径磁盘，去除重复路径，获取唯一盘符；参数值为非ASM盘符（系统盘等），例如：-fd /dev/sda，多个盘符用逗号拼接：-fd /dev/sda,/dev/sdb"
+  )
+  print_options "${options[@]}"
+  echo
+  color_printf red "注意：本脚本仅用于新服务器上实施部署数据使用，严禁在已运行数据库的主机上执行，以免发生数据丢失或者损坏，造成不可挽回的损失！！！"
+  echo
+  exit 0
+}
+#==============================================================#
+#                         配置 YUM 源                           #
+#==============================================================#
+function conf_yum() {
+  log_print "配置本地 YUM 源"
+  if [[ "$os_type" = "sles" ]]; then
+    # 备份原有YUM配置文件
+    mkdir /etc/zypp/repos.d/bak -p && nohup mv /etc/zypp/repos.d/* /etc/zypp/repos.d/bak >/dev/null 2>&1
+    zypper ar -f $mountPatch/Module-Basesystem sles
+    zypper ar -f $mountPatch/Module-Legacy sles-Legacy
+    zypper ar -f $mountPatch/Module-Development-Tools sles-Tools
+  else
+    # 避免Linux主机提示注册
+    [[ -e /etc/yum/pluginconf.d/subscription-manager.conf ]] && sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/subscription-manager.conf
+    # 避免Kyli/openEuler主机提示注册
+    [[ -e /etc/yum/pluginconf.d/debuginfo-install.conf ]] && sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/debuginfo-install.conf
+    # 备份原有YUM配置文件
+    mkdir /etc/yum.repos.d/bak -p && nohup mv /etc/yum.repos.d/* /etc/yum.repos.d/bak >/dev/null 2>&1
+    # 根据不同版本号创建本地YUM源配置文件
+    case "$os_type" in
+    kylin)
+      # 麒麟 V10 对标 redhat8，但是使用 redhat7 的 yum 配置方式
+      cat <<-EOF >/etc/yum.repos.d/local.repo
+[server]
+name=server
+baseurl=file://$mountPatch
+enabled=1
+gpgcheck=0
+EOF
+      ;;
+    openEuler)
+      cat <<-EOF >/etc/yum.repos.d/local.repo
+[openEuler]
+name=openEuler
+baseurl=file:///$mountPatch
+enabled=1
+gpgcheck=1
+gpgkey=file:///$mountPatch/RPM-GPG-KEY-openEuler
+EOF
+      ;;
+    rhel)
+      if [[ "$os_version" = 6 ]] || [[ "$os_version" = 7 ]]; then
+        cat <<-EOF >/etc/yum.repos.d/local.repo
+[server]
+name=server
+baseurl=file://$mountPatch
+enabled=1
+gpgcheck=0
+EOF
+      elif [[ "$os_version" = 8 ]] || [[ "$os_version" = 9 ]]; then
+        cat <<-EOF >/etc/yum.repos.d/local.repo
+[BaseOS]
+name=BaseOS
+baseurl=file://$mountPatch/BaseOS
+enabled=1
+gpgcheck=0
+[AppStream]
+name=AppStream
+baseurl=file://$mountPatch/AppStream
+enabled=1
+gpgcheck=0
+EOF
+      fi
+      ;;
+    esac
+
+    # 打印 yum 配置文件内容
+    cat /etc/yum.repos.d/local.repo
+  fi
+}
+#==============================================================#
+#                         RPM Install                          #
+#==============================================================#
+# 安装软件包（如果未安装）
+function install_packages_if_not_present() {
+  for package in "$@"; do
+    if ! rpm -q "$package" >/dev/null; then
+      if [[ "$os_type" = "sles" ]]; then
+        zypper in -y "$package" >/dev/null 2>&1
+      else
+        yum install -y -q "$package" --skip-broken >/dev/null 2>&1
+      fi
+    fi
+  done
+
+  ## openEuler 22.03 安装 12CR2 报错 jskm.c:(.text+0x4081): undefined reference to `stat'，eobtl.c:(.text+0x3ba): undefined reference to `fstat' 解决方案
+  case "$os_type-$os_version" in
+  "openEuler-8")
+    if check_file $software_dir/compat-glibc-2.12-4.el7.centos.x86_64.rpm; then
+      # 解压并提取软件包内容
+      rpm2cpio $software_dir/compat-glibc-2.12-4.el7.centos.x86_64.rpm | cpio -idmvu -D $software_dir >/dev/null 2>&1
+      # 创建并进入目录
+      mkdir -p $software_dir/oS && cd $software_dir/oS
+      # 提取对象文件
+      ar x $software_dir/usr/lib/x86_64-redhat-linux6E/lib64/libc_nonshared.a
+      # 添加特定的对象文件到 libc_nonshared.a 中
+      ar r /usr/lib64/libc_nonshared.a stat*.oS
+      ar r /usr/lib64/libc_nonshared.a fstat*.oS
+      # 返回 /soft 目录
+      cd ..
+      # 删除不必要的文件夹和文件
+      rm -rf $software_dir/usr && rm -rf $software_dir/oS
+    fi
+    ;;
+  esac
+}
+#==============================================================#
+#                         获取磁盘容量                         #
+#==============================================================#
+function disk_storage() {
+  lsblk -b -o SIZE -n "${1}" | awk '$1 >= 1024*1024*1024 {printf "%.1fG\n", $1/1024/1024/1024}'
+}
+#==============================================================#
+#                         过滤唯一uuid磁盘                     #
+#==============================================================#
+function filter_disk() {
+  local fil_disk=$1
+  # 将参数值转化为数组形式
+  declare -a fil_disk_arr=(${fil_disk//,/ })
+  declare -a disk_list
+  # 使用for-in循环枚举all_disk数组中所有元素
+  for ad in ${all_disk// / }; do
+    # 判断$ad是否不存在于$fd中，如果是则执行下列操作
+    if ! [[ ${fil_disk_arr[*]} =~ $ad ]]; then
+      # 将"/dev/$disk"添加到disk_list中
+      disk_list+=("/dev/$ad")
+    fi
+  done
+  # 声明存储磁盘 UUID 的关联数组
+  declare -A uuids
+  # 声明存储磁盘容量大小的关联数组
+  declare -A sizes
+
+  # 处理每个磁盘的循环
+  for disk in "${disk_list[@]}"; do
+    # 保存磁盘容量大小到关联数组中
+    sizes[$disk]=$(disk_storage "$disk")
+    # 获取磁盘的 UUID
+    uuid=$(get_uuid "$disk")
+
+    # 如果磁盘有 UUID 并且它还没有添加到数组中，就将其添加到数组中
+    if [[ $uuid != "" && ! ${uuids[*]} =~ $uuid ]]; then
+      uuids[$disk]=$uuid
+    fi
+  done
+  # 遍历存储磁盘 UUID 的关联数组并打印每个磁盘的 UUID、名称和容量大小
+  echo
+  for disk in "${!uuids[@]}"; do
+    echo "${uuids[$disk]} $disk ${sizes[$disk]}"
+  done | sort -k3n -k2
+  echo
+  # 过滤完直接退出脚本
+  exit 1
+}
+#==============================================================#
+#                         Get UUID                             #
+#==============================================================#
+# 定义名为 get_uuid 的函数
+function get_uuid() {
+  case "$os_version" in
+  "6")
+    # 获取指定设备的 UUID 并输出
+    /sbin/scsi_id -g -u "$1"
+    ;;
+  *)
+    # 获取指定设备的 UUID 并输出
+    /usr/lib/udev/scsi_id -g -u "$1"
+    ;;
+  esac
+
+}
+#==============================================================#
+#                   Clean Disk && GET UUID                     #
+#==============================================================#
+# 定义名为 clean_disk_and_get_uuid 的函数
+function clean_disk_and_get_uuid() {
+  # 循环处理输入参数，将逗号分隔的设备列表转换成由空格分隔的设备列表，并依次处理每个设备
+  for i in ${1//,/ }; do
+    # 如果当前设备名称不为空，则执行以下命令
+    if [ -n "$i" ]; then
+      # 使用 dd 命令清空指定设备的前 1KB 数据
+      dd if=/dev/zero of="$i" bs=1024 count=1
+      # 获取指定设备的 UUID 并将其添加到输出文件中
+      echo -n "$(get_uuid $i)", >>"$2"
+    fi
+  done
+}
+#==============================================================#
+#                    Configure Oracle ASM                      #
+#==============================================================#
+# 配置asm磁盘
+function conf_asmdisk() {
+  local scsi_id_path
+  if [[ $multipath = "Y" ]]; then
+    # 多路径udev绑盘
+    udev_rule="KERNEL==\"dm-*\",ENV{DM_UUID}==\"$1\",SYMLINK+=\"$2\",OWNER=\"grid\",GROUP=\"asmadmin\",MODE=\"0660\""
+  else
+    # 没有多路径udev绑盘,版本不同，scsi_id 路径不同
+    if [[ "$os_version" = "6" ]]; then
+      udev_rule="KERNEL==\"sd*\", BUS==\"scsi\", PROGRAM==\"/sbin/scsi_id -g -u -d /dev/\$name\", RESULT==\"$1\", SYMLINK+=\"$2\", OWNER=\"grid\", GROUP=\"asmadmin\", MODE=\"0660\""
+    else
+      udev_rule="KERNEL==\"sd*\", SUBSYSTEM==\"block\", PROGRAM==\"/usr/lib/udev/scsi_id -g -u -d /dev/\$name\", RESULT==\"$1\", SYMLINK+=\"$2\", OWNER=\"grid\", GROUP=\"asmadmin\", MODE=\"0660\""
+
+    fi
+  fi
+  # 写入udev规则文件
+  echo "$udev_rule" >>/etc/udev/rules.d/99-oracle-asmdevices.rules
+}
+#==============================================================#
+#                      执行 root.sh 脚本                        #
+#==============================================================#
+# 执行 root.sh 脚本
+function exec_root() {
+  local root_path=$1
+  log_print "执行 root 脚本"
+  if [[ "$oracle_install_mode" = "rac" ]]; then
+    color_printf blue "节点 $local_ip ："
+    echo
+  fi
+  # 执行 orainstRoot.sh 脚本，不论 grid/oracle 安装都执行
+  if check_file $env_oracle_inven/orainstRoot.sh; then
+    $env_oracle_inven/orainstRoot.sh
+  fi
+  if check_file $root_path/root.sh; then
+    $root_path/root.sh
+  fi
+  # 仅 rac 模式执行
+  if [[ "$oracle_install_mode" = "rac" ]]; then
+    for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+      echo
+      color_printf blue "节点 ${rac_public_ips[i]} ："
+      echo
+      ssh -q ${rac_public_ips[i]} $env_oracle_inven/orainstRoot.sh
+      ssh -q ${rac_public_ips[i]} $root_path/root.sh
+    done
+  fi
+}
+#==============================================================#
+#                         BAK FILE                             #
+#==============================================================#
+# 定义名为 bak_file 的函数，用于备份指定文件
+function bak_file() {
+  # 获取第一个传入参数作为要备份的文件路径
+  local file_path=$1
+  # 如果文件存在则备份
+  if check_file $file_path; then
+    # 检查文件中是否包含 "# OracleBegin" 字符串
+    if [[ $(grep -E -c "# OracleBegin" $file_path) = 0 ]]; then
+      # 如果不包含，则使用 nohup 命令备份该文件，并附加 .original 后缀
+      # 这里使用了 \cp 命令，而不是 cp 命令，以避免出现别名或其他问题
+      nohup \cp -rv $file_path{,.original} >/dev/null 2>&1
+    else
+      # 如果文件中包含 "# OracleBegin" 字符串，则先备份当前文件，再恢复原始文件
+      # 备份当前文件，将其保存为原来的名称加上当前时间戳的形式
+      nohup \cp -rv $file_path{,.$current} >/dev/null 2>&1
+      # 恢复原始文件，将其替换回原始的备份文件
+      nohup \cp -rv $file_path{.original,} >/dev/null 2>&1
+    fi
+  else
+    touch $file_path.original
+  fi
+}
+#==============================================================#
+#                         configure swap                       #
+#==============================================================#
+# 定义名为 conf_swap 的函数，用于配置交换空间
+function conf_swap() {
+  # 获取swap大小
+  local swap_total=$(awk '/^SwapTotal:/ { print $2; }' /proc/meminfo)
+  # 确定需要的交换空间大小
+  let "swap_need = $os_memory_total > 16777216 ? 16777216 : $os_memory_total > 2097152 ? $os_memory_total : $os_memory_total * 3 / 2"
+  # 计算额外需要的交换空间大小
+  let "swap_count = $swap_need - $swap_total"
+  # 如果需要额外交换空间，则创建并启用 swap
+  if (($swap_count > 0)); then
+    # 判断 /etc/fstab 文件中是否存在 /swapfile 文件这行，如果没有则添加
+    if ! grep -q '/swapfile swap swap defaults 0 0' /etc/fstab; then
+      log_print "配置 SWAP 交换空间"
+      if check_file "/swapfile"; then
+        rm -rf /swapfile
+      fi
+      # 创建指定大小的空文件 /swapfile，并将其格式化为交换分区
+      dd if=/dev/zero of=/swapfile bs=1G count=$((swap_count / 1024 / 1024))
+      # 设置文件权限为 0600
+      chmod 600 /swapfile
+      # 格式化文件为 Swap 分区
+      mkswap /swapfile
+      # 启用 Swap 分区
+      swapon /swapfile
+      # 将 Swap 分区信息添加到 /etc/fstab 文件中，以便系统重启后自动加载
+      echo "/swapfile none swap sw 0 0" >>/etc/fstab
+    fi
+    free -m
+  fi
+}
+#==============================================================#
+#                         configure firewall                   #
+#==============================================================#
+function conf_firewall() {
+  log_print "禁用防火墙"
+  # CentOS/RHEL 6
+  case "$os_version" in
+  "6")
+    chkconfig iptables off
+    chkconfig ip6tables off
+    if service iptables status >/dev/null; then
+      service iptables stop
+      service ip6tables stop
+      service iptables status
+    else
+      color_printf blue "防火墙服务未启动，无需禁用。"
+    fi
+    ;;
+  *)
+    # 包含 sles 版本
+    systemctl disable firewalld.service -q
+    if systemctl is-active firewalld.service >/dev/null; then
+      systemctl stop firewalld.service
+      systemctl status firewalld
+    else
+      color_printf blue "防火墙服务未启动，无需禁用。"
+    fi
+    ;;
+  esac
+}
+#==============================================================#
+#                         禁用 Selinux                          #
+#==============================================================#
+function conf_selinux() {
+  log_print "禁用 SELinux"
+  # 检查 SELinux 是否已经被禁用
+  if [[ $(getenforce) != "Disabled" ]]; then
+    /usr/sbin/setenforce 0 # 临时关闭 SELinux
+  fi
+  # 更新配置文件中的 SELINUX 配置
+  sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
+  # 记录更新后的 SELINUX 配置
+  sestatus
+}
+#==============================================================#
+#                          安装 rpm                            #
+#==============================================================#
+function rpm_install() {
+  log_print "YUM 静默安装依赖包"
+  # 安装软件包
+  packages=(
+    bc                      # 使用数学函数的 GNU 工具集
+    binutils                # 二进制工具集
+    compat-libcap1          # 兼容性库
+    gcc                     # GNU 编译器套件
+    gcc-c++                 # GNU C++ 编译器
+    elfutils-libelf         # ELF 文件处理工具和库
+    elfutils-libelf-devel   # ELF 文件处理工具和库的开发包
+    glibc                   # GNU C 库（包含标准的数学函数）
+    glibc-devel             # GNU C 库的开发包
+    libaio                  # 异步输入输出库
+    libaio-devel            # 异步输入输出库的开发包
+    libgcc                  # GCC 支持库
+    libstdc++               # C++ 标准模板库的主要实现
+    libstdc++-devel         # C++ 标准模板库的开发包
+    libxcb                  # X11 客户端库
+    libX11                  # X Window 系统核心协议库
+    libXau                  # X 权限数据库库
+    libXi                   # X Input 扩展库
+    libXrender              # X Rendering Extension 库
+    make                    # GNU 的自动构建工具
+    net-tools               # 网络工具集
+    smartmontools           # S.M.A.R.T 的磁盘监视和警告实用程序
+    sysstat                 # 统计资源利用率并对性能进行分析的软件
+    e2fsprogs               # Linux Ext2/Ext3/Ext4 文件系统工具
+    e2fsprogs-libs          # Linux Ext2/Ext3/Ext4 文件系统工具库
+    unzip                   # 无损压缩工具
+    openssh-clients         # SSH 客户端
+    readline                # 命令行读取库
+    readline-devel          # 命令行读取库的开发包
+    psmisc                  # 杂项的小型实用程序集合，包括 killall、fuser 等工具
+    ksh                     # KornShell，一种 Unix Shell
+    nfs-utils               # NFS（Network File System）工具
+    tar                     # GNU 的归档程序
+    device-mapper-multipath #多路径设备管理
+    avahi                   #服务发现和自动配置网络地址
+    ntp                     #网络时间协议服务器同步时间
+    chrony                  #Linux系统上提供时钟同步
+  )
+  # 根据不同的操作系统版本安装不同的软件包
+  case "$os_version" in
+  "6")
+    # 如果需要图形界面，则安装 GUI 软件包
+    if [[ $isgui = "Y" ]]; then
+      install_packages_if_not_present "nautilus-open-terminal" "tigervnc-server"
+      yum groupinstall -y -q "X Window System" "Desktop" --skip-broken >/dev/null 2>&1
+    fi
+    install_packages_if_not_present "${packages[@]}"
+    log_print "检查 RPM 包" "$(rpm -q ${packages[@]})"
+    ;;
+  "7" | "8" | "9")
+    # 如果需要图形界面，则安装 GUI 软件包
+    if [[ $isgui == "Y" ]]; then
+      install_packages_if_not_present "tigervnc-server"
+      yum groupinstall -y -q "Server with GUI" --skip-broken >/dev/null 2>&1
+    fi
+    packages+=(
+      libXtst                # X Test 拓展库
+      libXrender-devel       # X Rendering Extension 开发包
+      fontconfig-devel       # 字体配置库开发
+      policycoreutils        # SELinux 系统管理工具
+      policycoreutils-python # SELinux 系统管理工具 Python 接口
+    )
+    case "$os_version" in
+    "8" | "9")
+      if [[ "$os_type" = "sles" ]]; then
+        packages+=(
+          insserv-compat              # 兼容旧版 insserv 系统初始化脚本管理工具
+          libXext-devel               # X Window System 扩展库的开发文件
+          libXi-devel                 # X Input 扩展库的开发文件
+          libcap-ng-utils             # Linux 的用户空间接口，用于设置和检查 Linux 内核的能力和名称空间
+          libcap-progs                # Linux 的用户空间接口，用于设置和检查 Linux 内核的能力和名称空间
+          libcap1                     # POSIX 1003.1e（POSIX 操作系统）的访问控制列表（ACL）和能力支持库
+          libpcap1                    # 网络数据包捕获库
+          libpcre16-0                 # Perl 兼容的正则表达式库（16 位支持）
+          pixz                        # 多线程压缩工具，用于处理 .xz 文件
+          rdma-core-devel             # 远程直接内存访问（RDMA）核心库的开发文件
+          xorg-x11-libs               # X Window System 核心图形库
+          compat-libpthread-nonshared # 兼容性库，用于在旧版系统中提供 pthread 功能
+        )
+      elif [[ "$os_type" = "openEuler" ]]; then
+        packages+=(
+          libcap-devel      # 提供了开发 libcap 库所需的头文件和静态库
+          xorg-x11-utils    # 提供了与 X Window System 相关的实用工具集
+          xorg-x11-xauth    # 用于管理 X11 授权信息的工具
+          glibc-compat-2.17 # 提供了与 GNU C 库版本 2.17 兼容的兼容性库
+          elfutils
+          elfutils-devel
+          #glibc-*
+        )
+      fi
+      packages+=(
+        librdmacm                    # RDMA 网络协议栈的用户态库和开发文件
+        libnsl                       # 网络服务库和头文件
+        libibverbs                   # InfiniBand 接口管理库
+        compat-openssl10             # OpenSSL 1.0.x 库和应用程序
+        policycoreutils-python-utils # SELinux 系统管理工具的 Python 实用程序
+      )
+      ;;
+    "9")
+      packages+=(
+        ipmiutil
+        glibc-headers
+        unixODBC
+      )
+      ;;
+    esac
+    install_packages_if_not_present "${packages[@]}"
+    rpm -q "${packages[@]}"
+    ;;
+  esac
+}
+#==============================================================#
+#                           配置主机名                           #
+#==============================================================#
+function conf_hostname() {
+  log_print "配置主机名"
+  if [[ "$os_type" = "sles" ]]; then
+    local hostname_file="/etc/hostname"
+  else
+    case "$os_version" in
+    "6")
+      local hostname_file="/etc/sysconfig/network"
+      ;;
+    *)
+      local hostname_file="/etc/hostname"
+      ;;
+    esac
+  fi
+  # 检查新主机名是否已设置，并且不存在于相应的主机名文件中
+  if ! grep -Fxq "$HOSTNAME" "$hostname_file"; then
+    # 备份主机名文件
+    bak_file "$hostname_file"
+    # 设置新主机名
+    case "$os_version" in
+    "6")
+      /bin/hostname "$HOSTNAME"
+      sysctl kernel.hostname="$HOSTNAME"
+      echo "$HOSTNAME" >/proc/sys/kernel/hostname
+      sed -i "s/^HOSTNAME=.*/HOSTNAME=$HOSTNAME/" "$hostname_file"
+      # 记录日志
+      hostname
+      ;;
+    *)
+      # 包含了 sles 版本
+      /usr/bin/hostnamectl set-hostname "$HOSTNAME"
+      echo "$HOSTNAME" >"$hostname_file"
+      # 记录日志
+      hostnamectl
+      ;;
+    esac
+  else
+    cat "$hostname_file"
+  fi
+}
+#==============================================================#
+#                      配置 /etc/hosts 文件                     #
+#==============================================================#
+function conf_hosts() {
+  log_print "配置 /etc/hosts 文件"
+  # 备份 /etc/hosts 文件
+  bak_file /etc/hosts
+  # 配置 RAC hosts 文件
+  if [[ "$oracle_install_mode" = "rac" ]]; then
+    # 将集群节点信息写入 hosts 文件中
+    cat <<EOF >>"/etc/hosts"
+
+## OracleBegin
+EOF
+    for i in "${!rac_hostnames[@]}"; do
+      let node=i+1
+      priv_count=0
+      # 将PublicIP和主机名写入互信数组
+      hosts_array+=("${rac_public_ips[i]}" ${rac_hostnames[i]})
+      cat <<EOF >>"/etc/hosts"
+
+## RAC$node IP's: ${rac_hostnames[i]}
+
+## RAC$node Public IP
+${rac_public_ips[i]} ${rac_hostnames[i]}
+## RAC$node Virtual IP
+${rac_virtual_ips[i]} ${rac_hostnames[i]}-vip
+## RAC$node Private IP
+EOF
+      # 遍历心跳IP排序数组，按顺序输出心跳地址
+      for node_name in "${rac_priv_ifnames_sorted[@]}"; do
+        # 遍历心跳关联数组列表，找到属于当前节点的私有 IP，并将其写入 hosts 文件中
+        for ifname in "${!rac_priv_ips[@]}"; do
+          # 心跳IP按顺序输出
+          if [[ $ifname == *"$node_name"* ]]; then
+            # 用公网IP地址来匹配心跳
+            if [[ $ifname == *"${rac_public_ips[i]}"* ]]; then
+              let priv_count++
+              # 根据私有 IP 数量添加相应的后缀，用于区分不同的私有 IP
+              if [[ $priv_count > 1 ]]; then
+                # 将心跳IP和心跳主机名写入互信数组
+                hosts_array+=("${rac_priv_ips["$ifname"]}" "${rac_hostnames[i]}-priv1")
+                cat <<EOF >>"/etc/hosts"
+${rac_priv_ips["$ifname"]} ${rac_hostnames[i]}-priv1
+EOF
+              else
+                # 将心跳IP和心跳主机名写入互信数组
+                hosts_array+=("${rac_priv_ips["$ifname"]}" "${rac_hostnames[i]}-priv")
+                cat <<EOF >>"/etc/hosts"
+${rac_priv_ips["$ifname"]} ${rac_hostnames[i]}-priv
+EOF
+              fi
+            fi
+          fi
+        done
+      done
+    done
+    # 如果有 SCAN IP，则将其写入到 hosts 文件中
+    if (($scan_count == 1)); then
+      cat <<EOF >>/etc/hosts
+
+## SCAN IP
+${rac_scan_ips[0]} $scan_name
+EOF
+    fi
+  else
+    # 配置单实例 hosts 文件
+    # sles 不需要配置主机名，自动配置
+    if [[ "$os_type" != "sles" ]]; then
+      cat <<EOF >>/etc/hosts
+
+## OracleBegin
+## Public IP
+$local_ip	$hostname
+EOF
+    fi
+  fi
+  grep -v "^\s*\(#\|$\)" /etc/hosts
+}
+#==============================================================#
+#                        创建用户和组                            #
+#==============================================================#
+function create_users_groups() {
+  log_print "创建用户和组"
+  # 定义标记空值标记
+  local flag
+  if [[ "$oracle_install_mode" =~ ^(rac|standalone)$ ]]; then
+    flag="true"
+  fi
+  # 定义os用户组
+  local group_groups=("oinstall:54321" "dba:54322" "oper:54323" "backupdba:54324" "dgdba:54325" "kmdba:54326" "racdba:54330" ${flag:+"asmdba:54327"} ${flag:+"asmoper:54328"} ${flag:+"asmadmin:54329"})
+  local user_groups=(oracle ${flag:+grid})
+  # 定义os用户密码数组
+  declare -A passwd_groups=(
+    [oracle]=$oracle_passwd
+    [grid]=$grid_passwd
+  )
+  # 循环创建组
+  for group in "${group_groups[@]}"; do
+    local groupname=${group%%:*}
+    local gid=${group##*:}
+    # 如果不存在，则创建新组
+    if ! grep -E -q "^$groupname:" /etc/group; then
+      groupadd -g "$gid" "$groupname"
+    fi
+  done
+  for group in "${user_groups[@]}"; do
+    local uid=$([[ $group == "oracle" ]] && echo "54321" || echo "11012")
+    local primary_group=oinstall
+    local other_groups=dba,oper,backupdba,dgdba,kmdba,racdba${flag:+",asmdba"}${flag:+",asmoper"}${flag:+",asmadmin"}
+    if ! id -u $group >/dev/null 2>&1; then
+      useradd -u $uid -g $primary_group -G $other_groups $group
+    else
+      usermod -g $primary_group -G $other_groups $group
+    fi
+    # 为用户设置密码
+    echo "$group:${passwd_groups[$group]}" | chpasswd
+    # 记录日志，输出创建的grid和oracle用户信息
+    color_printf blue "$group 用户："
+    echo
+    id $group
+    echo
+  done
+}
+#==============================================================#
+#                         创建安装目录                           #
+#==============================================================#
+function create_dir() {
+  # 如果目录已存在，则删除
+  [[ -d $env_base_dir ]] && rm -rf $env_base_dir
+  [[ -d $oradata_dir ]] && rm -rf $oradata_dir
+  # 创建 Oracle 环境所需目录
+  mkdir -p $env_oracle_home $env_oracle_inven $backup_dir $scripts_dir
+  # 如果安装模式是 "RAC" (Real Application Clusters)
+  if [[ "$oracle_install_mode" =~ ^(rac|standalone)$ ]]; then
+    # 创建额外的目录，并设置属性
+    mkdir -p $env_grid_base $env_grid_home &&
+      chown -R grid:oinstall {$env_base_dir,$env_grid_home,$env_oracle_inven} &&
+      chown -R oracle:oinstall {$scripts_dir,$backup_dir,$env_oracle_base} &&
+      chmod -R 775 $env_base_dir
+  else
+    # 在 oradata 目录内创建 archivelog 目录，并设置属性
+    mkdir -p $oradata_dir/archivelog &&
+      chown -R oracle:oinstall {$scripts_dir,$oradata_dir,$backup_dir,$env_base_dir} &&
+      chmod -R 775 $env_base_dir
+  fi
+}
+#==============================================================#
+#                        配置 avahi deamon                      #
+#==============================================================#
+# 安装并配置 Avahi 服务
+function conf_avahi() {
+  log_print "配置 Avahi-daemon 服务"
+  install_packages_if_not_present "avahi*"
+  case "$os_version" in
+  "6")
+    # 如果 avahi-daemon 已经启用，则停止并禁用它
+    if [[ $(chkconfig --list | grep avahi-daemon | grep -c '3:on') > 0 ]]; then
+      service avahi-daemon stop
+      chkconfig avahi-daemon off
+    fi
+    # 记录 avahi-daemon 状态
+    service avahi-daemon status
+    ;;
+  *)
+    # 停止 avahi-daemon 服务，并使用 "pgrep" 命令杀死任何残留进程
+    if [[ $(systemctl status avahi-daemon | grep -c running) > 0 ]]; then
+      systemctl stop avahi-daemon.socket >/dev/null 2>&1
+      systemctl stop avahi-daemon.service >/dev/null 2>&1
+      pgrep -f avahi-daemon | awk '{print "kill -9 "$2}'
+    fi
+    # 禁用 avahi-daemon 服务
+    systemctl disable avahi-daemon.service >/dev/null 2>&1
+    systemctl disable avahi-daemon.socket >/dev/null 2>&1
+    # 记录 avahi-daemon 状态
+    systemctl status avahi-daemon
+    ;;
+  esac
+}
+#==============================================================#
+#               配置 THP && numa && ASM I/O scheduler           #
+#==============================================================#
+function set_kernel_option() {
+  local option="$1"
+  if grubby --info=ALL | grep -q "$option"; then
+    return 0
+  fi
+  grubby --update-kernel=ALL --args="$option"
+
+}
+function conf_grub() {
+  log_print "配置透明大页 && NUMA && 磁盘 IO 调度器"
+  if [[ "$os_type" = "sles" ]]; then
+    sed -i 's/quiet/quiet transparent_hugepage=never numa=off tsx=off elevator=deadline/' /etc/default/grub
+    sed -i 's/GRUB_DISABLE_OS_PROBER="true"/GRUB_DISABLE_OS_PROBER="false"/' /etc/default/grub
+    grub2-mkconfig -o /boot/grub2/grub.cfg
+  else
+    local options=("numa=off" "transparent_hugepage=never" "elevator=deadline")
+    for option in "${options[@]}"; do
+      set_kernel_option "$option"
+    done
+    grubby --info=ALL | awk '/numa/{print $0 "\n-" $(NR-1) "\n-" $(NR-2)}'
+  fi
+}
+#==============================================================#
+#                        配置 sysctl.conf                       #
+#==============================================================#
+function conf_sysctl() {
+  log_print "配置 sysctl.conf"
+  # 获取系统页面大小，用于计算内存总量
+  local pagesize=$(getconf PAGE_SIZE)
+  # min_free_kbytes = os_memory_total * 0.004
+  let "min_free_kbytes = $os_memory_total / 250"
+  # 计算内存总量（以 KB 或字节为单位）
+  let "shmall = ($os_memory_total - 1) * 1024 / $pagesize"
+  let "shmmax = $os_memory_total * 1024 - 1"
+  # 如果 shmall 小于 2097152，则将其设为 2097152
+  (($shmall < 2097152)) && shmall=2097152
+  # 如果 shmmax 小于 4294967295，则将其设为 4294967295
+  (($shmmax < 4294967295)) && shmmax=4294967295
+  # 备份 sysctl 配置文件
+  bak_file /etc/sysctl.conf
+  # 使用 Here Document 来追加配置参数到 sysctl.conf 文件中
+  cat <<-EOF >>/etc/sysctl.conf
+# OracleBegin
+fs.aio-max-nr = 1048576
+fs.file-max = 6815744
+kernel.shmall = $shmall
+kernel.shmmax = $shmmax
+kernel.shmmni = 4096
+kernel.sem = 250 32000 100 128
+net.ipv4.ip_local_port_range = 9000 65500
+net.core.rmem_default = 262144
+net.core.rmem_max = 4194304
+net.core.wmem_default = 262144
+net.core.wmem_max = 1048576
+vm.min_free_kbytes=$min_free_kbytes
+net.ipv4.conf.$local_ifname.rp_filter = 1
+vm.swappiness = 10
+kernel.panic_on_oops = 1
+kernel.randomize_va_space = 2
+kernel.numa_balancing = 0
+EOF
+  # 如果在 RAC 模式下安装，追加 RAC 参数
+  for priv_ifname in "${rac_priv_ifnames[@]}"; do
+    if [[ $priv_ifname ]]; then # 检查非空
+      cat <<-EOF >>/etc/sysctl.conf
+net.ipv4.conf.$priv_ifname.rp_filter = 2
+EOF
+    fi
+  done
+  # 重新加载 sysctl 配置，并将结果输出到日志中
+  sysctl -p
+}
+#==============================================================#
+#                       配置 nsysctl.conf                       #
+#==============================================================#
+function conf_nsysctl() {
+  # 检查是否已经存在 NOZEROCONF=yes 的配置选项，如果不存在则添加之
+  if ! grep -q "^NOZEROCONF=yes$" /etc/sysconfig/network; then
+    log_print "配置 nsysctl.conf"
+    # 备份原始配置文件
+    bak_file /etc/sysconfig/network
+    # 追加 NOZEROCONF=yes 配置选项
+    echo "NOZEROCONF=yes" >>/etc/sysconfig/network
+    # 记录更改前后的差异到日志中
+    grep -v "^\s*\(#\|$\)" /etc/sysconfig/network
+  fi
+}
+#==============================================================#
+#                         配置 RemoveIPC                        #
+#==============================================================#
+function conf_ipc() {
+  log_print "配置 RemoveIPC"
+  # redhat6 版本无需配置
+  if [[ "$os_version" != "6" ]]; then
+    # 检查是否需要设置 RemoveIPC=no。如果不需要设置则直接返回。
+    if grep -Fq "#RemoveIPC=no" /etc/systemd/logind.conf; then
+      # 备份原始配置文件
+      bak_file /etc/systemd/logind.conf
+      # Failed Install of RAC with ASM: ORA-27300 ORA-27302 ORA-27300 ORA-27301 ORA-27302 (文档 ID 2099563.1)
+      # ORA-27300 ORA-27301 ORA-27302 ORA-27157 Database Crash (文档 ID 438205.1)
+      if [[ "$os_type" = "sles" ]]; then
+        sed -i 's/#RemoveIPC=yes/RemoveIPC=no/' /etc/systemd/logind.conf
+      else
+        # 将 "#RemoveIPC=no" 行替换为 "RemoveIPC=no"
+        sed -i 's/#RemoveIPC=no/RemoveIPC=no/' /etc/systemd/logind.conf
+      fi
+      # 重新加载 systemd 守护进程并重启 systemd-logind 服务
+      (systemctl daemon-reload && systemctl restart systemd-logind) >/dev/null 2>&1
+    fi
+    # 检查是否已修改成功
+    grep -v "^\s*\(#\|$\)" /etc/systemd/logind.conf
+  fi
+}
+#==============================================================#
+#                         配置 limits.conf                     #
+#==============================================================#
+function conf_limits() {
+  log_print "配置 /etc/security/limits.conf 和 /etc/pam.d/login"
+  # 备份 /etc/security/limits.conf 文件
+  bak_file /etc/security/limits.conf
+  # 在 /etc/security/limits.conf 文件末尾添加 Oracle 的配置
+  cat <<-EOF >>/etc/security/limits.conf
+# OracleBegin
+oracle soft nofile 1024
+oracle hard nofile 65536
+oracle soft stack 10240
+oracle hard stack 32768
+oracle soft nproc 2047
+oracle hard nproc 16384
+oracle hard memlock unlimited
+oracle soft memlock unlimited
+EOF
+  # 如果 Oracle 安装模式为 RAC，则添加额外的配置
+  if [[ "$oracle_install_mode" =~ ^(rac|standalone)$ ]]; then
+    cat <<-EOF >>/etc/security/limits.conf
+grid soft nofile 1024
+grid hard nofile 65536
+grid soft stack 10240
+grid hard stack 32768
+grid soft nproc 2047
+grid hard nproc 16384
+EOF
+  fi
+  # 记录 /etc/security/limits.conf 文件的输出到日志中
+  color_printf blue "查看 /etc/security/limits.conf："
+  echo
+  grep -v "^\s*\(#\|$\)" /etc/security/limits.conf
+  echo
+  # 备份 /etc/pam.d/login 文件
+  bak_file /etc/pam.d/login
+  # 在 /etc/pam.d/login 文件末尾添加 Oracle 的配置
+  cat <<-EOF >>/etc/pam.d/login
+# OracleBegin
+session required pam_limits.so
+session required /lib64/security/pam_limits.so
+# OracleEnd
+EOF
+  # 记录 /etc/pam.d/login 文件的输出到日志中
+  color_printf blue "查看 /etc/pam.d/login 文件："
+  echo
+  grep -v "^\s*\(#\|$\)" /etc/pam.d/login
+}
+#==============================================================#
+#                         配置 /dev/shm                        #
+#==============================================================#
+function conf_shm() {
+  log_print "配置 /dev/shm"
+  local shm_total=$(df -k /dev/shm | awk 'NR==2 {print $2}')
+  # 检查是否将 /dev/shm 添加到了 /etc/fstab 文件中
+  if ! grep -qE "/dev/shm" /etc/fstab; then
+    # 如果没有添加，则将其添加进去
+    bak_file /etc/fstab
+    echo "tmpfs /dev/shm tmpfs size=${os_memory_total}k 0 0" >>/etc/fstab
+  elif (($shm_total < $os_memory_total)); then
+    # 如果已经添加了 /dev/shm，检查共享内存总大小是否小于操作系统内存总量
+    # 如果共享内存总大小小于操作系统内存总量，则将其设置为相同的值
+    bak_file /etc/fstab
+    sed -i "/\/dev\/shm/d" /etc/fstab
+    echo "tmpfs /dev/shm tmpfs size=${os_memory_total}k 0 0" >>/etc/fstab
+  fi
+  # 重新挂载 /dev/shm
+  mount -o remount /dev/shm
+  grep -v "^\s*\(#\|$\)" /etc/fstab
+}
+#==============================================================#
+#                         配置 asm disk                         #
+#==============================================================#
+function conf_asm() {
+  # 如果 udev 规则文件存在则删除
+  [[ -e /etc/udev/rules.d/99-oracle-asmdevices.rules ]] && rm -f /etc/udev/rules.d/99-oracle-asmdevices.rules
+  # 配置多路径
+  if [[ $multipath = "Y" ]]; then
+    log_print "配置 multipath 多路径"
+    # 启用多路径
+    mpathconf --enable --with_multipathd y
+    # 配置多路径开机自启
+    case "$os_version" in
+    "6")
+      chkconfig multipathd.service on
+      ;;
+    *)
+      systemctl enable multipathd.service >/dev/null 2>&1
+      ;;
+    esac
+    bak_file /etc/multipath.conf
+    # 配置 multipath.conf
+    cat <<-EOF >/etc/multipath.conf
+defaults {
+  user_friendly_names yes
+}
+
+blacklist {
+  devnode "^(ram|raw|loop|fd|md|dm-|sr|scd|st)[0-9]*"
+  devnode "^(hd|x?vd|c?dzi|d[a-f])[a-z]*"
+  devnode "^asm/*"
+  devnode "ofsctl"
+  devnode "^sda"
+}
+
+multipaths {
+EOF
+  fi
+  # 将磁盘 UUID 和磁盘组名称存放在关联数组变量中
+  declare -A DISK_INFOS=(
+    ["ocr"]="$ocr_disk_uuid"
+    ["data"]="$data_disk_uuid"
+    ["arch"]="$arch_disk_uuid"
+  )
+  # 循环ASM磁盘信息数组
+  for NAME in "${!DISK_INFOS[@]}"; do
+    # 获取当前磁盘组中的磁盘 UUID 列表
+    UUID_LIST=${DISK_INFOS[$NAME]}
+    # 定义一个间接变量用于存放asm磁盘路径，用逗号拼接
+    asm_disks="${NAME}disk"
+    # 当前磁盘组存在 UUID 时解析
+    if [[ -n $UUID_LIST ]]; then
+      # 将逗号分隔的 UUID 转换成 UUID 数组
+      declare -a UUIDS=(${UUID_LIST//,/ })
+      #IFS=',' read -ra UUIDS <<<"$UUID_LIST"
+      # 遍历 UUID 数组，为每个 UUID 添加别名
+      for ((i = 0; i < ${#UUIDS[@]}; i++)); do
+        # 获取当前循环的 UUID 值
+        WID="${UUIDS[i]}"
+        # 根据当前索引计算出别名编号
+        let "NUM=i+1"
+        ALIAS=asm_${NAME}_$NUM
+        UUID=$WID
+        # 需要配置多路径时，写入多路径配置文件
+        if [[ $multipath = "Y" ]]; then
+          # 构造磁盘管理器使用的 UUID 和别名
+          UUID=mpath-$WID
+          # 将当前磁盘的 UUID 和别名写入 multipath.conf
+          cat <<-EOF >>/etc/multipath.conf
+  multipath {
+    wwid $WID
+    alias $ALIAS
+  }
+EOF
+        fi
+        ALIAS_STR=/dev/$ALIAS
+        # 针对udev的规则配置ASM磁盘
+        conf_asmdisk $UUID $ALIAS
+        # 拼接asm磁盘组磁盘路径
+        eval "${asm_disks}=\"\${${asm_disks}}${ALIAS_STR},\""
+      done
+    fi
+    # 去掉最后一个逗号
+    eval "${asm_disks}=\${${asm_disks}%?}"
+  done
+  if [[ $multipath = "Y" ]]; then
+    echo "}" >>/etc/multipath.conf
+    # 解决 VirtualBox 的一个 bug
+    if [[ $virtualbox =~ ^[yY] ]]; then
+      sed -i 's/1ATA_//' /etc/multipath.conf
+    fi
+    # 启用及查看多路径服务状态
+    multipath -F
+    multipath -v2
+  fi
+  log_print "配置 UDEV 绑盘"
+  # 打印 UDEV 配置信息
+  cat /etc/udev/rules.d/99-oracle-asmdevices.rules
+  # 启动 UDEV
+  while true; do
+    if [[ "$os_version" = "6" ]]; then
+      # 在 CentOS 6上启动 UDEV 服务
+      start_udev
+    else
+      # 在 CentOS 7/8/9 上启动 UDEV 服务
+      # 重新加载udev规则
+      /sbin/udevadm control --reload-rules
+      # 触发设备变化事件
+      /sbin/udevadm trigger --type=devices --action=change
+    fi
+    # 睡眠 5s，防止 UDEV 加载慢问题
+    sleep 5s
+    if [[ $(find /dev -name "asm*" 2>/dev/null) ]]; then
+      echo
+      ls /dev/asm_*
+      echo
+      color_printf blue "UDEV 配置完成!"
+      break
+    fi
+  done
+}
+#==============================================================#
+#                       配置 ntp timeserver                     #
+#==============================================================#
+# 定义函数：配置 ntp 服务
+function conf_ntp() {
+  case "$os_version" in
+  6 | 7)
+    # 备份 ntp 配置文件和 sysconfig 配置文件
+    bak_file /etc/ntp.conf
+    bak_file /etc/sysconfig/ntpd
+    # 将容忍时钟偏差修改至30，单位为S，该值默认为1.5. 当偏差大于此限定值时,ntp不会同步时钟。
+    echo "tos maxdist 30" >>/etc/ntp.conf
+    # 当服务器时钟与本地时钟偏差大于1000时，ntp客户端会视为此偏差过大，不会同步时钟，且会退出ntpd服务，设置为0可忽略此限制。
+    echo "tinker panic 0" >>/etc/ntp.conf
+    # 删除 ntp 配置文件中已有的时间服务器信息，并添加新的时间服务器信息
+    sed -i '/^server/d' /etc/ntp.conf
+    echo "server $timeserver_ip iburst" >>/etc/ntp.conf
+    # 创建 ntpd 进程ID文件
+    touch /var/run/ntpd.pid
+    # 编辑 sysconfig 文件来配置 ntpd 服务
+    cat <<-\EOF >/etc/sysconfig/ntpd
+OPTIONS="-g -x -p /var/run/ntpd.pid"
+SYNC_HWCLOCK=yes
+EOF
+    ;;
+  *)
+    # 备份 chrony 配置文件
+    bak_file /etc/chrony.conf
+    # 删除 ntp 配置文件中已有的时间服务器信息，并添加新的时间服务器信息
+    sed -i '/^server/d' /etc/chrony.conf
+    echo "server $timeserver_ip iburst" >>/etc/chrony.conf
+    ;;
+  esac
+}
+#==============================================================#
+#                         配置时间同步                           #
+#==============================================================#
+function conf_timesync() {
+  log_print "配置时间同步"
+  # 如果存在时间服务器 IP，则配置 NTP/chrony 服务
+  if [[ $timeserver_ip ]]; then
+    case "$os_version" in
+    6)
+      # 启动和开机启动 ntpd 服务
+      service ntpd start
+      chkconfig ntpd on
+      # 配置 ntp
+      conf_ntp
+      # 重启 ntpd 服务，并检查其状态及时间同步情况
+      service ntpd restart
+      # 记录时间同步后的日期和时间
+      ntpstat
+      echo
+      ntpq -p -n
+      ;;
+    7)
+      # 关闭并禁用 chrony 服务，备份 chrony 配置文件
+      systemctl disable chronyd.service
+      if systemctl is-active --quiet chronyd.service; then
+        systemctl stop chronyd.service
+        mv /etc/chrony.conf /etc/chrony.conf.bak
+      fi
+      # 启动和开机启动 ntpd 服务
+      systemctl start ntpd.service
+      systemctl enable ntpd.service
+      # 配置 ntp
+      conf_ntp
+      # 重启 ntpd 服务，并检查其状态及时间同步情况
+      systemctl restart ntpd.service
+      # 记录时间同步后的日期和时间
+      ntpstat
+      echo
+      ntpq -p -n
+      ;;
+    *)
+      # 关闭并禁用 ntpd 服务，备份 ntpd 配置文件
+      systemctl disable ntpd.service
+      if systemctl is-active --quiet ntpd.service; then
+        systemctl stop ntpd.service
+        mv /etc/ntpd.conf /etc/ntpd.conf.bak
+      fi
+      # 启动和开机启动 chronyd 服务
+      systemctl start chronyd.service
+      systemctl enable chronyd.service
+      # 配置 ntp
+      conf_ntp
+      # 重启 chrony 服务，并检查其状态及时间同步情况
+      systemctl restart chronyd.service
+      chronyc tracking
+      echo
+      chronyc sources -v
+      ;;
+    esac
+  fi
+}
+#==============================================================#
+#                        配置 DNS 解析                          #
+#==============================================================#
+function conf_dns() {
+  # 记录日志
+  log_print "配置 DNS 解析"
+  # 检查是否已安装 bind，如果未安装则安装相关软件包
+  if ! rpm -q bind >/dev/null; then
+    install_packages_if_not_present "bind-libs" "bind" "bind-utils"
+  fi
+  # 配置 DNS 文件
+  cat <<-EOF >/etc/resolv.conf
+search $dns_name  
+nameserver $dns_ip
+options rotate
+options timeout:2
+options attempts:5
+EOF
+  # 检查 DNS 解析是否可用
+  if nslookup $scan_name.$dns_name; then
+    # 如果解析成功，则输出提示信息
+    color_printf green "DNS 配置成功！域名解析正常！"
+  else
+    # 如果解析失败，则输出错误信息
+    color_printf red "DNS 配置成功！但域名无法正常解析，请检查网络连接或者 DNS 设置！"
+  fi
+}
+#==============================================================#
+#                       安装 rlwrap 插件                        #
+#==============================================================#
+function install_rlwrap() {
+  # 判断是否已安装 rlwrap
+  if ! hash rlwrap 2>/dev/null; then
+    # 检查 rlwrap 压缩包是否存在
+    if check_file $software_dir/rlwrap-*.gz; then
+      # 如果压缩包存在则开始安装 rlwrap
+      log_print "安装 rlwrap 插件"
+      # 创建并进入目录
+      mkdir -p $software_dir/rlwrap && cd $software_dir/rlwrap
+      # 解压缩文件
+      tar -xf $software_dir/rlwrap-*.gz --strip-components 1 -C $software_dir/rlwrap
+      # 配置、编译和安装软件，并将日志重定向到/dev/null以避免输出干扰
+      (./configure -q && make -s && make install -s prefix=/usr/local libdir=/usr/local/libexec) >/dev/null 2>&1
+      # 返回 /soft 目录
+      cd ..
+      # 删除不必要的文件夹和文件
+      rm -rf $software_dir/rlwrap && rm -rf $software_dir/rlwrap*
+      # 检查 rlwrap 是否已成功安装
+      if hash rlwrap 2>/dev/null; then
+        # 如果已成功安装，则输出信息
+        color_printf green "成功安装 rlwrap：" "$(rlwrap -v)"
+      else
+        # 如果未成功安装，则输出错误信息
+        color_printf red "未能成功安装 rlwrap，请检查安装日志。"
+      fi
+    fi
+  fi
+}
+#==============================================================#
+#                         配置 profile                          #
+#==============================================================#
+function conf_profile() {
+  # 获取 profile 名称
+  if [[ "$os_type" = "sles" ]]; then
+    profile_name=.profile
+  else
+    profile_name=.bash_profile
+  fi
+  log_print "Root 用户环境变量"
+  # 配置root用户环境变量
+  bak_file /root/$profile_name
+  cat <<-EOF >>/root/$profile_name
+# OracleBegin
+alias so='su - oracle'
+export PS1="[\`whoami\`@\`hostname\`:"'\$PWD]\$ '
+EOF
+  # 增加历史命令时间显示以及一些优化项
+  bak_file /etc/profile
+  cat <<-\EOF >>/etc/profile
+# OracleBegin
+## history命令时间显示
+export HISTSIZE=1000
+export HISTTIMEFORMAT="%F %T "
+if [ "$HISTCONTROL" = "ignorespace" ] ; then
+    export HISTCONTROL=ignoreboth
+else
+    export HISTCONTROL=ignoredups
+fi
+## 主机语言
+export LANG="en_US.UTF-8"
+EOF
+  # RAC模式增加集群相关
+  if [[ $oracle_install_mode =~ ^(rac|standalone)$ ]]; then
+    cat <<-EOF >>/root/$profile_name
+alias sg='su - grid'
+alias crsctl='$env_grid_home/bin/crsctl'
+alias srvctl='$env_grid_home/bin/srvctl'
+EOF
+  fi
+  grep -v "^\s*\(#\|$\)" /root/$profile_name
+  # 配置oracle用户环境变量
+  log_print "Oracle 用户环境变量"
+  # Patching fails during relink , with error code 102 :: Fatal error: Command failed for target `javavm_refresh' (Doc ID 2002334.1)
+  bak_file /home/oracle/$profile_name
+  cat <<-EOF >>/home/oracle/$profile_name
+# OracleBegin
+umask 022
+export TMP=/tmp
+export TMPDIR=\$TMP
+export NLS_LANG=AMERICAN_AMERICA.$db_characterset
+export ORACLE_BASE=$env_oracle_base
+export ORACLE_HOME=$env_oracle_home
+export ORACLE_TERM=xterm
+export TNS_ADMIN=\$ORACLE_HOME/network/admin
+export LD_LIBRARY_PATH=\$ORACLE_HOME/lib:/lib:/usr/lib
+export ORACLE_SID=$DB_NAME
+export PATH=/usr/sbin:\$PATH
+export PATH=\$ORACLE_HOME/bin:\$ORACLE_HOME/OPatch:\$ORACLE_HOME/perl/bin:\$PATH
+export PERL5LIB=\$ORACLE_HOME/perl/lib
+alias sas='sqlplus / as sysdba'
+alias awr='sqlplus / as sysdba @?/rdbms/admin/awrrpt'
+alias ash='sqlplus / as sysdba @?/rdbms/admin/ashrpt'
+alias alert='vi \$ORACLE_BASE/diag/rdbms/*/\$ORACLE_SID/trace/alert_\$ORACLE_SID.log'
+export PS1="[\`whoami\`@\`hostname\`:"'\$PWD]\$ '
+EOF
+  # Users are strongly recommended to go with 19.9 DB RU (or later) to minimize the number of Patches to be installed.19.9 OJVM & OCW RU Patches are also recommended to be applied,during/after the Installation.
+  if [[ $os_version = "8" || $os_version = "9" ]]; then
+    cat <<-EOF >>/home/oracle/$profile_name
+export CV_ASSUME_DISTID=OL7
+EOF
+  fi
+  # 检查 rlwrap 是否已经安装，并显示无误信息
+  if hash rlwrap 2>/dev/null; then
+    cat <<-EOF >>/home/oracle/$profile_name
+alias sqlplus='rlwrap sqlplus'
+alias rman='rlwrap rman'
+alias adrci='rlwrap adrci'
+EOF
+  fi
+  # sles 授予目录权限
+  if [[ "$os_type" = "sles" ]]; then
+    chown -R oracle:oinstall /home/oracle/
+  fi
+  grep -v "^\s*\(#\|$\)" /home/oracle/$profile_name
+  # grid
+  if [[ $oracle_install_mode =~ ^(rac|standalone)$ ]]; then
+    log_print "Grid 用户环境变量"
+    bak_file /home/grid/$profile_name
+    cat <<-EOF >>/home/grid/$profile_name
+# OracleBegin
+umask 022
+export TMP=/tmp
+export TMPDIR=\$TMP
+export NLS_LANG=AMERICAN_AMERICA.$db_characterset
+export ORACLE_BASE=$env_grid_base
+export ORACLE_HOME=$env_grid_home
+export ORACLE_TERM=xterm
+export TNS_ADMIN=\$ORACLE_HOME/network/admin
+export LD_LIBRARY_PATH=\$ORACLE_HOME/lib:/lib:/usr/lib
+export ORACLE_SID=$grid_sid
+export PATH=/usr/sbin:\$PATH
+export PATH=\$ORACLE_HOME/bin:\$ORACLE_HOME/OPatch:\$PATH
+alias sas='sqlplus / as sysasm'
+export PS1="[\`whoami\`@\`hostname\`:"'\$PWD]\$ '
+EOF
+    # Users are strongly recommended to go with 19.9 DB RU (or later) to minimize the number of Patches to be installed.19.9 OJVM & OCW RU Patches are also recommended to be applied,during/after the Installation.
+    if [[ $os_version = "8" || $os_version = "9" ]]; then
+      cat <<-EOF >>/home/grid/$profile_name
+export CV_ASSUME_DISTID=OL7
+EOF
+    fi
+    # 检查 rlwrap 是否已经安装，并显示无误信息
+    if hash rlwrap 2>/dev/null; then
+      cat <<-EOF >>/home/grid/$profile_name
+alias sqlplus='rlwrap sqlplus'
+alias asmcmd='rlwrap asmcmd'
+alias adrci='rlwrap adrci'
+EOF
+    fi
+    # sles 授予目录权限
+    if [[ "$os_type" = "sles" ]]; then
+      chown -R grid:oinstall /home/grid/
+    fi
+    grep -v "^\s*\(#\|$\)" /home/grid/$profile_name
+  fi
+}
+#==============================================================#
+#                         配置其他节点                           #
+#==============================================================#
+function other_node_shell() {
+  # 发送脚本和安装程序到其他节点
+  for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+    log_print "配置 RAC 节点：${rac_public_ips[i]}" ""
+    color_printf blue "正在节点：${rac_public_ips[i]} 上执行脚本："
+    ssh -t -q ${rac_public_ips[i]} "cd $software_dir && sh $software_dir/racnode.sh"
+    echo
+    color_printf blue "配置 RAC 节点：${rac_public_ips[i]} 结束!"
+  done
+}
+#==============================================================#
+#                         配置 SSH 互信                         #
+#==============================================================#
+function rac_ssh() {
+  # 定义用户列表
+  local users=(grid oracle)
+  # 导出函数以供其他进程使用
+  export -f ssh_trust
+  # 对于每个用户
+  for user in "${users[@]}"; do
+    # 如果尚未配置SSH互信，则开始处理
+    if [[ $(ssh_check "$user" "${hosts_array[@]}") = "false" ]]; then
+      # 输出正在配置哪个用户的SSH互信
+      log_print "配置 ${user^^} 用户 SSH 互信"
+      case $user in
+      grid)
+        # 配置 Oracle Grid Infrastructure 的 SSH
+        su grid -c "ssh_trust grid $grid_passwd ${hosts_array[*]}"
+        ;;
+      oracle)
+        # 配置 Oracle Database 软件的SSH
+        su oracle -c "ssh_trust oracle $oracle_passwd ${hosts_array[*]}"
+        ;;
+      esac
+    fi
+  done
+}
+#==============================================================#
+#                        解压 Grid 软件包                        #
+#==============================================================#
+function unzip_gridsoft() {
+  # 执行日志输出函数
+  log_print "静默解压缩 Grid 软件包"
+  color_printf blue "正在静默解压缩 Grid 软件包，请稍等："
+  # 修改软件目录的所有者和所属组为GRID
+  chown -R grid:oinstall $software_dir
+  # 输出 小火车
+  art_print
+  # 解压缩 Grid 安装包
+  if [[ "$db_version" = 11 ]]; then
+    # 如果 Grid 软件目录不存在，则解压缩 Grid 安装包到指定目录中
+    if ! check_file $software_dir/grid; then
+      echo
+      color_printf green "静默解压 Grid 软件安装包： $grid_soft_name"
+      su - grid -c "unzip -oq \"$grid_soft_name\" -d \"$software_dir\""
+    fi
+  else
+    # 如果 Grid 软件目录存在文件，则删除该目录下所有文件和子目录，并解压缩 Grid 安装包到指定目录中
+    if check_file $env_grid_home && [[ $(find "$env_grid_home" -mindepth 1 | wc -l) > 0 ]]; then
+      rm -rf -- "$env_grid_home" "$env_grid_home"/.*
+    fi
+    echo
+    color_printf green "静默解压 Grid 软件安装包： $grid_soft_name"
+    su - grid -c "unzip -oq \"$grid_soft_name\" -d \"$env_grid_home\""
+  fi
+  # 解压缩 Grid 补丁包
+  if [[ $grid_patch ]]; then
+    # 解压缩 opatch，11G 需要在 Grid 软件被安装后解压缩
+    if [[ "$db_version" != "11" ]]; then
+      if check_file $opatch_name; then
+        echo
+        color_printf green "静默解压 OPatch 软件补丁包： $opatch_name"
+        su - grid -c "unzip -oq \"$opatch_name\" -d \"$env_grid_home\""
+      fi
+    fi
+    # 如果 Grid 补丁目录不存在，则解压缩 Grid 补丁包到指定目录中
+    if ! check_file $software_dir/$grid_patch; then
+      echo
+      color_printf green "静默解压 Grid 软件补丁包： $grid_patch_name"
+      su - grid -c "unzip -oq \"$grid_patch_name\" -d \"$software_dir\""
+    fi
+    # 拷贝 gi opatch/patch 到其他节点
+    if [[ "$db_version" =~ ^(11|12)$ ]]; then
+      for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+        # 将 Grid 补丁包和 opatch 包拷贝到其他节点的指定目录下，并修改目录所有者和所属组
+        scp -q $grid_patch_name $opatch_name ${rac_public_ips[i]}:$software_dir
+        ssh -q ${rac_public_ips[i]} "chown -R grid:oinstall \"$software_dir\" && su - grid -c \"unzip -oq '$grid_patch_name' -d '$software_dir'\""
+      done
+    fi
+  fi
+  # 安装 cvuqdisk
+  if [[ $(rpm -qa | grep -c cvuqdisk) = 0 ]]; then
+    # 安装 cvuqdisk，并将安装文件拷贝到其他节点指定的目录下，然后在其他节点上执行安装
+    if check_file $cvuqdisk; then
+      echo
+      color_printf green "静默安装 cvu 软件：$cvu_name"
+      echo
+      rpm -Uvh --quiet $cvuqdisk >/dev/null 2>&1
+      for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+        scp -q $cvuqdisk ${rac_public_ips[i]}:$software_dir >/dev/null 2>&1
+        ssh -q ${rac_public_ips[i]} "rpm -Uvh --quiet $software_dir/$cvu_name" >/dev/null 2>&1
+        ssh -q ${rac_public_ips[i]} "rm -rf $software_dir/$cvu_name" >/dev/null 2>&1
+      done
+    fi
+  fi
+}
+#==============================================================#
+#                       配置 grid 静默文件                       #
+#==============================================================#
+function conf_gridrsp() {
+  log_print "Grid 安装静默文件"
+  # rac 和 standalone 选项赋值
+  case "$oracle_install_mode" in
+  rac)
+    gridrsp_array=(
+      "INVENTORY_LOCATION=$env_oracle_inven"
+      "oracle.install.option=CRS_CONFIG"
+      "ORACLE_BASE=$env_grid_base"
+      "oracle.install.asm.OSDBA=asmdba"
+      "oracle.install.asm.OSOPER=asmoper"
+      "oracle.install.asm.OSASM=asmadmin"
+      "oracle.install.crs.config.gpnp.scanName=$scan_name"
+      "oracle.install.crs.config.gpnp.scanPort=1521"
+      "oracle.install.crs.config.clusterName=$cluster_name"
+      "oracle.install.crs.config.gpnp.configureGNS=false"
+      "oracle.install.crs.config.clusterNodes=$clusternodes"
+      "oracle.install.crs.config.networkInterfaceList=$networkinterfacelist"
+      "oracle.install.crs.config.useIPMI=false"
+      "oracle.install.asm.SYSASMPassword=$database_passwd"
+      "oracle.install.asm.diskGroup.name=$ocr_asm_group"
+      "oracle.install.asm.diskGroup.redundancy=$ocr_redun"
+      "oracle.install.asm.diskGroup.disks=$ocrdisk"
+      "oracle.install.asm.diskGroup.diskDiscoveryString=$asmdisk_string"
+      "oracle.install.asm.monitorPassword=$database_passwd"
+    )
+    ;;
+  standalone)
+    gridrsp_array=(
+      "INVENTORY_LOCATION=$env_oracle_inven"
+      "oracle.install.option=HA_CONFIG"
+      "ORACLE_BASE=$env_grid_base"
+      "oracle.install.asm.OSDBA=asmdba"
+      "oracle.install.asm.OSOPER=asmoper"
+      "oracle.install.asm.OSASM=asmadmin"
+      "oracle.install.crs.config.gpnp.configureGNS=false"
+      "oracle.install.crs.config.useIPMI=false"
+      "oracle.install.asm.SYSASMPassword=$database_passwd"
+      "oracle.install.asm.diskGroup.name=$data_asm_group"
+      "oracle.install.asm.diskGroup.redundancy=$data_redun"
+      "oracle.install.asm.diskGroup.disks=$datadisk"
+      "oracle.install.asm.diskGroup.diskDiscoveryString=$asmdisk_string"
+      "oracle.install.asm.monitorPassword=$database_passwd"
+    )
+    ;;
+  esac
+  # 根据不同的版本向grid.rsp文件追加配置
+  case "$db_version" in
+  "11")
+    gridrsp_array+=(
+      "oracle.install.responseFileVersion=/oracle/install/rspfmt_crsinstall_response_schema_v11_2_0"
+      "SELECTED_LANGUAGES=en"
+      "ORACLE_HOME=$env_grid_home"
+      "oracle.install.crs.config.storageOption=ASM_STORAGE"
+      "oracle.install.asm.diskGroup.AUSize=1"
+      "oracle.installer.autoupdates.option=SKIP_UPDATES"
+    )
+    ;;
+  "12" | "19" | "21")
+    gridrsp_array+=(
+      "oracle.install.crs.config.ClusterConfiguration=STANDALONE"
+      "oracle.install.crs.config.configureAsExtendedCluster=false"
+      "oracle.install.crs.configureGIMR=false"
+      "oracle.install.asm.storageOption=ASM"
+      "oracle.install.asm.diskGroup.AUSize=4"
+      "oracle.install.asm.configureAFD=$afd"
+      "oracle.install.crs.config.ignoreDownNodes=false"
+      "oracle.install.config.managementOption=NONE"
+      "oracle.install.crs.rootconfig.executeRootScript=false"
+    )
+    case "$db_version" in
+    "12")
+      gridrsp_array+=("oracle.install.responseFileVersion=/oracle/install/rspfmt_crsinstall_response_schema_v12.2.0")
+      ;;
+    "19")
+      gridrsp_array+=(
+        "oracle.install.responseFileVersion=/oracle/install/rspfmt_crsinstall_response_schema_v19.0.0"
+        "oracle.install.crs.config.scanType=LOCAL_SCAN"
+      )
+      ;;
+    "21")
+      gridrsp_array+=(
+        "oracle.install.responseFileVersion=/oracle/install/rspfmt_crsinstall_response_schema_v21.0.0"
+        "oracle.install.crs.config.scanType=LOCAL_SCAN"
+      )
+      ;;
+    esac
+    ;;
+  esac
+  # 将Oracle软件安装相关配置写入grid.rsp文件
+  if check_file $software_dir/grid.rsp; then
+    rm -rf $software_dir/grid.rsp
+  fi
+  printf '%s\n' "${gridrsp_array[@]}" >>$software_dir/grid.rsp
+  # 记录grid.rsp文件内容到日志中
+  cat $software_dir/grid.rsp
+}
+#==============================================================#
+#                         安装 Grid 软件                        #
+#==============================================================#
+# 安装 Grid 软件及补丁函数
+function install_gridsoft() {
+  # 配置 grid 静默安装文件
+  conf_gridrsp
+  # 打印日志
+  log_print "静默安装 Grid 软件"
+  # 修改软件目录的所有者和所属组为GRID
+  chown -R grid:oinstall $software_dir
+  case "$db_version" in
+  "11")
+    # 安装 Grid 软件
+    if ! su - grid -c "$software_dir/grid/runInstaller -silent -showProgress -ignoreSysPrereqs -ignorePrereq -waitForCompletion -responseFile $software_dir/grid.rsp"; then
+      color_printf red "抱歉，Grid 软件安装失败，请检查!"
+      echo
+      exit 1
+    fi
+    # patch 18370031 补丁安装
+    if [[ "$os_version" = "7" ]]; then
+      log_print "静默安装 18370031 补丁"
+      if [[ "$oracle_install_mode" = "rac" ]]; then
+        color_printf blue "节点 $local_ip ："
+        echo
+      fi
+      su - grid -c "unzip -oq $software_dir/p18370031_112040_Linux-x86-64.zip -d $software_dir"
+      su - grid -c "$env_grid_home/OPatch/opatch napply -oh $env_grid_home -local $software_dir/18370031 -silent"
+      for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+        # 将 Grid 补丁包和 opatch 包拷贝到其他节点的指定目录下，并修改目录所有者和所属组，执行安装
+        echo
+        color_printf blue "节点 ${rac_public_ips[i]} ："
+        echo
+        scp -r -q $software_dir/p18370031_112040_Linux-x86-64.zip ${rac_public_ips[i]}:$software_dir
+        ssh ${rac_public_ips[i]} "chown -R grid:oinstall $software_dir"
+        su - grid -c "ssh ${rac_public_ips[i]} unzip -oq $software_dir/p18370031_112040_Linux-x86-64.zip -d $software_dir"
+        # other node install 18370031 to grid
+        su - grid -c "ssh ${rac_public_ips[i]} $env_grid_home/OPatch/opatch napply -oh $env_grid_home -local $software_dir/18370031 -silent"
+      done
+    fi
+    # 执行 root 脚本
+    exec_root $env_grid_home
+    # Complete Grid Infrastructure Configuration Assistant(Plug-in) if OUI is not Available (Doc ID 1360798.1)
+    if ! check_file $env_grid_home/cfgtoollogs/configToolAllCommands; then
+      su - grid -c "$env_grid_home/oui/bin/runConfig.sh ORACLE_HOME=$env_grid_home MODE=perform ACTION=configure RERUN=true $*" >/dev/null 2>&1
+    fi
+    # 执行 configToolAllCommands 完成 GRID 基础配置
+    # 添加 asm 账户密码信息到 cfgrsp.properties 文件中
+    cat <<-EOF >>/home/grid/cfgrsp.properties
+oracle.assistants.asm|S_ASMPASSWORD=$database_passwd
+oracle.assistants.asm|S_ASMMONITORPASSWORD=$database_passwd
+EOF
+    if su - grid -c "$env_grid_home/cfgtoollogs/configToolAllCommands RESPONSE_FILE=/home/grid/cfgrsp.properties" >/dev/null 2>&1; then
+      rm -rf /home/grid/cfgrsp.properties
+    fi
+    # 11GR2 安装 grid 补丁
+    if [[ $grid_patch ]]; then
+      log_print "Grid 软件安装补丁"
+      if [[ "$oracle_install_mode" = "rac" ]]; then
+        color_printf blue "节点 $local_ip ："
+        echo
+      fi
+      su - grid -c "unzip -oq $opatch_name -d $env_grid_home"
+      $env_grid_home/OPatch/opatch auto $software_dir/$grid_patch -oh $env_grid_home
+      for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+        echo
+        color_printf blue "节点 ${rac_public_ips[i]} ："
+        echo
+        su - grid -c "ssh -q ${rac_public_ips[i]} unzip -oq $opatch_name -d $env_grid_home"
+        ssh -q ${rac_public_ips[i]} $env_grid_home/OPatch/opatch auto $software_dir/$grid_patch -oh $env_grid_home
+      done
+    fi
+    ;;
+  "12" | "19" | "21")
+    if [[ $grid_patch ]]; then
+      case "$db_version" in
+      "12")
+        # [INS-42505] The installer has detected that the Oracle Grid Infrastructure home software at (/oracle/GRID/12201) is not complete. (Doc ID 2697235.1)
+        mv $env_grid_home/install/files.lst $env_grid_home/install/files.lst.bak
+        if ! su - grid -c "$env_grid_home/gridSetup.sh -silent -force -responseFile $software_dir/grid.rsp -ignorePrereqFailure -waitForCompletion -skipPrereqs -applyPSU $software_dir/$grid_patch"; then
+          color_printf red "抱歉，Grid 软件安装失败，请检查!"
+          echo
+          exit 1
+        fi
+        # CLSRSC-614: failed to get the list of configured diskgroups
+        # Died at /u01/app/12.2.0/grid/crs/install/oraasm.pm line 2069
+        # The command '/u01/app/12.2.0/grid/perl/bin/perl -I/u01/app/12.2.0/grid/perl/lib -I/u01/app/12.2.0/grid/crs/install /u01/app/12.2.0/grid/crs/install/rootcrs.pl ' execution failed
+        /usr/bin/make -s -f $env_grid_home/rdbms/lib/ins_rdbms.mk client_sharedlib libasmclntsh12.ohso libasmperl12.ohso ORACLE_HOME=$env_grid_home >/dev/null 2>&1
+        for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+          ssh -q ${rac_public_ips[i]} "/usr/bin/make -s -f $env_grid_home/rdbms/lib/ins_rdbms.mk client_sharedlib libasmclntsh12.ohso libasmperl12.ohso ORACLE_HOME=$env_grid_home" >/dev/null 2>&1
+        done
+        ;;
+      "19" | "21")
+        if ! su - grid -c "$env_grid_home/gridSetup.sh -silent -force -responseFile $software_dir/grid.rsp -waitForCompletion -skipPrereqs -applyRU $software_dir/$grid_patch"; then
+          color_printf red "抱歉，Grid 软件安装失败，请检查!"
+          echo
+          exit 1
+        fi
+        ;;
+      esac
+    else
+      if ! su - grid -c "$env_grid_home/gridSetup.sh -silent -force -responseFile $software_dir/grid.rsp -waitForCompletion -skipPrereqs"; then
+        color_printf red "抱歉，Grid 软件安装失败，请检查!"
+        echo
+        exit 1
+      fi
+    fi
+    # 执行 root 脚本
+    exec_root $env_grid_home
+    # Complete Grid Infrastructure Configuration Assistant(Plug-in) if OUI is not Available (Doc ID 1360798.1)
+    su - grid -c "$env_grid_home/gridSetup.sh -executeConfigTools -responseFile $software_dir/grid.rsp -silent" >/dev/null 2>&1
+    ;;
+  esac
+  # 打印日志
+  log_print "Grid 软件版本" "$(su - grid -c "sqlplus -V")"
+  log_print "Grid 补丁信息" "$(su - grid -c "opatch lspatches")"
+}
+#==============================================================#
+#                       创建 ASM 磁盘组                          #
+#==============================================================#
+# 创建ASM磁盘组
+function create_asmgroup() {
+  # 打印日志
+  log_print "ASM 磁盘组创建"
+  # 操作Grid用户创建数据磁盘组
+  su - grid -c "asmca -silent -createDiskGroup \
+        -diskGroupName $data_asm_group \
+        -diskList $datadisk \
+        -redundancy $data_redun \
+        -compatible.asm $compatible \
+        -compatible.rdbms $compatible" >/dev/null 2>&1
+  # 判断归档磁盘是否存在，并操作Grid用户创建归档磁盘组
+  if [[ -n "$arch_base_disk" ]]; then
+    su - grid -c "asmca -silent -createDiskGroup \
+        -diskGroupName $arch_asm_group \
+        -diskList $archdisk \
+        -redundancy $arch_redun \
+        -compatible.asm $compatible \
+        -compatible.rdbms $compatible" >/dev/null 2>&1
+  fi
+  # 打印日志和查询已创建的磁盘组并输出到文件
+  su - grid -c "asmcmd lsdg"
+}
+#==============================================================#
+#                        解压 Oracle 软件                       #
+#==============================================================#
+function unzip_dbsoft() {
+  # 执行日志输出函数
+  log_print "静默解压 Oracle 软件包"
+  color_printf blue "正在静默解压缩 Oracle 软件包，请稍等："
+  art_print
+  # 修改软件目录的所有者和所属组为Oracle
+  chown -R oracle:oinstall $software_dir
+  # 安装Oracle数据库软件以及相关补丁
+  case "$db_version" in
+  "11" | "12")
+    # 只有当数据库所需文件夹不存在时，才会解压文件到指定目录下
+    if ! check_file $software_dir/database; then
+      # 解压第一个文件到指定的目录下，-o选项可以覆盖原有文件，-q选项可以减少输出信息
+      if [[ "$db_soft_name1" ]]; then
+        color_printf green "静默解压 Oracle 软件安装包： $db_soft_name,$db_soft_name1"
+        su - oracle -c "unzip -oq $db_soft_name -d $software_dir && unzip -oq $db_soft_name1 -d $software_dir"
+      else
+        color_printf green "静默解压 Oracle 软件安装包： $db_soft_name"
+        su - oracle -c "unzip -oq $db_soft_name -d $software_dir"
+      fi
+    fi
+    # 修改 Kylin 10 安装 11GR2 和 12CR2 报错 unzip 问题，Oralce 内置 unzip 版本太低
+    if [[ "$os_type" = "kylin" ]]; then
+      mv $software_dir/database/install/unzip $software_dir/database/install/unzipbak
+      ln -s /usr/bin/unzip $software_dir/database/install/unzip
+    fi
+    ;;
+  *)
+    # 如果Oracle Home存在并且它包含至少一个文件，则删除它。该命令也会删除所有隐藏文件。
+    if check_file $env_oracle_home && [[ $(find "$env_oracle_home" -mindepth 1 | wc -l) > 0 ]]; then
+      rm -rf -- "$env_oracle_home" "$env_oracle_home"/.*
+    fi
+    # 解压文件到Oracle Home文件夹中（$env_oracle_home）。
+    echo
+    color_printf green "静默解压 Oracle 软件安装包： $db_soft_name"
+    su - oracle -c "unzip -oq $db_soft_name -d $env_oracle_home"
+    ;;
+  esac
+  # 判断补丁
+  if [[ $oracle_patch ]]; then
+    # 任何模式，如果指定了 -opa 参数，则优先使用 -opa 指定的补丁
+    patch_number=$oracle_patch
+  else
+    # RAC 安装时，如果没有指定 -opa 参数，但是指定了 -gpa 参数，则默认使用 -gpa 指定的补丁
+    if [[ $grid_patch ]]; then
+      patch_number=$grid_patch
+    fi
+  fi
+  # 如果传入了oracle_patch参数，并且补丁所需文件夹不存在
+  if [[ $patch_number ]]; then
+    # 如果数据库版本不是11G/12C，则解压Opatch到Oracle Home文件夹中（$env_oracle_home）
+    if ! [[ "$db_version" =~ ^(11|12)$ ]]; then
+      if check_file $opatch_name; then
+        echo
+        color_printf green "静默解压 OPatch 软件补丁包： $opatch_name"
+        su - oracle -c "unzip -oq $opatch_name -d $env_oracle_home"
+      fi
+    fi
+    if ! check_file $software_dir/$oracle_patch; then
+      # 解压文件到指定目录下
+      echo
+      color_printf green "静默解压 Oracle 软件补丁包： $db_patch_name"
+      su - oracle -c "unzip -oq $db_patch_name -d $software_dir"
+    fi
+    # 如果是 RAC 部署模式，需要在其他节点上也应用补丁
+    if [[ "$oracle_install_mode" = "rac" ]]; then
+      # 拷贝 oracle opatch/patch 到其他节点
+      if [[ "$db_version" =~ ^(11|12)$ ]]; then
+        for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+          # 将 oracle 补丁包和 opatch 包拷贝到其他节点的指定目录下，并修改目录所有者和所属组
+          scp -q $db_patch_name $opatch_name ${rac_public_ips[i]}:$software_dir
+          ssh -q ${rac_public_ips[i]} "chown -R oracle:oinstall \"$software_dir\" && su - oracle -c \"unzip -oq '$db_patch_name' -d '$software_dir'\""
+        done
+      fi
+    fi
+  fi
+  # 如果 Linux8 安装 ORACLE 11GR2，需要解压必须补丁包
+  if [[ "$os_version" = "8" && "$db_version" = "11" ]]; then
+    if ! check_file $software_dir/33991024; then
+      echo
+      color_printf green "静默解压 Oracle 软件补丁包：$software_dir/p33991024_11204220118_Generic.zip"
+      su - oracle -c "unzip -oq $software_dir/p33991024_11204220118_Generic.zip -d $software_dir"
+    fi
+  fi
+  # 检查是否需要安装 OJVM 补丁
+  if [[ $ojvm_patch ]]; then
+    echo
+    color_printf green "静默解压 OJVM 软件补丁包： $ojvm_patch_name"
+    # 如果 Oracle 数据库版本不是 11 或 12，需要先安装 OPatch
+    if ! [[ "$db_version" =~ ^(11|12)$ ]]; then
+      # 在 oracle 用户下解压 OPatch 工具到 ORACLE_HOME 目录
+      su - oracle -c "unzip -oq $opatch_name -d $env_oracle_home"
+    fi
+    # 解压 OJVM 补丁到指定目录
+    su - oracle -c "unzip -oq $ojvm_patch_name -d $software_dir"
+    # 如果是 RAC 部署模式，需要在其他节点上也应用补丁
+    if [[ "$oracle_install_mode" = "rac" ]]; then
+      for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+        # 将 OJVM 补丁复制到远程主机的指定目录下
+        scp -q $ojvm_patch_name ${rac_public_ips[i]}:$software_dir
+        # 修改远程主机上的文件所有权以便 oracle 用户可以操作
+        ssh -q ${rac_public_ips[i]} "chown -R oracle:oinstall $software_dir"
+        # 在远程主机上应用 OJVM 补丁
+        su - oracle -c "ssh -q ${rac_public_ips[i]} unzip -oq $ojvm_patch_name -d $software_dir"
+      done
+    fi
+  fi
+}
+#==============================================================#
+#                    创建 Oracle 静默安装文件                     #
+#==============================================================#
+function conf_dbrsp() {
+  log_print "Oracle 安装静默文件"
+  # 将Oracle软件安装相关配置写入db.rsp文件
+  declare -a db_rsp_arr=(
+    "oracle.install.option=INSTALL_DB_SWONLY"
+    "UNIX_GROUP_NAME=oinstall"
+    "INVENTORY_LOCATION=$env_oracle_inven"
+    "ORACLE_BASE=$env_oracle_base"
+    "oracle.install.db.InstallEdition=EE"
+    "oracle.install.db.DBA_GROUP=dba"
+    "oracle.install.db.OPER_GROUP=oper"
+  )
+  if [[ "$oracle_install_mode" = "rac" ]]; then
+    db_rsp_arr+=("oracle.install.db.CLUSTER_NODES=$rac_hostname")
+  fi
+  # 根据不同的版本向db.rsp文件追加配置
+  case "$db_version" in
+  "11")
+    db_rsp_arr+=(
+      "oracle.install.responseFileVersion=/oracle/install/rspfmt_dbinstall_response_schema_v11_2_0"
+      "SELECTED_LANGUAGES=en,zh_CN"
+      "ORACLE_HOME=$env_oracle_home"
+      "DECLINE_SECURITY_UPDATES=true"
+      "oracle.installer.autoupdates.option=SKIP_UPDATES"
+    )
+    ;;
+  "12")
+    db_rsp_arr+=(
+      "oracle.install.responseFileVersion=/oracle/install/rspfmt_dbinstall_response_schema_v12.2.0"
+      "SELECTED_LANGUAGES=en,zh_CN"
+      "ORACLE_HOME=$env_oracle_home"
+      "oracle.install.db.OSBACKUPDBA_GROUP=backupdba"
+      "oracle.install.db.OSDGDBA_GROUP=dgdba"
+      "oracle.install.db.OSKMDBA_GROUP=kmdba"
+      "oracle.install.db.OSRACDBA_GROUP=racdba"
+    )
+    ;;
+  "19" | "21")
+    db_rsp_arr+=(
+      "oracle.install.db.OSBACKUPDBA_GROUP=backupdba"
+      "oracle.install.db.OSDGDBA_GROUP=dgdba"
+      "oracle.install.db.OSKMDBA_GROUP=kmdba"
+      "oracle.install.db.OSRACDBA_GROUP=racdba"
+      "oracle.install.db.rootconfig.executeRootScript=false"
+      "oracle.install.db.rootconfig.configMethod="
+    )
+    case "$db_version" in
+    "19")
+      db_rsp_arr+=("oracle.install.responseFileVersion=/oracle/install/rspfmt_dbinstall_response_schema_v19.0.0")
+      ;;
+    "21")
+      db_rsp_arr+=("oracle.install.responseFileVersion=/oracle/install/rspfmt_dbinstall_response_schema_v21.0.0")
+      ;;
+    esac
+    ;;
+  esac
+  # 将数组中的元素写入db.rsp文件
+  if check_file $software_dir/db.rsp; then
+    rm -rf $software_dir/db.rsp
+  fi
+  printf '%s\n' "${db_rsp_arr[@]}" >"$software_dir/db.rsp"
+  # 记录grid.rsp文件内容到日志中
+  cat "$software_dir/db.rsp"
+}
+#==============================================================#
+#                       安装 Oracle 软件                         #
+#==============================================================#
+# 安装数据库软件及补丁
+function install_dbsoft() {
+  local patch_number
+  # 配置 Oracle 静默安装文件
+  conf_dbrsp
+  log_print "静默安装数据库软件"
+  # 修改软件目录的所有者和所属组为Oracle
+  chown -R oracle:oinstall $software_dir
+  # 判断补丁
+  if [[ $oracle_patch ]]; then
+    # 任何模式，如果指定了 -opa 参数，则优先使用 -opa 指定的补丁
+    patch_number=$oracle_patch
+  else
+    # RAC 安装时，如果没有指定 -opa 参数，但是指定了 -gpa 参数，则默认使用 -gpa 指定的补丁
+    if [[ $grid_patch ]]; then
+      patch_number=$grid_patch
+    fi
+  fi
+  if [[ "$db_version" =~ ^(11|12)$ ]]; then
+    # 安装数据库软件
+    if ! su - oracle -c "$software_dir/database/runInstaller -silent -force -showProgress -ignoreSysPrereqs -waitForCompletion -responseFile $software_dir/db.rsp -ignorePrereq"; then
+      color_printf red "抱歉，Oracle 软件安装失败，请检查!"
+      echo
+      exit 1
+    fi
+    # 修改 Kylin 10 安装 11GR2 和 12CR2 报错 unzip 问题，Oralce 内置 unzip 版本太低
+    if [[ "$os_type" = "kylin" ]]; then
+      mv $env_oracle_home/bin/unzip $env_oracle_home/bin/unzipbak
+      ln -s /usr/bin/unzip $env_oracle_home/bin/unzip
+    fi
+    # 执行 root 脚本
+    exec_root $env_oracle_home
+    # 安装数据库补丁
+    # 如果 patch_number 有值，则打补丁
+    if [[ $patch_number ]]; then
+      log_print "Oracle 软件安装补丁"
+      # 解压 opatch 工具
+      su - oracle -c "unzip -oq $opatch_name -d $env_oracle_home"
+      # RAC 和 单机ASM 安装 Oracle PSU/RU
+      if [[ "$oracle_install_mode" =~ ^(rac|standalone)$ ]]; then
+        # RAC 安装数据库 PSU
+        for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+          su - oracle -c "ssh -q ${rac_public_ips[i]} unzip -oq $opatch_name -d $env_oracle_home"
+        done
+        if [[ "$db_version" = "11" ]]; then
+          # 单机 ASM 模式不显示节点提示
+          if [[ "$oracle_install_mode" = "rac" ]]; then
+            color_printf blue "节点 $local_ip ："
+            echo
+          fi
+          if [[ $oracle_patch ]]; then
+            su - oracle <<-EOF
+cd $software_dir/$patch_number
+$env_oracle_home/OPatch/opatch apply -silent
+EOF
+          else
+            $env_oracle_home/OPatch/opatch auto $software_dir/$patch_number -oh $env_oracle_home
+          fi
+          for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+            echo
+            color_printf blue "节点 ${rac_public_ips[i]} ："
+            echo
+            if [[ $oracle_patch ]]; then
+              ssh -q ${rac_public_ips[i]} "su - oracle <<-EOF
+cd $software_dir/$patch_number
+$env_oracle_home/OPatch/opatch prereq CheckConflictAgainstOHWithDetail -ph ./
+$env_oracle_home/OPatch/opatch apply -silent
+EOF"
+            else
+              ssh -q ${rac_public_ips[i]} $env_oracle_home/OPatch/opatch auto $software_dir/$patch_number -oh $env_oracle_home
+            fi
+          done
+        elif [[ "$db_version" = "12" ]]; then
+          if [[ "$oracle_install_mode" = "rac" ]]; then
+            color_printf blue "节点 $local_ip ："
+            echo
+          fi
+          $env_oracle_home/OPatch/opatchauto apply $software_dir/$patch_number -oh $env_oracle_home
+          for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+            echo
+            color_printf blue "节点 ${rac_public_ips[i]} ："
+            echo
+            ssh -q ${rac_public_ips[i]} $env_oracle_home/OPatch/opatchauto apply $software_dir/$patch_number -oh $env_oracle_home
+          done
+        fi
+      else
+        # Linux8 安装 11GR2 时打补丁不需要执行 relink
+        if [[ "$db_version" = "11" && "$os_version" = "8" ]]; then
+          su - oracle <<-EOF
+cd $software_dir/$patch_number
+$env_oracle_home/OPatch/opatch prereq CheckConflictAgainstOHWithDetail -ph ./
+$env_oracle_home/OPatch/opatch apply -silent -no_relink
+EOF
+        else
+          su - oracle <<-EOF
+cd $software_dir/$patch_number
+$env_oracle_home/OPatch/opatch prereq CheckConflictAgainstOHWithDetail -ph ./
+$env_oracle_home/OPatch/opatch apply -silent
+EOF
+        fi
+      fi
+    fi
+    # 在 12c 上安装 Linux6 需要设置 irman、ioracle
+    if [[ "$db_version" = "12" && "$os_version" = "6" ]]; then
+      su - oracle -c "/usr/bin/make -s -f $env_oracle_home/rdbms/lib/ins_rdbms.mk irman" >/dev/null 2>&1
+      su - oracle -c "/usr/bin/make -s -f $env_oracle_home/rdbms/lib/ins_rdbms.mk ioracle" >/dev/null 2>&1
+
+      if [[ "$oracle_install_mode" = "rac" ]]; then
+        for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+          su - oracle -c "ssh -q ${rac_public_ips[i]} /usr/bin/make -s -f $env_oracle_home/rdbms/lib/ins_rdbms.mk irman" >/dev/null 2>&1
+          su - oracle -c "ssh -q ${rac_public_ips[i]} /usr/bin/make -s -f $env_oracle_home/rdbms/lib/ins_rdbms.mk ioracle" >/dev/null 2>&1
+        done
+      fi
+    fi
+    # 在 11g 上安装 Linux7 需要设置 -lnnz11
+    if [[ "$db_version" = "11" && "$os_version" = "7" ]]; then
+      sed -i 's/^\(\s*\$(MK_EMAGENT_NMECTL)\)\s*$/\1 -lnnz11/g' $env_oracle_home/sysman/lib/ins_emagent.mk
+
+      if [[ "$oracle_install_mode" = "rac" ]]; then
+        for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+          ssh -q ${rac_public_ips[i]} "sed -i 's/^\(\s*\$(MK_EMAGENT_NMECTL)\)\s*$/\1 -lnnz11/g' $env_oracle_home/sysman/lib/ins_emagent.mk"
+        done
+      fi
+    fi
+    # 11GR2 安装补丁 33991024
+    if [[ "$db_version" = "11" && "$os_version" = "8" ]]; then
+      log_print "Oracle 软件安装补丁 33991024"
+      su - oracle <<-EOF
+cd "$software_dir/33991024"
+$env_oracle_home/OPatch/opatch prereq CheckConflictAgainstOHWithDetail -ph ./
+$env_oracle_home/OPatch/opatch apply -silent -no_relink
+EOF
+      # 执行 relink 修复 Linux8 安装错误
+      log_print "Oracle 执行 relink"
+      su - oracle -c "$env_oracle_home/bin/relink all"
+    fi
+  # 在 19C、21C 上应用 RU
+  elif [[ "$db_version" = "19" || "$db_version" = "21" ]]; then
+    if [[ $patch_number ]]; then
+      su - oracle -c "$env_oracle_home/runInstaller -silent -force -responseFile $software_dir/db.rsp -ignorePrereq -waitForCompletion -applyRU $software_dir/$patch_number"
+    else
+      # 无补丁
+      su - oracle -c "$env_oracle_home/runInstaller -silent -force -responseFile $software_dir/db.rsp -ignorePrereq -waitForCompletion"
+    fi
+    # 执行 root 脚本
+    exec_root $env_oracle_home
+  fi
+  # 安装 ojvm 补丁
+  if [[ $ojvm_patch ]]; then
+    log_print "OJVM 补丁安装"
+    # 解压 db 成功后，db 版本为 11/12 的数据库需要使用 opatch 工具
+    if [[ "$db_version" == @(11|12) ]]; then
+      su - oracle -c "unzip -oq $opatch_name -d $env_oracle_home"
+      for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+        su - oracle -c "ssh -q ${rac_public_ips[i]} unzip -oq $opatch_name -d $env_oracle_home"
+      done
+    fi
+    # 所有 db 版本都安装 ojvm 补丁
+    if [[ "$oracle_install_mode" = "rac" ]]; then
+      color_printf blue "节点 $local_ip ："
+      echo
+    fi
+    # 所有版本安装 OJVM 补丁
+    su - oracle <<-EOF
+cd $software_dir/$ojvm_patch
+$env_oracle_home/OPatch/opatch prereq CheckConflictAgainstOHWithDetail -ph ./
+$env_oracle_home/OPatch/opatch apply -silent
+EOF
+    if [[ "$oracle_install_mode" = "rac" ]]; then
+      for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+        echo
+        color_printf blue "节点 ${rac_public_ips[i]} ："
+        echo
+        ssh -q ${rac_public_ips[i]} "su - oracle <<-EOF
+cd $software_dir/$ojvm_patch
+$env_oracle_home/OPatch/opatch prereq CheckConflictAgainstOHWithDetail -ph ./
+$env_oracle_home/OPatch/opatch apply -silent
+EOF"
+      done
+    fi
+  fi
+  log_print "Oracle 软件版本" "$(su - oracle -c "sqlplus -V")"
+  log_print "Oracle 补丁信息" "$(su - oracle -c "opatch lspatches")"
+}
+#==============================================================#
+#                           配置监听                            #
+#==============================================================#
+# 配置NetCA监听器
+function conf_netca() {
+  # 输出日志信息
+  log_print "配置监听"
+  # 检查Oracle安装模式是否为单实例，以及listener.ora文件是否存在
+  if [[ "$oracle_install_mode" = "single" ]] && ! check_file $env_oracle_home/network/admin/listener.ora; then
+    # 如果netca.rsp文件存在则执行NetCA配置命令
+    if check_file $env_oracle_home/assistants/netca/netca.rsp; then
+      su - oracle -c "netca -silent -responsefile $env_oracle_home/assistants/netca/netca.rsp"
+    fi
+  fi
+  # 输出检查监听状态的提示信息
+  echo
+  color_printf blue "检查监听状态："
+  echo
+  # 使用oracle用户执行lsnrctl stat命令来检查监听状态
+  su - oracle -c "lsnrctl stat"
+}
+#==============================================================#
+#                          配置建库命令                          #
+#==============================================================#
+function get_dbca_cmd() {
+  log_print "静默建库命令"
+  case "$db_version" in
+  "11")
+    # 数据库版本是11
+    if [[ $enable_arch = "true" ]]; then
+      # 同意使用归档日志模式
+      sed -i 's/<archiveLogMode>false<\/archiveLogMode>/<archiveLogMode>true<\/archiveLogMode>/g' "$env_oracle_home/assistants/dbca/templates/General_Purpose.dbc"
+    fi
+    case "$oracle_install_mode" in
+    "rac")
+      # Oracle 安装模式是 RAC (Real Application Cluster)
+      adg_str="-diskGroupName $data_asm_group \\
+-storageType ASM \\
+-listeners LISTENER \\
+-nodeinfo $rac_hostname"
+      ;;
+    "standalone")
+      # Oracle 安装模式是 Standalone
+      adg_str="-diskGroupName $data_asm_group \\
+-storageType ASM"
+      ;;
+    *)
+      # Oracle 安装模式是单实例
+      adg_str="-datafileDestination $oradata_dir \\
+-storageType FS"
+      ;;
+    esac
+    dbca_cmd=$(echo -e "dbca -silent -createDatabase \\
+-templateName General_Purpose.dbc \\
+-responseFile NO_VALUE \\
+-gdbname $db_name \\
+-sid $db_name \\
+-sysPassword $database_passwd \\
+-systemPassword $database_passwd \\
+-redoLogFileSize $redosize \\
+$adg_str \\
+-characterSet $db_characterset \\
+-nationalCharacterSet $nation_characterset \\
+-emConfiguration NONE \\
+-automaticMemoryManagement false \\
+-totalMemory $db_memory_total \\
+-databaseType OLTP")
+    ;;
+  "12" | "19" | "21")
+    # 数据库版本是12、19或21
+    case "$oracle_install_mode" in
+    "rac")
+      # Oracle 安装模式是 RAC (Real Application Cluster)
+      adg_str="-diskGroupName +$data_asm_group \\
+-storageType ASM -enableArchive $enable_arch \\
+-archiveLogDest +$data_asm_group \\
+-databaseConfigType RAC \\
+-nodeinfo $rac_hostname"
+      ;;
+    "standalone")
+      # Oracle 安装模式是 Standalone
+      adg_str="-diskGroupName +$data_asm_group \\
+-storageType ASM \\
+-enableArchive $enable_arch \\
+-archiveLogDest +$data_asm_group \\
+-databaseConfigType SINGLE"
+      ## 12.2 Oracle Restart: LFI-00133 LFI-01517 occurred when using srvctl (Doc ID 2387137.1)
+      if [[ "$db_version" = 12 ]]; then
+        check_file "$env_oracle_home/log/$oracle_sid" || mkdir -p "$env_oracle_home/log/$oracle_sid"
+        chown -R oracle:oinstall "$env_oracle_home/log/$oracle_sid"
+      fi
+      ;;
+    *)
+      # 单实例
+      adg_str="-datafileDestination $oradata_dir \\
+-storageType FS \\
+-enableArchive $enable_arch \\
+-archiveLogDest $oradata_dir \\
+-databaseConfigType SINGLE"
+      ;;
+    esac
+    dbca_cmd=$(echo -e "dbca -silent -createDatabase \\
+-ignorePrereqFailure \\
+-templateName General_Purpose.dbc \\
+-responseFile NO_VALUE \\
+-gdbName $db_name \\
+-sid $db_name \\
+-sysPassword $database_passwd \\
+-systemPassword $database_passwd \\
+-redoLogFileSize $redosize \\
+$adg_str \\
+-characterset $db_characterset \\
+-nationalCharacterSet $nation_characterset \\
+-emConfiguration NONE \\
+-automaticMemoryManagement false \\
+-totalMemory $db_memory_total \\
+-databaseType OLTP \\
+-createAsContainerDatabase $iscdb")
+    ;;
+  esac
+  color_printf blue "$dbca_cmd"
+}
+#==============================================================#
+#                           创建数据库                           #
+#==============================================================#
+# 创建数据库
+function create_db() {
+  # 获取建库命令并打印
+  get_dbca_cmd
+  # 打印日志到终端和文件
+  log_print "创建数据库"
+  if ! su - oracle -c "$dbca_cmd"; then
+    # 创建数据库失败，退出脚本
+    color_printf red "抱歉，创建数据库失败。请检查！"
+    echo
+    exit 1
+  fi
+  # 配置 Oracle Managed Files（OMF）
+  conf_omf
+  # 创建 PDB
+  if [[ $iscdb = "true" ]]; then
+    # 打印日志到终端和文件
+    log_print "创建 PDB 数据库"
+    # 如果启用了多租户架构，则创建可插入数据库 (PDB)
+    for i in ${pdbname//,/ }; do
+      color_printf blue "正在创建 PDB：$i"
+      echo
+      su - oracle <<SO
+sqlplus -S / as sysdba<<EOF
+set feedback off
+create pluggable database $i admin user admin identified by $database_passwd;
+alter pluggable database all open;
+alter pluggable database all save state;
+alter session set container=$i;
+alter profile default limit password_life_time unlimited;
+EOF
+SO
+    done
+    # 查看 pdb
+    su - oracle <<SO
+sqlplus -S / as sysdba<<EOF
+set feedback off
+show pdbs
+EOF
+SO
+  fi
+  # 配置 sqlnet.ora 文件
+  if check_file "$env_oracle_home/network/admin/sqlnet.ora"; then
+    bak_file "$env_oracle_home/network/admin/sqlnet.ora"
+  fi
+  su - oracle -c "cat <<-EOF >>$env_oracle_home/network/admin/sqlnet.ora
+SQLNET.ALLOWED_LOGON_VERSION_CLIENT=8
+SQLNET.ALLOWED_LOGON_VERSION_SERVER=8
+EOF"
+  if [[ "$oracle_install_mode" = "rac" ]]; then
+    # 将 sqlnet.ora 文件复制到其他节点
+    for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+      scp -q "$env_oracle_home/network/admin/sqlnet.ora" "${rac_public_ips[i]}:$env_oracle_home/network/admin/"
+    done
+  fi
+  # 配置控制文件和重做日志文件
+  conf_controlfile
+  conf_redolog
+}
+#==============================================================#
+#                         配置 OMF                              #
+#==============================================================#
+# 配置 OMF 以及优化 RMAN
+function conf_omf() {
+  # 定义 omf 变量，判断版本在11以后是否需要在路径前添加 + 符号
+  local omf
+  # 如果安装模式为 rac，则获取数据组存储的路径；否则使用 oradata_dir 变量定义的路径。
+  if [[ "$oracle_install_mode" =~ ^(rac|standalone)$ ]]; then
+    log_print "配置 OMF && 优化 RMAN"
+    omf=+$data_asm_group
+    # 判断是否存在归档日志组磁盘路径，如果存在，则获取 arch_asm_group 存储路径；否则使用 omf 变量定义的路径。
+    if [[ $arch_base_disk ]]; then
+      arch=+$arch_asm_group
+    else
+      arch=$omf
+    fi
+    # 使用 su 命令以 oracle 用户身份执行 rman 命令，配置控制文件备份地址
+    su - oracle <<SO
+rman target / <<-EOF 
+CONFIGURE SNAPSHOT CONTROLFILE NAME TO '$omf/snapcf_fdcdb1.f';
+EOF
+SO
+  else
+    # 获取 oradata 目录的存储路径
+    omf=$oradata_dir
+    # 获取归档日志组存储路径
+    arch=$oradata_dir/archivelog
+  fi
+  # 使用 su 命令以 oracle 用户身份执行 sqlplus 命令，配置数据库链接、redo log 和归档日志的存储路径
+  su - oracle <<SO
+sqlplus -S / as sysdba<<EOF
+set feedback off
+alter system set db_create_file_dest='$omf';
+alter system set log_archive_dest_1='location=$arch';
+EOF
+SO
+}
+#==============================================================#
+#                       配置数据库开机自启                        #
+#==============================================================#
+function db_autostart() {
+  # 备份 oratab 文件
+  bak_file /etc/oratab
+  # 修改 oratab 文件，将数据库自动启动状态改为 Y
+  sed -i 's/db:N/db:Y/' /etc/oratab
+  if [[ "$oracle_install_mode" =~ ^(rac|standalone)$ ]]; then
+    if [[ "$db_version" = "11" ]]; then
+      # 修改资源配置，设置数据库自动启动
+      $env_grid_home/bin/crsctl modify resource "ora.$db_name.db" -attr "AUTO_START=always"
+    else
+      # 该版本修改数据库自动启动方式不受支持，需要在命令中添加 -unsupported 参数
+      $env_grid_home/bin/crsctl modify resource "ora.$db_name.db" -attr "AUTO_START=always" -unsupported
+    fi
+  else
+    # 修改 dbstart 脚本，将变量 ORACLE_HOME_LISTNER 的值改为 $ORACLE_HOME
+    sed -i 's/ORACLE_HOME_LISTNER=$1/ORACLE_HOME_LISTNER=$ORACLE_HOME/' $env_oracle_home/bin/dbstart
+    # sles 没有 rc.local 文件，需要使用 after.local
+    if [[ "$os_type" = "sles" ]]; then
+      # 备份 after.local 文件
+      bak_file /etc/rc.d/after.local
+      # 在 after.local 文件中添加启动监听器和数据库的命令，并配置权限为可执行
+      cat <<-EOF >>/etc/rc.d/after.local
+#!/bin/bash
+# OracleBegin
+su oracle -lc "$env_oracle_home/bin/lsnrctl start"
+su oracle -lc "$env_oracle_home/bin/dbstart"
+EOF
+      chmod +x /etc/rc.d/after.local
+    else
+      # 备份 rc.local 文件
+      bak_file /etc/rc.d/rc.local
+      # 在 rc.local 文件中添加启动监听器和数据库的命令，并配置权限为可执行
+      cat <<-EOF >>/etc/rc.d/rc.local
+# OracleBegin
+su oracle -lc "$env_oracle_home/bin/lsnrctl start"
+su oracle -lc "$env_oracle_home/bin/dbstart"
+EOF
+      chmod +x /etc/rc.d/rc.local
+    fi
+  fi
+}
+#==============================================================#
+#                      配置 RMAN 备份脚本                        #
+#==============================================================#
+function db_backup() {
+  log_print "配置 RMAN 备份任务"
+  local scripts_dir="/home/oracle/scripts"
+  local rman_log_dir="/backup"
+  # 共用的 RMAN 配置参数
+  rman_config=$(
+    cat <<RMAN
+allocate channel c1 device type disk;
+allocate channel c2 device type disk;
+crosscheck backup;
+crosscheck archivelog all;
+sql"alter system archive log current";
+delete noprompt expired backup;
+delete noprompt obsolete device type disk;
+backup not backed up 1 times as compressed backupset archivelog all format '/backup/arch_%d_%T_%t_%s_%p';
+RMAN
+  )
+  # 删除过期归档日志脚本
+  del_arch_script="$scripts_dir/del_arch.sh"
+  cat >"$del_arch_script" <<DELARCH
+#!/bin/bash
+source ~/$profile_name
+deltime=\$(date +"20%y%m%d%H%M%S")
+rman target / nocatalog msglog $scripts_dir/del_arch_\$deltime.log <<-EOF
+crosscheck archivelog all;
+delete noprompt archivelog until time 'sysdate-7';
+delete noprompt force archivelog until time 'SYSDATE-10';
+EOF
+DELARCH
+  chmod +x "$del_arch_script"
+  # Level 0 备份脚本
+  lv0_backup_script="$scripts_dir/dbbackup_lv0.sh"
+  cat >"$lv0_backup_script" <<LV0BACKUP
+#!/bin/bash
+source ~/$profile_name
+backtime=\$(date +"20%y%m%d%H%M%S")
+rman target / log=$rman_log_dir/level0_backup_\$backtime.log<<-EOF
+run {
+$rman_config
+backup incremental level 0 database include current controlfile format '/backup/backlv0_%d_%T_%t_%s_%p';
+}
+EOF
+LV0BACKUP
+  chmod +x "$lv0_backup_script"
+  # Level 1 备份脚本
+  lv1_backup_script="$scripts_dir/dbbackup_lv1.sh"
+  cat >"$lv1_backup_script" <<LV1BACKUP
+#!/bin/bash
+source ~/$profile_name
+backtime=\$(date +"20%y%m%d%H%M%S")
+rman target / log=$rman_log_dir/level1_backup_\$backtime.log<<-EOF
+run {
+$rman_config
+backup incremental level 1 database include current controlfile format '/backup/backlv1_%d_%T_%t_%s_%p';
+}
+EOF
+LV1BACKUP
+  chmod +x "$lv1_backup_script"
+  # 添加 crontab 计划任务
+  crontab_file="/var/spool/cron/oracle"
+  if check_file "$crontab_file"; then
+    bak_file "$crontab_file"
+  else
+    # 不存在文件时，生成一个原始空文件
+    touch /var/spool/cron/oracle.original
+  fi
+  cat <<CRONTAB >>"$crontab_file"
+## OracleBegin
+00 02 * * * $del_arch_script
+#00 00 * * 0 $lv0_backup_script
+#00 00 * * 1,2,3,4,5,6 $lv1_backup_script
+CRONTAB
+  if check_file /etc/cron.allow; then
+    echo "oracle" >>/etc/cron.allow
+  fi
+  chown -R oracle:oinstall "$scripts_dir" "$rman_log_dir"
+  cat /var/spool/cron/oracle
+}
+#==============================================================#
+#                          配置控制文件                          #
+#==============================================================#
+function conf_controlfile() {
+  # 获取控制文件数量
+  local ctl_count=$(su - oracle -c "sqlplus -S / as sysdba <<< $'set pagesize0\nset timing off\nset feedback off\nselect count(*) from v\$controlfile;'")
+  # 如果控制文件数量只有1个，则增加一个控制文件
+  if (($ctl_count == 1)); then
+    echo
+    log_print "配置控制文件复用"
+    local ctl_name=$(su - oracle -c "sqlplus -S / as sysdba <<< $'set pagesize0\nset timing off\nset feedback off\nselect name from v\$controlfile;'")
+    local ctl_name_new
+    # 如果是 RAC，则将新增的控制寄文件存放在 OCR 磁盘组中
+    if [[ "$oracle_install_mode" =~ ^(rac|standalone)$ ]]; then
+      ctl_name_new=$(su - oracle -c "sqlplus -S / as sysdba <<< $'set pagesize0\nset timing off\nset feedback off\nselect substr(replace(name,substr(name,1,instr(name,\'/\',1)-1),\'+$data_asm_group\'),1,instr(name,\'/\',-1)-1) || '\''/control02.ctl'\'' from v\$controlfile;'")
+      # 重启数据库至 nomount 状态
+      su - oracle -c "srvctl stop database -d $db_name"
+      su - oracle -c "srvctl start database -d $db_name -o nomount"
+    else
+      # 单机模式则直接存放在 ORACLE_HOME/dbs 目录下
+      ctl_name_new="$env_oracle_home/dbs/control02.ctl"
+      # 重启数据库至 nomount 状态
+      su - oracle -c "sqlplus -S / as sysdba <<< $'set feedback off\nshutdown immediate\nstartup nomount;'"
+    fi
+    # 从原来的控制文件恢复一个新的控制文件
+    su - oracle -c "rman target / <<< 'restore controlfile to \"${ctl_name_new}\" from \"$ctl_name\"; exit;'"
+    # 修改数据库控制文件参数
+    su - oracle -c "sqlplus -S / as sysdba <<< $'set feedback off\nalter system set control_files=\"$ctl_name\",\"$ctl_name_new\" scope=spfile;'"
+    # 重启数据库生效参数
+    if [[ "$oracle_install_mode" =~ ^(rac|standalone)$ ]]; then
+      su - oracle -c "srvctl stop database -d $db_name"
+      su - oracle -c "srvctl start database -d $db_name"
+    else
+      su - oracle -c "sqlplus -S / as sysdba <<< $'set feedback off\nshu immediate\nstartup\nexit;'"
+    fi
+    # 查询当前数据库控制文件
+    echo
+    color_printf blue "数据库控制文件："
+    echo
+    su - oracle -c "sqlplus -S / as sysdba <<< $'set feedback off\nset line222 pages1000\ncol name for a100\nselect name from v\$controlfile;'"
+  fi
+}
+#==============================================================#
+#                    Configure redolog                         #
+#==============================================================#
+function conf_redolog() {
+  log_print "配置在线重做日志"
+  if [[ "$oracle_install_mode" = "rac" ]]; then
+    # 将 sqlnet.ora 文件复制到其他节点
+    for ((i = 0; i < ${#rac_public_ips[@]}; i++)); do
+      let thread=i+1
+      su - oracle <<SOF
+sqlplus -S / as sysdba<<-EOF
+set feedback off
+alter database add logfile thread $thread
+group ${thread}1 size ${redosize}M,
+group ${thread}2 size ${redosize}M,
+group ${thread}3 size ${redosize}M,
+group ${thread}4 size ${redosize}M,
+group ${thread}5 size ${redosize}M;
+exit;
+EOF
+SOF
+    done
+  else
+    su - oracle <<SOF
+sqlplus -S / as sysdba<<-EOF
+set feedback off
+alter database add logfile
+group 11 size ${redosize}M,
+group 12 size ${redosize}M,
+group 13 size ${redosize}M,
+group 14 size ${redosize}M,
+group 15 size ${redosize}M;
+exit;
+EOF
+SOF
+  fi
+  # 查询当前数据库在线重做日志
+  color_printf blue "数据库在线重做日志文件："
+  echo
+  su - oracle <<-\SOF
+sqlplus -S / as sysdba<<-\EOF
+set feedback off
+set line222 pages1000
+col member for a120
+select a.thread#,a.group#,b.member member,a.bytes/1024/1024 "size(M)" from v$log a,v$logfile b where a.group#=b.group# order by 1,2;
+exit;
+EOF
+SOF
+}
+#==============================================================#
+#                       配置 glogin.sql                         #
+#==============================================================#
+function conf_glogin() {
+  log_print "配置 glogin.sql"
+  bak_file $env_oracle_home/sqlplus/admin/glogin.sql
+  cat <<-\EOF >$env_oracle_home/sqlplus/admin/glogin.sql
+define _editor=vi
+set serveroutput on size 1000000
+set pagesize 9999
+set long 99999
+set trimspool on
+col name format a80
+set termout off
+define gname=idle
+column global_name new_value gname
+select lower(user) || '@' || substr( global_name, 1, decode( dot, 0, length(global_name), dot-1) ) global_name from (select global_name, instr(global_name,'.') dot from global_name );
+ALTER SESSION SET nls_date_format = 'YYYY-MM-DD HH24:MI:SS';
+set sqlprompt '&gname _DATE> '
+set termout on
+EOF
+
+  if [[ "$oracle_install_mode" = "rac" ]]; then
+    bak_file $env_grid_home/sqlplus/admin/glogin.sql
+    cat <<-\EOF >$env_grid_home/sqlplus/admin/glogin.sql
+define _editor=vi
+set serveroutput on size 1000000
+set pagesize 9999
+set long 99999
+set trimspool on
+col name format a80
+set termout off
+define gname=idle
+column global_name new_value gname
+select lower(user) || '@' || substr( global_name, 1, decode( dot, 0, length(global_name), dot-1) ) global_name from (select global_name, instr(global_name,'.') dot from global_name );
+ALTER SESSION SET nls_date_format = 'YYYY-MM-DD HH24:MI:SS';
+set sqlprompt '&gname _DATE> '
+set termout on
+EOF
+    for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+      su - oracle -c "scp -q $env_oracle_home/sqlplus/admin/glogin.sql ${rac_public_ips[i]}:$env_oracle_home/sqlplus/admin/"
+      su - grid -c "scp -q $env_grid_home/sqlplus/admin/glogin.sql ${rac_public_ips[i]}:$env_grid_home/sqlplus/admin/"
+    done
+  fi
+  grep -v "^\s*\(#\|$\|--\)" $env_oracle_home/sqlplus/admin/glogin.sql
+}
+#==============================================================#
+#                         配置大页内存                           #
+#==============================================================#
+function conf_hugepage() {
+  log_print "配置大页内存"
+  # 获取当前系统的内核版本
+  KERN=$(uname -r | awk -F. '{ printf("%d.%d\n",$1,$2); }')
+  # 获取系统支持的 HugePage 大小
+  HPG_SZ=$(grep Hugepagesize /proc/meminfo | awk '{print $2}')
+  if [ -z "$HPG_SZ" ]; then
+    color_printf red "在当前系统中不支持 HugePages!"
+    echo
+    return 1
+  fi
+  # 初始化计数器，累加所需的 HugePages 数量
+  NUM_PG=0
+  for SEG_BYTES in $(ipcs -m | cut -c44-300 | awk '{print $1}' | grep "[0-9][0-9]*"); do
+    MIN_PG=$(echo "$SEG_BYTES/($HPG_SZ*1024)" | bc -q)
+    if [ $MIN_PG -gt 0 ]; then
+      NUM_PG=$(echo "$NUM_PG+$MIN_PG+1" | bc -q)
+    fi
+  done
+  # 计算所需的 HugePages 总大小（以字节为单位）
+  RES_BYTES=$(echo "$NUM_PG * $HPG_SZ * 1024" | bc -q)
+  # 如果需要使用 HugePages 的共享内存段总大小小于 100MB，则无法配置成功
+  if (($RES_BYTES < 100000000)); then
+    color_printf red "无法为 HugePages 配置分配足够的共享内存段。HugePages 只能用于大小与 Oracle 数据库 SGA 匹配的共享内存段。请确保：
+* Oracle 数据库实例正在运行；
+* Oracle 数据库 11g 自动内存管理（AMM）未配置!"
+    echo
+    return 1
+  fi
+  # 根据不同的内核版本，采用不同的 HugePages 配置方式
+  case $KERN in
+  "2.4")
+    # 对于 2.4 版本的内核，使用 hugetlbfs 模式，并设置 vm.hugetlb_pool 参数
+    HUGETLB_POOL=$(echo "$NUM_PG*$HPG_SZ/1024" | bc -q)
+    echo "建议的参数设置：vm.hugetlb_pool = $HUGETLB_POOL"
+    sysctl -w vm.hugetlb_pool=$HUGETLB_POOL
+    cat <<-EOF >>/etc/sysctl.conf
+vm.hugetlb_pool=$HUGETLB_POOL
+EOF
+    if [[ "$oracle_install_mode" = "rac" ]]; then
+      for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+        ssh -q ${rac_public_ips[i]} sysctl -w vm.hugetlb_pool=$HUGETLB_POOL
+        ssh -q ${rac_public_ips[i]} "cat <<-EOF >>/etc/sysctl.conf
+vm.hugetlb_pool=$HUGETLB_POOL
+EOF"
+      done
+    fi
+    ;;
+  "2.6" | "3.8" | "3.10" | "4.1" | "4.14" | "4.18" | "5.4")
+    # 对于其他版本的内核，直接设置 vm.nr_hugepages 参数即可
+    echo "建议的参数设置：vm.nr_hugepages = $NUM_PG"
+    sysctl -w vm.nr_hugepages=$NUM_PG
+    cat <<-EOF >>/etc/sysctl.conf
+vm.nr_hugepages=$NUM_PG
+EOF
+    if [[ "$oracle_install_mode" = "rac" ]]; then
+      for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+        ssh -q ${rac_public_ips[i]} sysctl -w vm.nr_hugepages=$NUM_PG
+        ssh -q ${rac_public_ips[i]} "cat <<-EOF >>/etc/sysctl.conf
+vm.nr_hugepages=$NUM_PG
+EOF"
+      done
+    fi
+    ;;
+  *)
+    echo "当前内核版本 $KERN 不受此脚本支持。"
+    ;;
+  esac
+  grep HugePages_Total /proc/meminfo
+}
+#==============================================================#
+#                        优化数据库参数                          #
+#==============================================================#
+function conf_para() {
+  log_print "优化数据库参数"
+  # memory for db sga_size(MB) = os_memory_total * 0.8 * 0.8 / 1024
+  let "sga_target = ($os_memory_total * 8 * 8 / 100 / 1024)"
+  sga_target="${sga_target}M"
+  # memory for db pga_size(MB) = os_memory_total * 0.8 * 0.2 / 1024
+  let "pga_target = ($os_memory_total * 8 * 2 / 100 / 1024)"
+  pga_target="${pga_target}M"
+  # just rac
+  if [[ "$oracle_install_mode" = "rac" ]]; then
+    su - oracle <<-\SOF
+sqlplus -S / as sysdba<<-\EOF
+set feedback off
+alter system set parallel_force_local=true sid='*' scope=spfile;
+alter system set "_gc_policy_time"=0 scope=spfile;
+alter system set "_gc_undo_affinity"=false scope=spfile;
+alter system set "_clusterwide_global_transactions"=FALSE scope=spfile;
+EOF
+SOF
+  fi
+  # rac and single
+  su - oracle <<SOF
+sqlplus -S / as sysdba<<-EOF
+set feedback off
+exec dbms_scheduler.disable('ORACLE_OCM.MGMT_CONFIG_JOB');
+exec dbms_scheduler.disable('ORACLE_OCM.MGMT_STATS_CONFIG_JOB');
+BEGIN
+DBMS_AUTO_TASK_ADMIN.DISABLE(
+client_name => 'auto space advisor',
+operation => NULL,
+window_name => NULL);
+END;
+/
+BEGIN
+DBMS_AUTO_TASK_ADMIN.DISABLE(
+client_name => 'sql tuning advisor',
+operation => NULL,
+window_name => NULL);
+END;
+/
+alter profile default limit password_grace_time unlimited;
+alter profile default limit password_life_time unlimited;
+alter profile default limit password_lock_time unlimited;
+alter profile default limit failed_login_attempts unlimited;
+alter system set audit_trail=none sid='*' scope=spfile;
+alter system set sga_max_size=$sga_target sid='*' scope=spfile;
+alter system set sga_target=$sga_target sid='*' scope=spfile;
+alter system set pga_aggregate_target=$pga_target sid='*' scope=spfile;
+alter system set processes=2000 scope=spfile;
+alter system set open_cursors=1000 scope=spfile;
+alter system set session_cached_cursors=300 scope=spfile;
+alter system set db_files=5000 scope=spfile;
+alter system set "_undo_autotune"=false sid='*' scope=spfile;
+alter system set undo_retention=10800 scope=spfile;
+alter system set control_file_record_keep_time=31;
+alter system set event='28401 trace name context forever,level 1','10949 trace name context forever,level 1' sid='*' scope=spfile;
+alter system set "_b_tree_bitmap_plans"=false sid='*';
+alter system set deferred_segment_creation=false sid='*';
+alter system set "_optimizer_adaptive_cursor_sharing"=false sid='*' scope=spfile;
+alter system set "_optimizer_extended_cursor_sharing"=none sid='*' scope=spfile;
+alter system set "_optimizer_extended_cursor_sharing_rel"=none sid='*' scope=spfile;
+alter system set "_optimizer_use_feedback"=false sid ='*' scope=spfile;
+alter system set "_cleanup_rollback_entries"=2000 sid='*' scope=spfile;
+alter system set "_datafile_write_errors_crash_instance"=false sid='*';
+alter system set parallel_max_servers=64 sid='*';
+EOF
+SOF
+  # for 11g implied parameters
+  if [[ "$db_version" = "11" ]]; then
+    su - oracle <<-\SOF
+sqlplus -S / as sysdba<<-\EOF
+set feedback off
+alter system set resource_limit=true sid='*' scope=spfile;
+alter system set resource_manager_plan='force:' sid='*' scope=spfile;
+alter system set "_optimizer_null_aware_antijoin"=false sid ='*' scope=spfile;
+alter system set "_px_use_large_pool"=true sid ='*' scope=spfile;
+alter system set "_partition_large_extents"=false sid='*' scope=spfile;
+alter system set "_index_partition_large_extents"=false sid='*' scope=spfile;
+alter system set "_use_adaptive_log_file_sync"=false sid='*' scope=spfile;
+alter system set "_memory_imm_mode_without_autosga"=false sid='*' scope=spfile;
+alter system set enable_ddl_logging=true sid='*' scope=spfile;
+alter system set sec_case_sensitive_logon=false sid='*' scope=spfile;
+EOF
+SOF
+  fi
+  color_printf blue "数据库参数："
+  echo
+  # 查看数据库参数
+  su - oracle <<-\SOF
+sqlplus -S / as sysdba<<-\EOF
+set feedback off
+set line2222 pages1000
+col name for a50
+col sid for a10
+col spvalue for a80
+col VALUE for a80
+SELECT DISTINCT s.name,
+                s.sid,
+                s.value spvalue,
+                p.value VALUE
+  FROM v$spparameter s,
+       gv$parameter  p
+ WHERE s.name = p.name
+   AND (s.value IS NOT NULL OR (p.name IN ('statistics_level',
+                                           'processes',
+                                           'sessions',
+                                           'db_files',
+                                           'spfile',
+                                           'optimizer_adaptive_features',
+                                           'optimizer_adaptive_plans',
+                                           'optimizer_adaptive_statistics',
+                                           'max_string_size',
+                                           'control_file_record_keep_time',
+                                           '_use_adaptive_log_file_sync',
+                                           'fast_start_parallel_rollback',
+                                           '_datafile_write_errors_crash_instance',
+                                           'max_dump_file_size',
+                                           'parallel_max_servers',
+                                           'deferred_segment_creation',
+                                           '_optimizer_use_feedback',
+                                           'open_cursors',
+                                           'session_cached_cursors',
+                                           'OPTIMIZER_INDEX_COST_ADJ',
+                                           'optimizer_index_caching',
+                                           'audit_trail',
+                                           'SEC_CASE_SENSITIVE_LOGON',
+                                           'parallel_force_local',
+                                           'db_file_multiblock_read_count',
+                                           'event',
+                                           'dispatchers',
+                                           'db_writer_processes',
+                                           'optimizer_mode')))
+   AND p.name NOT IN ('thread',
+                      'instance_name',
+                      'instance_number',
+                      'undo_tablespace',
+                      'local_listener',
+                      'remote_listener',
+                      'lisneter_network',
+                      'control_files')
+ ORDER BY s.name;
+EOF
+SOF
+}
+#==============================================================#
+#                          优化数据库                            #
+#==============================================================#
+function db_optimize() {
+  db_autostart
+  db_backup
+  conf_glogin
+  # 物理内存大于100G，配置大页内存
+  if [[ $os_memory_total -gt 104857600 ]]; then
+    conf_hugepage
+  fi
+  conf_para
+}
+#==============================================================#
+#                            主函数                             #
+#==============================================================#
+function main() {
+  logo_print
+  # 判断当前用户是否为root用户
+  if [ $(id -u) != 0 ]; then
+    color_printf red "本脚本需要使用 root 用户执行，已退出!"
+    echo
+    exit 1
+  fi
+  # 检查脚本软件目录是否为/root或者oracle安装根目录
+  if [[ $software_dir = "/root" || $software_dir = $env_base_dir ]]; then
+    color_printf red "Oracle 软件安装包以及脚本不能放在 /root 目录以及 $env_base_dir，请创建 /soft 目录存放!"
+    echo
+    exit 1
+  fi
+  # 脚本传参判断
+  while [[ $1 ]]; do
+    case $1 in
+    # 当前节点号，脚本内部参数，仅用于脚本识别当前执行的节点
+    -node | --node_num)
+      node_num=$2
+      # 通过shift 2将已经处理过的参数（-node和其对应的值）从参数列表中移除，让接下来处理参数的代码只处理剩余的参数
+      shift 2
+      ;;
+    # 是否挂载ISO镜像，脚本外部参数，用于判断脚本是否需要配置YUM源，默认值为Y，代表已经挂载ISO镜像，脚本会自动配置YUM源
+    -iso | --iso)
+      # 判断ISO参数的值是否为空，如果为空则提示报错退出执行
+      checkpara_NULL $1 $2
+      # 判断ISO参数的值是否为Y/N，如果不是则提示报错退出执行
+      checkpara_YN $1 $2
+      iso=$2
+      shift 2
+      ;;
+    -rp | --root_passwd)
+      checkpara_NULL $1 $2
+      root_passwd=$2
+      shift 2
+      ;;
+    -lf | --local_ifname)
+      checkpara_NULL $1 $2
+      local_ifname=$2
+      # 通过网卡名称获取网卡对应的IP地址，如果获取不到说明网络没有配置
+      local_ip=$(ip addr show dev "$local_ifname" | awk '/inet / {print $2}' | cut -d/ -f1 | head -n 1)
+      if [[ $local_ip ]]; then
+        # 检查IP地址是否合法
+        if ! check_ip $local_ip; then
+          color_printf red "参数 [ -lf ] 网卡名称：$local_ifname 对应的 IP：$local_ip 不合规，请检查!"
+          echo
+          exit 1
+        fi
+      else
+        color_printf red "参数 [ -lf ] 网卡名称：$local_ifname 不存在或者未配置 IP 信息，请检查!"
+        echo
+        exit 1
+      fi
+      shift 2
+      ;;
+    -ri | --rac_public_ip)
+      checkpara_NULL $1 $2
+      rac_public_ip=$2
+      # 将参数值转化为数组形式
+      rac_public_ips=(${rac_public_ip//,/ })
+      # 判断RAC节点数不少于2个
+      if [[ ${#rac_public_ips[@]} -lt 2 ]]; then
+        color_printf red "RAC 参数 [ -ri ] 至少需要包含 2 个节点的公网 IP 地址!"
+        echo
+        exit 1
+      fi
+      # 拆分公网IP进行判断
+      for ((i = 0; i < ${#rac_public_ips[@]}; i++)); do
+        if ! check_ip ${rac_public_ips[i]}; then
+          color_printf red "RAC 参数 [ -ri ] 中的 IP：${rac_public_ips[i]}) 不合规，请检查!"
+          echo
+          exit 1
+        fi
+      done
+      shift 2
+      ;;
+    -o | --db_name)
+      checkpara_NULL $1 $2
+      db_name=$2
+      shift 2
+      ;;
+    -hn | --rac_hostname)
+      checkpara_NULL $1 $2
+      rac_hostname=$2
+      # 转为数组
+      rac_hostnames=(${rac_hostname//,/ })
+      if [[ ${#rac_hostnames[@]} -lt 2 ]]; then
+        color_printf red "RAC 参数 [ -hn ] 至少需要包含 2 个节点的主机名!"
+        echo
+        exit 1
+      fi
+      shift 2
+      ;;
+      # 单机时作为主机名传参，RAC时作为主机名前缀传参
+    -n | --hostname)
+      checkpara_NULL $1 $2
+      hostname=$2
+      shift 2
+      ;;
+    -d | --env_base_dir)
+      checkpara_NULL $1 $2
+      env_base_dir=$2
+      shift 2
+      ;;
+    -ord | --oradata_dir)
+      checkpara_NULL $1 $2
+      oradata_dir=$2
+      shift 2
+      ;;
+    -ds | --db_characterset)
+      checkpara_NULL $1 $2
+      db_characterset=$2
+      shift 2
+      ;;
+    -ns | --nation_characterset)
+      checkpara_NULL $1 $2
+      nation_characterset=$2
+      shift 2
+      ;;
+    -dp | --database_passwd)
+      checkpara_NULL $1 $2
+      database_passwd=$2
+      shift 2
+      ;;
+    -pdb | --pdbname)
+      checkpara_NULL $1 $2
+      pdbname=$2
+      # 如果传入pdb参数，则默认创建为CDB架构
+      iscdb=true
+      shift 2
+      ;;
+    -sn | --scan_name)
+      checkpara_NULL $1 $2
+      scan_name=$2
+      shift 2
+      ;;
+    -cn | --cluster_name)
+      checkpara_NULL $1 $2
+      cluster_name=$2
+      shift 2
+      ;;
+    -install_mode | --oracle_install_mode)
+      checkpara_NULL $1 $2
+      oracle_install_mode=$2
+      shift 2
+      ;;
+    -dbv | --db_version)
+      checkpara_NULL $1 $2
+      db_version=$2
+      shift 2
+      ;;
+    -m | --only_conf_os)
+      checkpara_NULL $1 $2
+      checkpara_YN $1 $2
+      only_conf_os=$2
+      shift 2
+      ;;
+    -ug | --install_until_grid)
+      checkpara_NULL $1 $2
+      checkpara_YN $1 $2
+      install_until_grid=$2
+      shift 2
+      ;;
+    -ud | --install_until_db)
+      checkpara_NULL $1 $2
+      checkpara_YN $1 $2
+      install_until_db=$2
+      shift 2
+      ;;
+    -opd | --optimize_db)
+      checkpara_NULL $1 $2
+      checkpara_YN $1 $2
+      optimize_db=$2
+      shift 2
+      ;;
+    -gpa | --grid_patch)
+      checkpara_NULL $1 $2
+      grid_patch=$2
+      grid_patch_name="$software_dir/p$grid_patch"*.zip
+      # 检查 Grid 补丁包是否已上传至指定目录
+      if ! check_file $grid_patch_name; then
+        color_printf red "RAC 参数 [-gpa] 对应的 Grid 补丁包：$grid_patch_name 是否已上传至目录：$software_dir，请检查并上传!"
+        echo
+        exit 1
+      fi
+      # 检查 OPatch 补丁包是否已上传至指定目录
+      if ! check_file $opatch_name; then
+        color_printf red "OPatch 补丁包：$opatch_name 不存在，请检查并上传!"
+        echo
+        exit 1
+      fi
+      shift 2
+      ;;
+    -opa | --oracle_patch)
+      checkpara_NULL $1 $2
+      oracle_patch=$2
+      db_patch_name="$software_dir/p$oracle_patch"*.zip
+      # 检查 Oracle 补丁包是否已上传至指定目录
+      if ! check_file $db_patch_name; then
+        color_printf red "参数 [ -opa ] 对应的 Oracle 补丁包：$db_patch_name 是否已上传至目录：$software_dir，请检查并上传!"
+        exit 1
+      fi
+      # 检查 OPatch 补丁包是否已上传至指定目录
+      if ! check_file $opatch_name; then
+        color_printf red "OPatch 补丁包：$opatch_name 不存在，请检查并上传!"
+        exit 1
+      fi
+      shift 2
+      ;;
+    -jpa | --ojvm_patch)
+      checkpara_NULL $1 $2
+      ojvm_patch=$2
+      ojvm_patch_name="$software_dir/p$ojvm_patch"*.zip
+      # 检查 OJVM 补丁包是否已上传至指定目录
+      if ! check_file $ojvm_patch_name; then
+        color_printf red "参数 [ -jpa ] 对应的 OJVM 补丁包：$ojvm_patch_name 是否已上传至目录：$software_dir，请检查并上传!"
+        echo
+        exit 1
+      fi
+      # 检查 OPatch 补丁包是否已上传至指定目录
+      if ! check_file $opatch_name; then
+        color_printf red "OPatch 补丁包：$opatch_name 不存在，请检查并上传!"
+        echo
+        exit 1
+      fi
+      shift 2
+      ;;
+    -gp | --grid_passwd)
+      checkpara_NULL $1 $2
+      grid_passwd=$2
+      shift 2
+      ;;
+    -op | --oracle_passwd)
+      checkpara_NULL $1 $2
+      oracle_passwd=$2
+      shift 2
+      ;;
+    -vi | --rac_virtual_ip)
+      checkpara_NULL $1 $2
+      rac_virtual_ip=$2
+      # 将参数值转化为数组形式
+      rac_virtual_ips=(${rac_virtual_ip//,/ })
+      # 判断RAC节点数不少于2个
+      if [[ ${#rac_virtual_ips[@]} -lt 2 ]]; then
+        color_printf red "RAC 参数 [ -vi ] 至少包含 2 个节点的虚拟IP!"
+        echo
+        exit 1
+      fi
+      # 拆分虚拟IP进行判断
+      for ((i = 0; i < ${#rac_virtual_ips[@]}; i++)); do
+        let rac_vir_count=i+1
+        if ! check_ip ${rac_virtual_ips[i]}; then
+          color_printf red "RAC 参数 [ -vi ] 中的 IP：${rac_virtual_ips[i]}) 不合规，请检查!"
+          echo
+          exit 1
+        fi
+      done
+      shift 2
+      ;;
+    -pf | --rac_priv_ifname)
+      checkpara_NULL $1 $2
+      rac_priv_ifname=$2
+      # 将参数值转化为数组形式
+      rac_priv_ifnames=(${rac_priv_ifname//,/ })
+      # 判断RAC心跳数不超过2个
+      if [[ ${#rac_priv_ifnames[@]} -gt 2 ]]; then
+        color_printf red "RAC 参数 [ -pf ] 心跳网卡不建议超过 2 组!"
+        echo
+        exit 1
+      fi
+      shift 2
+      ;;
+    -dnsn | --dns_name)
+      checkpara_NULL $1 $2
+      dns_name=$2
+      shift 2
+      ;;
+    -dnsi | --dns_ip)
+      checkpara_NULL $1 $2
+      dns_ip=$2
+      if ! check_ip $dns_ip; then
+        color_printf red "RAC 参数 [ -dsi ] IP 地址：$dns_ip 不合规，请检查!"
+        echo
+        exit 1
+      fi
+      shift 2
+      ;;
+    -dns | --dns)
+      checkpara_NULL $1 $2
+      checkpara_YN $1 $2
+      dns=$2
+      shift 2
+      ;;
+    -si | --rac_scan_ip)
+      checkpara_NULL $1 $2
+      rac_scan_ip=$2
+      # 将参数值转化为数组形式
+      rac_scan_ips=(${rac_scan_ip//,/ })
+      # 拆分SCANIP进行判断
+      for ((i = 0; i < ${#rac_scan_ips[@]}; i++)); do
+        let scan_count=i+1
+        if ! check_ip ${rac_scan_ips[i]}; then
+          color_printf red "RAC 参数 [ -si ] 中的 IP 地址：${rac_scan_ips[i]}) 不合规，请检查!"
+          echo
+          exit 1
+        fi
+      done
+      shift 2
+      ;;
+    -on | --ocr_asm_group)
+      checkpara_NULL $1 $2
+      ocr_asm_group=$2
+      shift 2
+      ;;
+    -dn | --data_asm_group)
+      checkpara_NULL $1 $2
+      data_asm_group=$2
+      shift 2
+      ;;
+    -an | --arch_asm_group)
+      checkpara_NULL $1 $2
+      arch_asm_group=$2
+      shift 2
+      ;;
+      # 是否需要配置多路径Multipath，不配置多路径则直接绑定UDEV
+    -mp | --multipath)
+      checkpara_NULL $1 $2
+      checkpara_YN $1 $2
+      multipath=$2
+      shift 2
+      ;;
+    -adc | --asm_disk_conf)
+      checkpara_NULL $1 $2
+      checkpara_YN $1 $2
+      asm_disk_conf=$2
+      shift 2
+      ;;
+    -od | --ocr_base_disk)
+      checkpara_NULL $1 $2
+      ocr_base_disk=$2
+      shift 2
+      ;;
+    -dd | --data_base_disk)
+      checkpara_NULL $1 $2
+      data_base_disk=$2
+      shift 2
+      ;;
+    -ad | --arch_base_disk)
+      checkpara_NULL $1 $2
+      arch_base_disk=$2
+      shift 2
+      ;;
+    -or | --ocr_redun)
+      checkpara_NULL $1 $2
+      checkpara_REDUN $1 $2
+      ocr_redun=$2
+      shift 2
+      ;;
+    -dr | --data_redun)
+      checkpara_NULL $1 $2
+      checkpara_REDUN $1 $2
+      data_redun=$2
+      shift 2
+      ;;
+    -ar | --arch_redun)
+      checkpara_NULL $1 $2
+      checkpara_REDUN $1 $2
+      arch_redun=$2
+      shift 2
+      ;;
+    -tsi | --timeserver_ip)
+      checkpara_NULL $1 $2
+      timeserver_ip=$2
+      if ! check_ip $timeserver_ip; then
+        color_printf red "RAC 参数 [ -tsi ] IP 地址：$timeserver_ip 不合规，请检查!"
+        echo
+        exit 1
+      fi
+      shift 2
+      ;;
+    -gui | --isgui)
+      checkpara_NULL $1 $2
+      checkpara_YN $1 $2
+      isgui=$2
+      shift 2
+      ;;
+    -vbox | --virtualbox)
+      checkpara_NULL $1 $2
+      checkpara_YN $1 $2
+      virtualbox=$2
+      shift 2
+      ;;
+    -fd | --filter_disk)
+      checkpara_NULL $1 $2
+      # 如果传参，则直接过滤多路径磁盘
+      filter_disk $2
+      shift 2
+      ;;
+    -redo | --redosize)
+      checkpara_NULL $1 $2
+      redosize=$2
+      shift 2
+      ;;
+    -er | --enable_arch)
+      checkpara_NULL $1 $2
+      if [[ $2 != "true" && $2 != "false" ]]; then
+        color_printf red "参数 [ -er ] 的值：$2 必须配置为 true 或者 false，请检查!"
+        echo
+        exit 1
+      else
+        enable_arch=$2
+      fi
+      shift 2
+      ;;
+    -h | --help) help ;;
+    *)
+      color_printf red "脚本执行命令中的参数 [ $1 ] 传参不正确，请使用 'sh OracleShellInstall --help' 以获取更多帮助信息!"
+      echo
+      exit 1
+      ;;
+    *) break ;;
+    esac
+  done
+  # 选择安装模式以及版本
+  if [[ -z "$oracle_install_mode" ]]; then
+    while :; do
+      echo
+      read -rep "$(echo -e "\033[1;34m请选择安装模式 [单机(si)/单机ASM(sa)/集群(rac)] : \E[0m")" oracle_install_mode
+      echo
+      case "$oracle_install_mode" in
+      si) oracle_install_mode=single ;;
+      sa) oracle_install_mode=standalone ;;
+      esac
+      if [[ "$oracle_install_mode" =~ ^(single|standalone|rac)$ ]]; then
+        color_printf green "数据库安装模式:" "$oracle_install_mode"
+        break
+      else
+        color_printf red "数据库安装模式输入错误，请重新选择!"
+        echo
+      fi
+    done
+  fi
+  if [[ -z "$db_version" ]]; then
+    while :; do
+      echo
+      read -rep "$(echo -e "\033[1;34m请选择数据库版本 [11/12/19/21] : \E[0m")" db_version
+      echo
+      if [[ "$db_version" =~ ^(11|12|19|21)$ ]]; then
+        color_printf green "数据库版本:" "$db_version"
+        break
+      else
+        color_printf red "数据库版本输入错误，请重新选择!"
+        echo
+      fi
+    done
+  fi
+  # 获取操作系统类型，目前支持：openEuler,anolis,sles,rhel,centos,ol,kylin,uos
+  if [[ -e /etc/os-release ]]; then
+    os_type=$(grep -oP '^ID="?(\K[^"]+|[^"]+$)' /etc/os-release)
+  fi
+
+  # 获取操作系统大版本
+  if [[ "$os_type" = "kylin" ]]; then
+    # 获取到值为 V10
+    os_version=$(grep -oP '(?<=VERSION_ID=").*(?=")' /etc/os-release)
+  else
+    # 只获取大版本号
+    os_version=$(grep -oP '^VERSION_ID="?(\K[0-9]+|[0-9]+$)' /etc/os-release)
+  fi
+
+  # anolis7.9 安装 Oracle19C 报错 [FATAL] [DBT-05509] Failed to connect to the specified database，无法安装
+  case "$os_type-$os_version" in
+  "anolis-7")
+    if [[ "$db_version" =~ ^(12|19|21)$ ]]; then
+      echo
+      color_printf red "本脚本不支持在龙蜥 Anolis7.9 版本安装 12CR2/19C/21C，建库时报错：ORA-12547: TNS:lost contact！"
+      echo
+      exit 1
+    fi
+    ;;
+  esac
+
+  ## openEuler 22.03 安装 12CR2 报错 jskm.c:(.text+0x4081): undefined reference to `stat'，eobtl.c:(.text+0x3ba): undefined reference to `fstat' 解决方案
+  case "$os_type-$os_version" in
+  "openEuler-22")
+    if [[ "$db_version" = 12 ]]; then
+      if ! check_file $software_dir/compat-glibc-2.12-4.el7.centos.x86_64.rpm; then
+        echo
+        color_printf red "本脚本在 openEuler 22.03 安装 12CR2 单机版需要上传 compat-glibc-2.12-4.el7.centos.x86_64.rpm 到 $software_dir 目录下！"
+        echo
+        exit 1
+      fi
+    fi
+    ;;
+  esac
+
+  # 去除密码复杂度设置
+  if [[ "$os_type" = "sles" ]]; then
+    sed -i 's/^password\+[[:space:]]\+requisite[[:space:]]\+pam_cracklib.so/#&/g' /etc/pam.d/common-password
+    sed -i '/^password.*pam_unix\.so/s/use_authtok //' /etc/pam.d/common-password
+  elif [[ "$os_type" = "uos" ]]; then
+    sed -i 's/^password    requisite     pam_deepin_pw_check.so try_first_pass local_users_only retry=1 enforce_for_root authtok_type=/#&/' /etc/pam.d/system-auth
+    sed -i 's/use_authtok$//' /etc/pam.d/system-auth
+  elif [[ "$os_type" =~ ^(kylin|openEuler)$ ]]; then
+    sed -i 's/^password\+[[:space:]]\+requisite[[:space:]]\+pam_pwquality.so/#&/g' /etc/pam.d/system-auth
+    sed -i 's/use_authtok$//' /etc/pam.d/system-auth
+  fi
+
+  # 适配麒麟 V10 系统和 openEuler 22.03 系统，suse 15
+  case "$os_type-$os_version" in
+  "kylin-V10" | "openEuler-22" | "sles-15" | "uos-20")
+    # 将系统版本调整为对应的 Red Hat 版本
+    os_version=8
+    # 检查是否是 Oracle 11GR2 或 12CR2
+    if [[ "$db_version" =~ ^(11|12)$ ]]; then
+      # 检查是否是集群安装模式
+      if [[ "$oracle_install_mode" =~ ^(rac|standalone)$ ]]; then
+        echo
+        case "$os_type" in
+        "kylin")
+          color_printf red "本脚本只支持在 Kylin V10 版本安装 19C RAC!"
+          ;;
+        "openEuler")
+          color_printf red "本脚本只支持在 openEuler 22.03 版本安装 19C RAC!"
+          ;;
+        "sles")
+          color_printf red "本脚本只支持在 suse 15 版本安装 19C RAC!"
+          ;;
+        "uos")
+          color_printf red "本脚本只支持在 uos V20 版本安装 19C RAC!"
+          ;;
+        esac
+        echo
+        exit 1
+      fi
+      # 修改系统版本信息为 Red Hat Enterprise Linux Server release 7.9 (Maipo)
+      cat <<-\EOF >/etc/redhat-release
+Red Hat Enterprise Linux Server release 7.9 (Maipo)
+EOF
+    fi
+
+    # 修复 libnsl
+    if ! check_file /usr/lib64/libnsl.so.1; then
+      ln -s /usr/lib64/libnsl.so.2.0.1 /usr/lib64/libnsl.so.1 >/dev/null 2>&1
+    fi
+    ;;
+  esac
+
+  # rhel 系列的统一为 rhel
+  if [[ "$os_type" =~ ^(rhel|centos|ol|anolis|uos)$ ]]; then
+    os_type=rhel
+  fi
+
+  # 切换用户时不显示 Last Login 信息
+  sed -i 's/^session\+[[:space:]]\+include[[:space:]]\+postlogin/#&/g' /etc/pam.d/su
+  # 删除 /etc 目录下所有的 ora 开头文件以及文件夹
+  if [[ $(find /etc -name "ora*") ]]; then
+    rm -rf /etc/ora*
+  fi
+  # 检查是否需要挂载 ISO 镜像源
+  if [[ $iso = "Y" ]]; then
+    # 获取ISO镜像挂载路径，排除光盘挂载的路径 iso9660
+    mountPatch=$(
+      mount | awk '/iso9660/ && !/run\/media/{print $3}'
+    )
+    if [[ $mountPatch ]]; then
+      # 配置 YUM 源(提前配置YUM源，确保 RAC 安装 root ssh 互信需要安装 expect 软件)
+      conf_yum
+    else
+      # 如果没有挂载路径，则输出错误信息并退出程序。
+      echo
+      color_printf red "ISO 镜像未挂载，请先挂载!"
+      echo
+      exit 1
+    fi
+  fi
+  # rac 需要安装 expect 和 openssh-clients
+  if [[ "$oracle_install_mode" = "rac" ]]; then
+    # 如果需要配置互信，则安装 expect 软件
+    install_packages_if_not_present "expect" "openssh-clients"
+    # 避免ssh连接远程主机输入 yes/no
+    if [[ $(grep -E -c "StrictHostKeyChecking no" /etc/ssh/ssh_config) = 0 ]]; then
+      echo "StrictHostKeyChecking no" >>/etc/ssh/ssh_config
+    fi
+  fi
+  # 设置Oracle数据库和Grid的基本目录
+  # Oracle数据库基本目录，默认为 /u01/app/oracle
+  env_oracle_base=$env_base_dir/app/oracle
+  # Oracle Grid 基本目录，默认为 /u01/app/grid
+  env_grid_base=$env_base_dir/app/grid
+  # Oracle oraInventory 基本目录，默认为 /u01/app/oraInventory
+  env_oracle_inven=$env_base_dir/app/oraInventory
+  case "$db_version" in
+  "11")
+    cvu_name=cvuqdisk-1.0.9-1.rpm
+    ;;
+  *)
+    cvu_name=cvuqdisk-1.0.10-1.rpm
+    ;;
+  esac
+  # 定义版本以及安装包数组
+  declare -A version_dirs=(
+    ["11"]="$env_base_dir/app/11.2.0/grid;$env_oracle_base/product/11.2.0/db;$software_dir/p13390677_112040_Linux-x86-64_3of7.zip;$software_dir/p13390677_112040_Linux-x86-64_1of7.zip;$software_dir/p13390677_112040_Linux-x86-64_2of7.zip;$software_dir/grid/rpm/$cvu_name;11.2.0.4.0"
+    ["12"]="$env_base_dir/app/12.2.0/grid;$env_oracle_base/product/12.2.0/db;$software_dir/LINUX.X64_122010_grid_home.zip;$software_dir/LINUX.X64_122010_db_home.zip;;$env_grid_home/cv/rpm/$cvu_name;12.2.0.1.0;$iscdb"
+    ["19"]="$env_base_dir/app/19.3.0/grid;$env_oracle_base/product/19.3.0/db;$software_dir/LINUX.X64_193000_grid_home.zip;$software_dir/LINUX.X64_193000_db_home.zip;;$env_grid_home/cv/rpm/$cvu_name;19.0.0.0.0;$iscdb"
+    ["21"]="$env_base_dir/app/21.3.0/grid;$env_oracle_base/product/21.3.0/db;$software_dir/LINUX.X64_213000_grid_home.zip;$software_dir/LINUX.X64_213000_db_home.zip;;$env_grid_home/cv/rpm/$cvu_name;21.0.0.0.0;true"
+    ["23"]="$env_base_dir/app/23.3.0/grid;$env_oracle_base/product/23.3.0/db;$software_dir/LINUX.X64_233000_grid_home.zip;$software_dir/LINUX.X64_233000_db_home.zip;;$env_grid_home/cv/rpm/$cvu_name;23.0.0.0.0;true"
+  )
+  # 根据选择的Oracle数据库版本
+  IFS=";" read -r env_grid_home env_oracle_home grid_soft_name db_soft_name db_soft_name1 cvuqdisk compatible iscdb <<<"${version_dirs[$db_version]}"
+  # 针对所有模式，包括单机/单机ASM 和 RAC 主节点
+  if [[ $node_num = 1 ]]; then
+    # 6 版本的操作系统官方不支持 19C 以后的版本
+    if [[ "$os_version" = 6 ]]; then
+      if [[ "$db_version" =~ ^(19|21|23)$ ]]; then
+        color_printf red "Oracle 19C/21C/23C 官方不支持 Linux 6 版本!"
+        echo
+        exit 1
+      fi
+    fi
+    # 9 版本的操作系统官方只支持 19C 以后的版本
+    if [[ "$os_version" = 9 ]]; then
+      if [[ "$db_version" =~ ^(11|12)$ ]]; then
+        color_printf red "Oracle 11G/12C 官方不支持 Linux 9 版本!"
+        echo
+        exit 1
+      fi
+    fi
+    # 检查数据库软件安装包是否存在
+    if [[ "$db_version" = "11" ]]; then
+      if ! check_file $db_soft_name && ! check_file $db_soft_name1; then
+        color_printf red "请检查 Oracle 软件安装包 $db_soft_name,$db_soft_name1 是否已上传至 $software_dir 目录下。"
+        echo
+        exit 1
+      fi
+    else
+      if ! check_file $db_soft_name; then
+        color_printf red "请检查 Oracle 软件安装包 $db_soft_name 是否已上传至 $software_dir 目录下。"
+        echo
+        exit 1
+      fi
+    fi
+    # 8以后版本官方支持 11GR2 版本安装，但是需要安装补丁包
+    if [[ "$os_version" = "8" && "$db_version" = "11" ]]; then
+      # 11GR2 在 Linux8 安装必须要上传补丁包
+      if [[ $oracle_patch ]]; then
+        # 如果传了 -opa 参数，则提示 -opa 参数对应的PSU补丁包必须大于 33477185
+        if (($oracle_patch < 33477185)); then
+          color_printf red "Oracle 11GR2 在 Linux 8 版本安装必须安装补丁号为 33477185 或者之后的 PSU 版本，请正确设置 [ -opa ] 参数!"
+          echo
+          exit 1
+        fi
+      else
+        color_printf red "Oracle 11GR2 在 Linux 8 版本安装必须安装补丁号为 33477185 或者之后的 PSU 版本，必须设置 [ -opa ] 参数!"
+        echo
+        exit 1
+      fi
+      # 检查 33991024 补丁是否上传
+      if ! check_file $software_dir/p33991024_11204220118_Generic.zip; then
+        color_printf red "Oracle 11GR2 在 Linux 8 版本安装需要上传补丁包：p33991024_11204220118_Generic.zip!"
+        echo
+        exit 1
+      fi
+    fi
+    # 针对 单机 和 单机ASM
+    if [[ "$oracle_install_mode" = "single" ]]; then
+      # 单实例必传参数
+      if [[ -z $local_ifname ]]; then
+        color_printf red "Oracle 单机数据库必须设置参数：-lf，请运行命令 'sh OracleShellInstall --help' 以获取更多帮助信息!"
+        echo
+        exit 1
+      fi
+      # 获取主机名和DB名称
+      HOSTNAME=$hostname
+      DB_NAME=$db_name
+      # 用于单实例数据库重新安装
+      # 使用 awk 找到正在运行的 pmon 进程，将结果传递给 sed 处理得到 ORACLE_SID 变量
+      ORACLE_SIDS=$(ps -ef | grep "ora_pmon_" | grep -v grep | sed -e 's/ora_pmon_//g' | grep -v sed | awk '{printf $8","}')
+      if [[ $ORACLE_SIDS ]]; then
+        for SID in ${ORACLE_SIDS//,/ }; do
+          log_print "单机数据库重装，停止并删除运行数据库"
+          color_printf blue "停止实例：$SID"
+          echo
+          # 将 su - oracle 命令中的内容用 heredoc 的形式传递，避免多个字符串拼接
+          su - oracle <<EOF
+   export ORACLE_SID=$SID
+   lsnrctl stop
+   sqlplus -S / as sysdba <<-\SQL
+   shu abort
+   exit;
+SQL
+EOF
+        done
+      fi
+      # 针对单机ASM
+    elif [[ "$oracle_install_mode" = "standalone" ]]; then
+      # 单机ASM必传参数
+      if [[ -z $local_ifname || -z $data_base_disk ]]; then
+        color_printf red "Oracle 单机 ASM 模式必须设置以下参数: -lf,-dd，否则无法进行安装。可以使用 'sh OracleShellInstall --help' 查看脚本的帮助文档!"
+        echo
+        exit 1
+      fi
+      # 获取主机名和DB名称
+      HOSTNAME=$hostname
+      DB_NAME=$db_name
+      # 单机ASM grid_id 赋值
+      grid_sid=+ASM
+    fi
+    # 针对 RAC 和 单机ASM
+    if [[ "$oracle_install_mode" =~ ^(rac|standalone)$ ]]; then
+      # 主节点检查 GRID 安装包是否存在
+      if ! check_file $grid_soft_name; then
+        color_printf red "请检查 Grid 软件安装包 $grid_soft_name 是否已上传至 $software_dir 目录下!"
+        echo
+        exit 1
+      fi
+      # 检查 Oracle 11GR2 版本
+      if [[ "$db_version" = "11" ]]; then
+        case $os_version in
+        "7")
+          # 7 版本操作系统安装 11GR2 RAC 存在 bug 18370031，必须上传 p18370031_112040_Linux-x86-64.zip 补丁包
+          if ! check_file $software_dir/p18370031_112040_Linux-x86-64.zip; then
+            color_printf red "在 Linux 7 安装 11GR2 RAC 时，必须应用补丁 18370031，请上传补丁包 p18370031_112040_Linux-x86-64.zip 到 $software_dir 目录下!"
+            echo
+            exit 1
+          fi
+          ;;
+        "8")
+          # 8以后版本官方支持 11GR2 RAC 版本数据库安装，需要安装 19.14 Grid
+          color_printf red "本脚本只支持 Oracle 11GR2 单机版在 Linux 8 版本安装!"
+          echo
+          exit 1
+          ;;
+        esac
+      fi
+      # 安装 12CR2 RAC 存在 bug，必须上传 GRID RU 补丁包
+      if [[ "$db_version" = "12" ]]; then
+        if [[ -z "$grid_patch" ]]; then
+          color_printf red "安装 12CR2 RAC/STANDALONE 时，必须先应用 PSU 补丁，否则无法进行安装，请使用参数 [ -gpa ] 安装补丁!"
+          echo
+          exit 1
+        fi
+      fi
+      # 如果已经提前配置好ASM磁盘，则直接获取ASM磁盘路径
+      if [[ $asm_disk_conf = "N" ]]; then
+        # 获取asmdisk_string
+        datadisk=$data_base_disk
+        asmdisk_string=$(dirname ${data_base_disk##*,})/$(echo ${data_base_disk##*/} | cut -c1-3)*
+        ocrdisk=${ocr_base_disk:+"$ocr_base_disk"}
+        archdisk=${arch_base_disk:+"$arch_base_disk"}
+      else
+        # 解析ASN磁盘，获取UUID，做了判断单机ASM
+        log_print "获取 ASM 磁盘 UUID && 格式化磁盘头"
+        if [[ $ocr_base_disk ]]; then
+          color_printf blue "格式化 OCR 磁盘：$ocr_base_disk"
+          echo
+          ocr_disk_uuid=$(clean_disk_and_get_uuid "$ocr_base_disk" "/dev/stdout" | sed 's/,$//')
+          echo
+          color_printf green "OCR磁盘组的磁盘UUID：" $ocr_disk_uuid
+          echo
+        fi
+        if [[ $data_base_disk ]]; then
+          color_printf blue "格式化 DATA 磁盘：$data_base_disk"
+          echo
+          data_disk_uuid=$(clean_disk_and_get_uuid "$data_base_disk" "/dev/stdout" | sed 's/,$//')
+          echo
+          color_printf green "DATA磁盘组的磁盘UUID：" $data_disk_uuid
+        fi
+        if [[ "$arch_base_disk" ]]; then
+          echo
+          color_printf blue "格式化 ARCH 磁盘：$arch_base_disk"
+          echo
+          arch_disk_uuid=$(clean_disk_and_get_uuid "$arch_base_disk" "/dev/stdout" | sed 's/,$//')
+          echo
+          color_printf green "ARCH磁盘组的磁盘UUID：" $arch_disk_uuid
+          echo
+        fi
+      fi
+    fi
+    # 针对 RAC 主节点
+    if [[ "$oracle_install_mode" = "rac" ]]; then
+      # 主节点检查RAC是否缺少必传参数
+      if [[ -z $hostname || -z $rac_hostname || -z $root_passwd || -z $local_ifname || -z $rac_public_ip || -z $rac_virtual_ip || -z $rac_priv_ifname || -z $rac_scan_ip || -z $ocr_base_disk || -z $data_base_disk ]]; then
+        color_printf red "安装 RAC 模式必须设置以下参数: -n,-hn,-rp,-lf,-ri,-vi,-pf,-si,-od,-dd，否则无法进行安装。可以使用 'sh OracleShellInstall --help' 查看脚本的帮助文档!"
+        echo
+        exit 1
+      fi
+      # 主节点获取集群名称
+      if [[ -z $cluster_name ]]; then
+        # 如果集群名称默认使用主机名前缀拼接 -cluster 方式，则需要保证主机名前缀不超过 7 位数，否则集群名称超过  15 位则安装失败
+        if [ ${#hostname} -gt 7 ]; then
+          color_printf red "RAC 参数 [ -cn ] 未配置，但是参数 [ -n ] 的值：$hostname 已超过 7 位，组成的集群名称将超过 15 位，不符合官方要求，请检查!"
+          echo
+          exit 1
+        else
+          cluster_name=$hostname-cluster
+        fi
+      else
+        # 如果传入集群名称大于15位则报错退出
+        if [ ${#cluster_name} -gt 15 ]; then
+          color_printf red "RAC 参数 [ -cn ] 集群名称：$cluster_name 已超过 15 位，不符合官方要求，请检查!"
+          echo
+          exit 1
+        fi
+      fi
+      # DNS检查，如果SCANIP需要配置DNS，则确保DNSIP和DNSNAME都存在，否则报错
+      if [[ $dns = "Y" ]]; then
+        if [[ -z $dns_name || -z $dns_ip ]]; then
+          color_printf red "RAC 参数 [ -dns ] 已传参，但是级联参数 [ -dnsn ] 和 [ -dnsi ] 没有传参，请检查!"
+          echo
+          exit 1
+        fi
+      else
+        # 当SCANIP数量超过1，则需要配置DNS
+        if (($scan_count > 1)); then
+          color_printf red "RAC 参数 [ -si ] SCAN IP 数量超过 1 个，需要配置 DNS，但是配置 DNS 参数 [ -dns ] 没有传参，请检查!"
+          echo
+          exit 1
+        fi
+      fi
+      # 校验所有IP是否互信，如果没有互信则添加到未互信数组中，排除主节点
+      for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+        if ! check_ip "${rac_public_ips[i]}"; then
+          color_printf red "RAC 参数 [ -ri ] 中的 IP：${rac_public_ips[i]} 不合规，请检查!"
+          echo
+          exit 1
+        else
+          ssh_ips+=("${rac_public_ips[i]}")
+        fi
+      done
+      #  对所有未互信的IP进行互信配置
+      if [[ ${#ssh_ips[@]} -gt 0 ]]; then
+        if [[ $(ssh_check root "${ssh_ips[@]}") = "false" ]]; then
+          log_print "配置 root 用户互信"
+          # 主节点 root ssh互信，只需要公网IP
+          ssh_trust root "$root_passwd" "${ssh_ips[@]}"
+        fi
+      fi
+    fi
+  fi
+  # 针对 RAC 所有节点配置
+  if [[ "$oracle_install_mode" = "rac" ]]; then
+    # 其他节点获取ASM磁盘UUID
+    if [[ $asm_disk_conf = "Y" && $node_num != 1 ]]; then
+      # 通过主节点传过来的 ocr_base_disk,data_base_disk.arch_base_disk 参数实际为UUID
+      ocr_disk_uuid=$ocr_base_disk
+      data_disk_uuid=$data_base_disk
+      [[ $arch_base_disk ]] && arch_disk_uuid=$arch_base_disk
+    fi
+    # 所有节点的local_ip都是主节点IP
+    local_ip=${rac_public_ips[0]}
+    # 获取SCAN名称，如果没有传参SCAN名称，则默认主机名前缀-scan为SCAN名称
+    if [[ -z $scan_name ]]; then
+      scan_name=$hostname-scan
+    fi
+    # 获取ASM实例和DB实例名称
+    grid_sid=+ASM$node_num
+    DB_NAME=$db_name$node_num
+    # 获取 clusternodes
+    for ((i = 0; i < ${#rac_hostnames[@]}; i++)); do
+      # rac主机名和vip名写入clusternodes数组
+      if [[ "$db_version" = "12" ]]; then
+        clusternodes_array+=(${rac_hostnames[i]}:${rac_hostnames[i]}-vip:HUB)
+      else
+        clusternodes_array+=(${rac_hostnames[i]}:${rac_hostnames[i]}-vip)
+      fi
+    done
+    clusternodes=$(printf "%s," "${clusternodes_array[@]}")
+    # 去掉最后一个逗号
+    clusternodes=${clusternodes%?}
+    # rac节点主机名，当数组下标加1等于当前节点号，则配置主机名为当前节点号对应主机名
+    HOSTNAME=${rac_hostnames[$((node_num - 1))]}
+    # 获取所有节点心跳网卡对应的心跳IP地址
+    # 获取子网地址
+    local_ipmask=$(ip route show dev $local_ifname | awk '/kernel/ && /proto/ {print $1}' | cut -d'/' -f1 | head -n 1)
+    networkinterfacelist_array=($local_ifname:$local_ipmask:1)
+    # 循环遍历所有节点和网卡组合
+    for public_ip in "${rac_public_ips[@]}"; do
+      for priv_ifname in "${rac_priv_ifnames[@]}"; do
+        # 使用ssh免密连接获取当前节点和网卡对应的心跳IP
+        priv_ip=$(ssh -q "$public_ip" ip addr show dev "$priv_ifname" | awk '/inet / {print $2}' | cut -d/ -f1 | head -n 1)
+        # 校验心跳IP地址是否合规
+        if ! check_ip $priv_ip; then
+          color_printf red "RAC 节点 $public_ip 参数 [ -pf ] 的网卡名称：$priv_ifname 对应的 IP：$priv_ip 不合规，请检查!"
+          echo
+          exit 1
+        fi
+        # 只需要主节点网卡信息即可
+        if [[ $public_ip = $local_ip ]]; then
+          # 获取子网地址
+          rac_priv_ipmask=$(ip route show dev $priv_ifname | awk '/kernel/ && /proto/ {print $1}' | cut -d'/' -f1 | head -n 1)
+          # rac主机名和vip名写入clusternodes数组
+          if [[ "$db_version" = "11" ]]; then
+            networkinterfacelist_array+=($priv_ifname:$rac_priv_ipmask:2)
+          else
+            networkinterfacelist_array+=($priv_ifname:$rac_priv_ipmask:5)
+          fi
+        fi
+        # 将心跳IP存放到对应的节点数组中
+        node_name="${public_ip}_${priv_ifname}"
+        rac_priv_ips["$node_name"]=$priv_ip
+        # 将 node_name 添加到 rac_priv_ifnames_sorted 数组中
+        rac_priv_ifnames_sorted+=($node_name)
+      done
+    done
+    networkinterfacelist=$(printf "%s," "${networkinterfacelist_array[@]}")
+    # 去掉最后一个逗号
+    networkinterfacelist=${networkinterfacelist%?}
+    # 针对主节点，生成其他节点参数并且分发shell脚本
+    if [[ $node_num = 1 ]]; then
+      # 创建其他节点的脚本执行命令，将内容保存在变量中
+      node_cmd="sh $software_dir/OracleShellInstall -lf $local_ifname -pf $rac_priv_ifname -ri $rac_public_ip \
+              -vi $rac_virtual_ip -n $hostname -hn $rac_hostname -o $db_name -d $env_base_dir -rp $root_passwd \
+              -gp $grid_passwd -op $oracle_passwd -mp $multipath -dns $dns -si $rac_scan_ip \
+              -adc $asm_disk_conf -or $ocr_redun -dr $data_redun -install_mode $oracle_install_mode \
+              -dbv $db_version -gui $isgui -iso $iso -vbox $virtualbox -sn $scan_name"
+      # 判断是否存在 ASM 磁盘配置
+      if [[ $asm_disk_conf = "N" ]]; then
+        node_cmd+=" -od $ocr_base_disk -dd $data_base_disk"
+      else
+        node_cmd+=" -od $ocr_disk_uuid -dd $data_disk_uuid"
+      fi
+      # 判断是否粗在 ARCH ASM 磁盘组
+      if [[ $arch_base_disk ]]; then
+        if [[ $asm_disk_conf = "N" ]]; then
+          node_cmd+=" -an $arch_asm_group -ad $data_base_disk -ar $arch_redun"
+        else
+          node_cmd+=" -an $arch_asm_group -ad $arch_disk_uuid -ar $arch_redun"
+        fi
+      fi
+      # 判断是否需要时间服务器
+      if [[ $timeserver_ip ]]; then
+        node_cmd+=" -tsi $timeserver_ip"
+      fi
+      # 判断是否需要配置DNS
+      if [[ $dns_ip && $dns_name ]]; then
+        node_cmd+=" -dnsn $dns_name -dnsi $dns_ip"
+      fi
+      # 将命令以重定向的方式保存到文件中
+      echo -n "$node_cmd" >$software_dir/racnode.sh
+      # 发送脚本和安装程序到其他节点
+      for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+        # ssh 连接到其他节点并创建目录
+        ssh -q ${rac_public_ips[i]} "[[ -f $software_dir || -d $software_dir ]] && rm -rf $software_dir ; mkdir -p $software_dir"
+        # 将脚本发送到其他节点
+        scp -q $software_dir/racnode.sh ${rac_public_ips[i]}:$software_dir
+        # 将节点编号写入脚本中
+        ssh -q ${rac_public_ips[i]} "echo -n ' -node $((i + 1))' >> $software_dir/racnode.sh"
+        # 将安装程序发送到其他节点
+        scp -q $software_dir/OracleShellInstall ${rac_public_ips[i]}:$software_dir
+        # 拷贝 OPatch 到其他节点
+        if check_file $opatch_name; then
+          scp -q $opatch_name ${rac_public_ips[i]}:$software_dir
+        fi
+        # 如果是 RAC 安装并且存在多个节点，则将 rlwrap 复制到其他节点上
+        if ls $software_dir/rlwrap-*.gz 1>/dev/null 2>&1; then
+          find "$software_dir" -name "rlwrap-*.gz" -exec scp -q {} ${rac_public_ips[i]}:$software_dir \;
+        fi
+      done
+      # 删除本地脚本
+      if check_file $software_dir/racnode.sh; then
+        rm -f $software_dir/racnode.sh
+      fi
+    fi
+  fi
+  # 系统配置
+  conf_swap
+  conf_firewall
+  if [[ "$os_type" != "sles" ]]; then
+    conf_selinux
+    conf_nsysctl
+  fi
+  rpm_install
+  conf_hostname
+  conf_hosts
+  create_users_groups
+  create_dir
+  conf_avahi
+  conf_grub
+  conf_sysctl
+  conf_ipc
+  conf_limits
+  conf_shm
+  install_rlwrap
+  conf_profile
+  # 判断 Oracle 安装模式
+  declare -u isreboot
+  if [[ "$oracle_install_mode" = "single" ]]; then
+    # single 模式安装
+    unzip_dbsoft
+    if [[ $only_conf_os = "N" ]]; then
+      # 安装到 Oracle 数据库软件结束
+      install_dbsoft
+      conf_netca
+      if [[ $install_until_db = "N" ]]; then
+        create_db
+      fi
+      # 优化数据库
+      if [[ $optimize_db = "Y" ]]; then
+        db_optimize
+      fi
+      echo
+      read -rep "$(echo -e "\033[1;34m恭喜！Oracle 单机安装成功，现在是否重启主机：[Y/N] \E[0m")" isreboot
+      echo
+      if [[ $isreboot = "Y" ]]; then
+        color_printf red "正在重启 ......"
+        shutdown -r now
+      else
+        exit 1
+      fi
+    fi
+  elif [[ "$oracle_install_mode" = "standalone" ]]; then
+    # 单机 ASM 模式安装
+    if [[ $asm_disk_conf = "Y" ]]; then
+      # 配置 ASM 盘
+      conf_asm
+    fi
+    unzip_gridsoft
+    unzip_dbsoft
+    if [[ $only_conf_os = "N" ]]; then
+      # install until grid database software
+      install_gridsoft
+      if [[ $install_until_grid = "N" ]]; then
+        # install until oracle database software
+        install_dbsoft
+        if [[ $install_until_db = "N" ]]; then
+          create_db
+        fi
+      fi
+      # 优化数据库
+      if [[ $optimize_db = "Y" ]]; then
+        db_optimize
+      fi
+      echo
+      read -rep "$(echo -e "\033[1;34m恭喜！Oracle 单机 ASM 安装成功，现在是否重启主机：[Y/N] \E[0m")" isreboot
+      echo
+      if [[ $isreboot = "Y" ]]; then
+        color_printf red "正在重启 ......"
+        shutdown -r now
+      else
+        exit 1
+      fi
+    fi
+  elif [[ "$oracle_install_mode" = "rac" ]]; then
+    # rac 模式安装
+    if [[ $timeserver_ip ]]; then
+      conf_timesync
+    fi
+    if [[ $dns = "Y" ]]; then
+      conf_dns
+    fi
+    # 配置 ASM 盘
+    if [[ $asm_disk_conf = "Y" ]]; then
+      conf_asm
+    fi
+    if [[ $node_num = 1 ]]; then
+      # 只在主节点执行以下操作
+      other_node_shell
+      rac_ssh
+      unzip_gridsoft
+      unzip_dbsoft
+      if [[ $only_conf_os = "N" ]]; then
+        # install until grid database software
+        install_gridsoft
+        create_asmgroup
+        if [[ $install_until_grid = "N" ]]; then
+          # install until oracle database software
+          install_dbsoft
+          if [[ $install_until_db = "N" ]]; then
+            create_db
+          fi
+        fi
+        # 优化数据库
+        if [[ $optimize_db = "Y" ]]; then
+          db_optimize
+        fi
+        echo
+        read -rep "$(echo -e "\033[1;34m恭喜！Oracle RAC 安装成功，现在是否重启主机：[Y/N] \E[0m")" isreboot
+        echo
+        if [[ $isreboot = "Y" ]]; then
+          color_printf red "正在重启 ......"
+          for ((i = 1; i < ${#rac_public_ips[@]}; i++)); do
+            ssh -q ${rac_public_ips[i]} shutdown -r now
+          done
+          shutdown -r now
+        else
+          exit 1
+        fi
+      fi
+    fi
+  fi
+}
+# 执行主函数，写入安装日志
+main "$@" | tee -a "$oracleinstalllog"

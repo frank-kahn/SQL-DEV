@@ -184,3 +184,60 @@ https://docs.oracle.com/zh-cn/solutions/reduce-database-migration-downtime/learn
 
 expdp \'sys/oracle as sysdba\' directory=dmp dumpfile=tablespace_name.dmp logfile=tablespace_name.log transport_tablespaces=tablespace_name
 convert tablespace test_tb to platform 'Microsoft Windows IA (64-bit)' format '/oradata/backup/%U';
+'
+
+
+
+-- 如何正确在windows server core（无图形界面）安装Oracle 19c 
+www.modb.pro/db/1740748717920694272
+-- 《pg_profile安装和配置_含pg_stat_kcache插件》
+www.modb.pro/db/1737005135493160960
+
+-- 《数据库备份脚本（Oracle/MySQL/PG/openGauss》
+www.modb.pro/db/1746456741822943232
+
+-- 《记一次MySQL生产环境CPU与内存双爆（都100%）的排查过程》
+www.modb.pro/db/1748277093398040576
+3、《PG高可用之repmgr篇》www.modb.pro/doc/124414
+
+1、《运维5年OGG经典错误及处理方式集合》www.modb.pro/db/1751738048563990528
+2、《日常巡检SQL会引起PG实例crash ？含故障处理》www.modb.pro/db/1751838751907205120
+3、《价值3K的Percona XtraBackup全备与增量备份脚本》www.modb.pro/db/1752188769272942592
+
+1、《小白也能学会的Oracle优化教程-主打零基础》www.modb.pro/db/1755563387710951424
+2、《Oracle数据库常规维护手册.pdf》https://www.modb.pro/doc/125247
+
+1、《如何优化一个看似正常的数据库》www.modb.pro/db/1760112323750612992
+2、《Oracle数据库应急方案(二).doc》www.modb.pro/doc/125419
+3、《MySQL8.0如何分析TOP SQL》www.modb.pro/db/1760587202291650560
+
+1、《Oracle表空间和数据文件遇到的坑》www.modb.pro/db/1763125793060884480
+2、《PostgreSQL安全修葺》www.modb.pro/db/1765183724995579904
+3、《Oracle深度巡检工作指导书.docx》www.modb.pro/doc/126032
+
+1、《Oracle 高可用性（RAC）技术解决方案及实现过程.docx》www.modb.pro/doc/126448
+2、《Postgre+pgpool实现HA.docx》www.modb.pro/doc/125639
+3、《数据库设计(MySQL)避坑指南》www.modb.pro/db/1762011570709229568
+
+1、《Oracle数据库常规巡检项目和命令.docx》www.modb.pro/doc/126659
+2、《MySQL导入N种实现方式》www.modb.pro/db/1765214556288290816
+3、《pgbouncer的这些坑，你踩过几个？》www.modb.pro/db/1770267158911717376
+
+《ogg基础学习.docx》www.modb.pro/doc/128416
+1、《Oracle经典的SQL语句训练(100例).doc》www.modb.pro/doc/128260
+2、《MySQL DBA 日常运维常用命令总结》www.modb.pro/db/1785176462622003200
+
+1、《Oracle数据库常用运维SQL语句.docx》www.modb.pro/doc/129598
+2、《MySQL参数配置详解.pdf》www.modb.pro/doc/129383
+
+1、《linux7安装oracle19c-rac.docx》www.modb.pro/doc/130202
+2、《使用xtrabackup备份工具完全恢复MySQL数据库》www.modb.pro/db/1791643273223294976
+3、《PostgreSQL数据库常用SQL》www.modb.pro/db/1790042714368708608
+
+1、《2023年中国数据库年度行业分析报告.pdf》-20万字梳理数据库行业发展现状和技术要点 www.modb.pro/doc/130680?sq
+2、《MySQL 半同步机制解读》www.modb.pro/db/1793471763187306496
+3、《Oracle高水位线操作相关.sql》 www.modb.pro/doc/130314
+
+【💻技术干货】
+1、《Oracle数据库的安全配置指南.pdf》www.modb.pro/doc/130933
+2、《MySQL 8.0 MGR、InnoDB 集群搭建及 MySQL Shell、Router 的使用.docx》www.modb.pro/doc/130659

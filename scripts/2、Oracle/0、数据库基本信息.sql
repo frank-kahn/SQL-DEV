@@ -6,7 +6,10 @@ conn hr/hr
 sqlplus hr/hr
 
 -- alert日志
-SELECT 'tail -100f '||VALUE||'/'||'alert_'||(SELECT INSTANCE_NAME FROM V$INSTANCE)||'.log' "Diag Trace" FROM V$DIAG_INFO WHERE NAME IN ('Diag Trace');
+SELECT 'tail -100f '||VALUE||case when (select platform_id from v$database) in (7,12) then '\' else '/' end ||'alert_'||(SELECT INSTANCE_NAME FROM V$INSTANCE)||'.log' "alert log"
+FROM V$DIAG_INFO WHERE NAME IN ('Diag Trace');
+
+'
 
 -- 系统表/系统视图查询
 select TABLE_NAME from all_tables where regexp_like(TABLE_NAME,'tablespace','i')

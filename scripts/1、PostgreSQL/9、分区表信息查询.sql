@@ -96,6 +96,9 @@ select relid::text from pg_partition_tree('tbp')
 )
 ORDER BY relname;
 
+-- 查询分区表的记录数（查询的是主表，精确数据）
+select tableoid::regclass,count(*) from tbp
+group by 1 order by 1;
 
 -- 相关函数
 pg_partition_tree()   显示分区表信息

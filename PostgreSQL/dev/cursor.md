@@ -79,3 +79,15 @@ end if;
 end update_acl$$; 
 ~~~
 
+## 循环遍历数组元素
+
+```sql
+do $$
+declare i int;
+begin
+ foreach i in array array[12,1,2,3] loop
+ raise notice 'i=%',i;
+ end loop;
+end $$;
+```
+

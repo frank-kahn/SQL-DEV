@@ -1,3 +1,13 @@
+################################## 检查和删除无效备份 #################################
+report obsolete;
+RUN {
+  allocate channel c1 type disk;
+  crosscheck backup;
+  delete noprompt expired backup;
+  delete noprompt obsolete;
+  release channel c1;
+}
+
 #待研究
 https://blog.csdn.net/leshami/article/details/9011789
 

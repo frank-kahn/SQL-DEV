@@ -1291,3 +1291,179 @@ dvdrental=# SELECT * FROM accounts;
 (2 rows)
 ```
 
+# 第26章 PostgreSQL 触发器
+
+## PostgreSQL 触发器介绍
+
+postgresql触发器是一个函数，当和表关联的事件发生时，触发器能够调用自动的执行，事件可以是下列任何之一：insert、update、delete、truncate，触发器是和某个表关联的，表发生某个事件的时候，触发器自动执行一些动作
+
+触发器是一个特殊的用户定义函数，绑定到一个表上，创建一个新的触发器，必须先定义一个触发函数，然后将这个触发函数绑定到一个表中
+
+触发器和用户自定义函数区别是：事件出发时自动调用
+
+postgresql提供了两种类型的触发器：基于行的和基于语句的，区别的调用次数和在什么时候调用，例如更新语句影响20行，行级触发器将调用20次，语句级的将只调用1次
+
+我们可以指定触发器是在事件之前还是之后进行调用，如果调用一个触发事件，可以跳过当前的操作行，甚至改变行或者更新及插入，如果调用事件后，可以触发所有更改。
+
+触发器是在各种应用程序访问数据库的情况下非常有用，比如在修改数据库中保留某些信息，以便在修改数据时自动运行，例如如果希望保留数据的历史记录，而不需要应用程序具有检查每个事件的逻辑。
+
+还可以使用触发器来维持复杂的数据完整性规则，以及无法在其他地方实现的东西，比如说数据库级别，例如当一个新行添加到客户表时，其它行必须创建一个银行和信用卡的表。
+
+缺点：必须知道存在，并理解其逻辑，以便在数据更改时计算它的影响
+
+postgresql触发器实行SQL标准的语句，触发器在postgresql中还有一些特定的功能，比如postgresql触发器可以针对truncate事件，允许定义基于语句的触发器，postgresql要求我们设置用户自定义的函数作为触发器的动作。
+
+## PostgreSQL 触发器的创建
+
+创建触发器需要完成如下步骤
+
+1. CREATE FUNCTION语句创建一个触发器函数
+2. 使用CREATE TRIGGER 语句去绑定一个触发器函数到一个表中
+
+
+
+创建触发器函数的结构
+
+```sql
+CREATE FUNCTION trigger_function()
+  RETURNS trigger AS
+```
+
+创建触发器语句
+
+```sql
+CREATE TRIGGER trigger_name 
+	{BEFORE | AFTER | INSTEAD OF} {event [OR ...]}
+	   ON table_name
+	   [FOR [EACH] {ROW | STATEMENT}]
+		   EXECUTE PROCEDURE trigger_function
+```
+
+案例
+
+```sql
+DROP TABLE if exists employees;
+CREATE TABLE employees(
+   id SERIAL PRIMARY KEY,
+   first_name VARCHAR(40) NOT NULL,
+   last_name VARCHAR(40) NOT NULL);
+
+DROP TABLE if exists employees_audits;
+CREATE TABLE employees_audits(
+   id SERIAL PRIMARY KEY,
+   employee_id INT NOT NULL,
+   last_name VARCHAR(40) NOT NULL,
+   changed_on TIMESTAMP(6) NOT NULL
+);
+
+CREATE OR REPLACE FUNCTION log_last_name_changes()
+RETURNS trigger AS
+$BODY$
+BEGIN
+  IF NEW.last_name <> old.last_name THEN
+  INSERT INTO employees_audits(employee_id,last_name,changed_on)
+  VALUES(OLD.id,OLD.last_name,now());
+  END IF;
+RETURN NEW;
+END;
+$BODY$
+LANGUAGE plpgsql;
+
+
+CREATE TRIGGER last_name_changes
+BEFORE UPDATE
+ON employees
+FOR EACH ROW
+EXECUTE PROCEDURE log_last_name_changes();
+
+
+INSERT INTO employees (first_name, last_name) VALUES ('John', 'Doe');
+INSERT INTO employees (first_name, last_name) VALUES ('Lily', 'Bush');
+
+UPDATE employees SET last_name = 'Brown' WHERE ID = 2;
+
+SELECT * FROM employees_audits;
+
+ id | employee_id | last_name |         changed_on
+----+-------------+-----------+----------------------------
+  1 |           2 | Bush      | 2024-07-16 18:33:56.326799
+(1 row)
+```
+
+## 删除触发器
+
+```sql
+DROP TRIGGER [IF EXISTS] trigger_name
+ON table_name [CASCADE | RESTRICT];
+
+/* CASCADE   删除依赖关系*/
+```
+
+案例
+
+```sql
+CREATE FUNCTION check_staff_user()
+	RETURNS TRIGGER
+AS $$
+BEGIN
+	IF length(NEW.username) < 8 OR NEW.username IS NULL THEN
+	  RAISE EXCEPTION 'The username cannot be less than 8 characters';
+	END IF;
+	IF NEW.NAME IS NULL THEN
+		RAISE EXCEPTION 'Username cannot be NULL';
+	END IF;
+	RETURN NEW;
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE TRIGGER username_check
+	BEFORE INSERT OR UPDATE
+ON staff
+FOR EACH ROW
+EXECUTE procedure check_staff_user();
+
+DROP TRIGGER username_check ON staff;
+```
+
+## PostgreSQL 触发器的管理
+
+1、修改触发器语法
+
+```sql
+-- 修改触发器的名称
+ALTER TRIGGER trigger_name ON table_name 
+RENAME TO new_name;
+
+ALTER TRIGGER last_name_changes
+ON employees
+RENAME TO log_last_name_changes;
+```
+
+2、关闭触发器
+
+```sql
+ALTER TABLE table_name DISABLE TRIGGER trigger_name | ALL
+/*
+使用all参数，将关闭所有跟该表关联的触发器
+*/
+```
+
+关闭触发器始终在数据库中是有效的，当触发器事件发生制，没有触发而已
+
+```sql
+ALTER TABLE employees DISABLE TRIGGER log_last_name_changes;
+
+ALTER TABLE employees DISABLE TRIGGER ALL;
+```
+
+3、移除触发器
+
+```sql
+DROP TRIGGER [IF EXISTS] trigger_name 
+ON table_name [RESTRICT | CASCADE]
+
+DROP TRIGGER log_last_name_changes 
+ON employees;
+```
+

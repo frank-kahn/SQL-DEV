@@ -17,6 +17,26 @@ EOF
 nohup sqlplus -s "/as sysdba" @stats.sql > nohup.$ORACLE_SID.log 2>&1 &
 ```
 
+shell脚本中通常使用方式
+
+```shell
+#使用sql脚本
+#!/bin/sh
+sqlplus -s / as sysdba << EOF
+@/opt/oracle/tabel_clear_data.sql;
+EOF
+
+#使用SQL命令（涉及$字符需要转义）
+#!/bin/bash
+sqlplus -s / as sysdba << EOF
+select MEMBER from v\$logfile;
+EOF
+
+#使用脚本同时将执行结果返回到某个文件
+sqlplus -s "/as sysdba"  << eof @1.sql > 1.log
+eof
+```
+
 
 
 ## spool生成命令再执行

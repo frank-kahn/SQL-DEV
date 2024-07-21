@@ -1,3 +1,44 @@
+#用户名@IP:Port/数据库名(PID)
+cd
+cat >> ~/.psqlrc << "EOF"
+\set PROMPT1 '%n@%M:%>/%/(%p)%R%#'
+EOF
+
+#用户名@数据库名
+\set PROMPT1 '%n@%/%R%#'
+
+#用户名@数据库名(PID)
+\set PROMPT1 '%n@%/(%p)%R%#'
+
+#数据库名(PID)
+\set PROMPT1 '%/(%p)%R%#'
+
+#数据库名
+\set PROMPT1 '%/%R%#'
+
+
+#修改会话级别日志参数，把日志输出到控制台上
+set log_statement='all';  
+set client_min_messages ='log';
+
+
+#PostgreSQL环境变量
+
+export LANG=en_US.UTF8
+export PS1="[`whoami`@`hostname`:"'$PWD]$'
+export PGPORT=5432
+export PGDATA=/postgresql/pgdata
+export PGHOME=/postgresql/pg12
+export LD_LIBRARY_PATH=$PGHOME/lib:/lib64:/usr/lib64:/usr/local/lib64:/lib:/usr/lib:/usr/local/lib:$LD_LIBRARY_PATH
+export PATH=$PGHOME/bin:$PATH:.
+export DATE=`date +"%Y%m%d%H%M"`
+export MANPATH=$PGHOME/share/man:$MANPATH
+export PGHOST=$PGDATA
+export PGUSER=postgres
+export PGDATABASE=postgres
+alias psql="rlwrap psql"
+
+################################################ 提示符参数资料 #######################################################
 --psql显示设置
 
 Windows配置：
@@ -45,21 +86,7 @@ psql -h localhost -U postgres
 %l
 	当前语句中的行号，从1开始。
 
---PostgreSQL环境变量
 
-export LANG=en_US.UTF8
-export PS1="[`whoami`@`hostname`:"'$PWD]$'
-export PGPORT=5432
-export PGDATA=/postgresql/pgdata
-export PGHOME=/postgresql/pg12
-export LD_LIBRARY_PATH=$PGHOME/lib:/lib64:/usr/lib64:/usr/local/lib64:/lib:/usr/lib:/usr/local/lib:$LD_LIBRARY_PATH
-export PATH=$PGHOME/bin:$PATH:.
-export DATE=`date +"%Y%m%d%H%M"`
-export MANPATH=$PGHOME/share/man:$MANPATH
-export PGHOST=$PGDATA
-export PGUSER=postgres
-export PGDATABASE=postgres
-alias psql="rlwrap psql"
 
 
 

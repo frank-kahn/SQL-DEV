@@ -24,7 +24,7 @@ ll|grep "Jun  3"|awk '{print $5}'|echo $[ $(tr '\n' '+')0]
 sed '{N;s/\n//}' filename
 
 # sed命令
-sed -i 's///g' regular_express.txt
+sed -i '/匹配的信息/s///g' regular_express.txt
 
 
 # 获取终端的ip地址

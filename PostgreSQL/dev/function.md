@@ -73,6 +73,28 @@ $$
 language 'plpgsql';
 ~~~
 
+## 判断传入的字符串是否是日期格式
+
+```sql
+CREATE OR REPLACE FUNCTION isDate(dateStr VARCHAR) RETURNS BOOLEAN  
+AS  
+$$  
+BEGIN  
+IF (dateStr IS NULL) THEN   
+     RETURN FALSE;   
+END IF;   
+     PERFORM dateStr::timestamp;   
+     RETURN TRUE;   
+EXCEPTION   
+     WHEN others THEN   
+     RETURN FALSE;   
+END;  
+$$  
+LANGUAGE 'plpgsql';
+```
+
+
+
 ## 查看表的创建时间、修改时间、vacuum、analyze时间
 
 ~~~sql

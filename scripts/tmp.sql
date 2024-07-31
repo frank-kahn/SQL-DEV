@@ -1,3 +1,63 @@
+-- 初始化环境
+pg_ctl stop
+rm -rf /postgresql/data/*
+rm -rf /postgresql/log/*
+rm -rf /postgresql/arch/*
+pg_basebackup -h 192.168.1.51 -p 5432 -U repuser -W -X stream -F p -P -R -D /postgresql/data -l backup20240728
+pg_ctl start
+
+*/
+
+-- 创建测试数据
+initdb -D /postgresql/data -E UTF8 --lc-collate=C --lc-ctype=en_US.utf8 -U postgres
+psql -c "create user fgedu with password 'fgedu123' nocreatedb;"
+psql -c "create database fgedudb with owner=fgedu template=template0 encoding='UTF8' lc_collate='C' lc_ctype='en_US.UTF8' connection limit = -1;"
+psql -c "alter user postgres with password 'rootroot';"
+psql -d fgedudb -U fgedu -f /postgresql/soft/fgedudb.sql
+
+
+-- 远程查询
+export PGPASSWORD=fgedu123
+psql -h 192.168.1.51 -U fgedu02 -d fgedudb02 -c ""
+
+export PGPASSWORD=rootroot
+psql -U postgres -c "select pg_switch_wal();"
+psql -h 192.168.1.51 -U postgres -c "select pg_switch_wal();"
+
+export PGPASSWORD=rootroot
+psql -h 192.168.1.100 -U postgres -c "select * from delay_check;"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 求一份mysql dba运维脚本，类似oracle dba 使用 ora脚本或者 percona-toolkit 工具查看主从延时，kill等功能
 https://www.modb.pro/issue/34884
 

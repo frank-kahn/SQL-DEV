@@ -1,3 +1,24 @@
+-- 主机准备
+#定义主机序号变量
+host_num=101
+#修改主机名
+hostnamectl set-hostname fgedudb${host_num}
+#修改hosts文件
+sed -i "s/192.168.1.51/192.168.1.${host_num}/" /etc/hosts
+sed -i "s/fgedudb51/fgedudb${host_num}/" /etc/hosts
+#修改IP配置文件信息
+sed -i "s/192.168.1.51/192.168.1.${host_num}/" /etc/NetworkManager/system-connections/ens160.nmconnection
+sed -i '/^uuid/d' /etc/NetworkManager/system-connections/ens160.nmconnection
+#重启主机
+reboot
+#检查相关配置
+grep fgedu /etc/hosts
+egrep "^address|^uuid" /etc/NetworkManager/system-connections/ens160.nmconnection
+hostname
+
+
+
+
 -- 初始化环境
 pg_ctl stop
 rm -rf /postgresql/data/*

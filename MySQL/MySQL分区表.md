@@ -18,51 +18,239 @@
 
 ## 分区表设计方案
 
-当设计 MySQL 分区表时，需要考虑以下几个方面：分区策略、分区字段、分区数量和分区函数。下面是一个详细的示例，展示了如何设计和执行分区表的增删改查操作。
+### 范围分区
 
-### 设计分区表
-
-~~~sql
-CREATE TABLE orders (
-    order_id INT NOT NULL AUTO_INCREMENT,
-    order_date DATE,
-    customer_id INT,
-    total_amount DECIMAL(10, 2),
-    PRIMARY KEY (order_id, order_date)
-)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='这是一个分区表，按月份分区'
-PARTITION BY RANGE (YEAR(order_date)) (
-    PARTITION p0 VALUES LESS THAN (2020),
-    PARTITION p1 VALUES LESS THAN (2021),
-    PARTITION p2 VALUES LESS THAN (2022),
-    PARTITION p3 VALUES LESS THAN MAXVALUE
+```sql
+CREATE TABLE employees (
+   id INT NOT NULL,
+   fname VARCHAR(30),
+   lname VARCHAR(30),
+   hired DATE NOT NULL DEFAULT '1970-01-01',
+   separated DATE NOT NULL DEFAULT '9999-12-31',
+   job_code INT NOT NULL,
+   store_id INT NOT NULL
+)
+PARTITION BY RANGE (store_id) (
+   PARTITION p0 VALUES LESS THAN (6),
+   PARTITION p1 VALUES LESS THAN (11),
+   PARTITION p2 VALUES LESS THAN (16),
+   PARTITION p3 VALUES LESS THAN MAXVALUE
 );
-~~~
+```
 
-上述示例中，我们创建了一个名为 orders 的分区表，并按照 order_date 字段的年份进行范围分区，总共有四个分区。
+注意：
 
-### 对分区表DML操作
+- RANGE分区的返回值必须为整数。
+- MAXVALUE分区是非必需的
 
-~~~sql
--- 插入数据到分区表（向分区表插入了三条订单数据，分别属于不同的分区。）：
-INSERT INTO orders (order_date, customer_id, total_amount) VALUES
-    ('2021-01-01', 1001, 50.00),
-    ('2021-02-15', 1002, 100.00),
-    ('2022-03-10', 1003, 200.00);
+**RANGE COLUMNS分区**
+
+RANGE COLUMNS是RANGE分区的一种特殊类型，它与RANGE分区的区别如下：
+
+- RANGE COLUMNS不接受表达式，只能是列名。而RANGE分区则要求分区的对象是整数。
+- RANGE COLUMNS允许多个列，在底层实现上，它比较的是元祖(多个列值组成的列表)，而RANGE比较的是标量，即数值的大小。
+- RANGE COLUMNS不限于整数对象，date，datetime，string都可作为分区列。
+
+```sql
+CREATE TABLE rcx (
+   a INT,
+   b INT,
+   c CHAR(3),
+   d INT
+)
+PARTITION BY RANGE COLUMNS(a,d,c) (
+   PARTITION p0 VALUES LESS THAN (5,10,'ggg'),
+   PARTITION p1 VALUES LESS THAN (10,20,'mmm'),
+   PARTITION p2 VALUES LESS THAN (15,30,'sss'),
+   PARTITION p3 VALUES LESS THAN (MAXVALUE,MAXVALUE,MAXVALUE)
+);
+```
+
+同RANGE分区类似，它的区间范围必须是递增的，有时候，列涉及的太多，不好判断区间的大小，可采用下面的方式进行判断：
+
+```sql
+mysql> SELECT (5,10) < (5,12), (5,11) < (5,12), (5,12) < (5,12);
++-----------------+-----------------+-----------------+
+| (5,10) < (5,12) | (5,11) < (5,12) | (5,12) < (5,12) |
++-----------------+-----------------+-----------------+
+|               1 |               1 |               0 |
++-----------------+-----------------+-----------------+
+1 row in set (0.00 sec)
+```
 
 
--- 查询分区表数据（查询了 orders 表中 2021 年的订单数据。）：
-SELECT * FROM orders WHERE order_date >= '2021-01-01' AND order_date < '2022-01-01';
+
+### 列表分区
+
+列表分区和范围分区类似，主要区别是list partition的分区范围是预先定义好的一系列值，而不是连续的范围。列表分区采用partition by list和values in子句定义。
+
+示例，创建一张员工表按照employee_id进行列表分区：
+
+```sql
+CREATE TABLE employees (
+  employee_id int(6) primary key,
+  first_name varchar(20),
+  last_name varchar(25),
+  email varchar(25),
+  phone_number varchar(20),
+  hire_date datetime, 
+  job_id varchar(10),
+  salary int(8),
+  commission_pct decimal(2,2),
+  manager_id decimal(6,0),
+  department_id int(4)
+)
+PARTITION BY LIST(employee_id) (
+    PARTITION p0 VALUES IN (101,103,105,107,109),
+    PARTITION p1 VALUES IN (102,104,106,108,110)
+);
+
+INSERT INTO employees VALUES ('100', 'Steven', 'King', 'SKING', '515.123.4567', '1987-06-17 00:00:00', 'AD_PRES', '24000.00', null, null, '90');
+INSERT INTO employees VALUES ('101', 'Neena', 'Kochhar', 'NKOCHHAR', '515.123.4568', '1989-09-21 00:00:00', 'AD_VP', '17000.00', null, '100', '90');
+INSERT INTO employees VALUES ('102', 'Lex', 'De Haan', 'LDEHAAN', '515.123.4569', '1993-01-13 00:00:00', 'AD_VP', '17000.00', null, '100', '90');
+INSERT INTO employees VALUES ('103', 'Alexander', 'Hunold', 'AHUNOLD', '590.423.4567', '1990-01-03 00:00:00', 'IT_PROG', '9000.00', null, '102', '60');
+INSERT INTO employees VALUES ('104', 'Bruce', 'Ernst', 'BERNST', '590.423.4568', '1991-05-21 00:00:00', 'IT_PROG', '6000.00', null, '103', '60');
+INSERT INTO employees VALUES ('105', 'David', 'Austin', 'DAUSTIN', '590.423.4569', '1997-06-25 00:00:00', 'IT_PROG', '4800.00', null, '103', '60');
+INSERT INTO employees VALUES ('106', 'Valli', 'Pataballa', 'VPATABAL', '590.423.4560', '1998-02-05 00:00:00', 'IT_PROG', '4800.00', null, '103', '60');
+INSERT INTO employees VALUES ('107', 'Diana', 'Lorentz', 'DLORENTZ', '590.423.5567', '1999-02-07 00:00:00', 'IT_PROG', '4200.00', null, '103', '60');
+INSERT INTO employees VALUES ('108', 'Nancy', 'Greenberg', 'NGREENBE', '515.124.4569', '1994-08-17 00:00:00', 'FI_MGR', '12000.00', null, '101', '100');
+INSERT INTO employees VALUES ('109', 'Daniel', 'Faviet', 'DFAVIET', '515.124.4169', '1994-08-16 00:00:00', 'FI_ACCOUNT', '9000.00', null, '108', '230');
+INSERT INTO employees VALUES ('110', 'John', 'Chen', 'JCHEN', '515.124.4 269', '1997-09-28 00:00:00', 'FI_ACCOUNT', '8200.00', null, '108', '100');
+```
+
+查询分区数据
+
+```sql
+select * from employees partition(p0);
+select * from employees partition(p1);
+select * from employees partition(p0,p1);
+```
+
+和range分区一样，可以使用alter table … add/drop partition新增/删除分区：
+
+```sql
+ALTER TABLE employees ADD PARTITION(PARTITION p2 VALUES IN (111,112,113,114,115));
+ALTER TABLE employees DROP PARTITION p2;
+```
+
+LIST COLUMNS分区表，分区字段支持使用CHAR VARCHAR DATE等数据类型。普通的LIST分区表分区字段必须是INT类型。
+
+```sql
+drop table if exists employees;
+CREATE TABLE employees (
+    employee_id int(6),
+    first_name varchar(20),
+    last_name varchar(25),
+    email varchar(25),
+    phone_number varchar(20),
+    hire_date datetime,
+    job_id varchar(10),
+    salary int(8),
+    commission_pct decimal(2,2),
+    manager_id decimal(6,0),
+    department_id int(4)
+)
+PARTITION BY LIST COLUMNS(last_name) (
+    PARTITION p0 VALUES IN ('King','Grant'),
+    PARTITION p1 VALUES IN ('Scott','Jim')
+);
+```
+
+### 哈希分区
+
+和RANGE，LIST分区不同的是，HASH分区无需定义分区的条件。只需要指明分区数即可。
+
+```sql
+drop table if exists employees;
+CREATE TABLE employees (
+   id INT NOT NULL,
+   fname VARCHAR(30),
+   lname VARCHAR(30),
+   hired DATE NOT NULL DEFAULT '1970-01-01',
+   separated DATE NOT NULL DEFAULT '9999-12-31',
+   job_code INT,
+   store_id INT
+)
+PARTITION BY HASH(store_id) PARTITIONS 4;
+```
+
+注意：
+
+- HASH分区可以不用指定PARTITIONS子句，如上文中的PARTITIONS 4，则默认分区数为4。
+- 不允许只写PARTITIONS，而不指定分区数。
+- 同RANGE分区和LIST分区一样，PARTITION BY HASH (expr)子句中的expr返回的必须是整数值。
+- HASH分区的底层实现其实是基于MOD函数。譬如，对于下表
+
+```sql
+CREATE TABLE t1 (col1 INT, col2 CHAR(5), col3 DATE)
+PARTITION BY HASH( YEAR(col3) ) PARTITIONS 4;
+-- 如果你要插入一个col3为“2005-09-15”的记录，则分区的选择是根据以下值决定的：
+MOD(YEAR('2005-09-01'),4)= MOD(2005,4)=1
+```
+
+**LINEAR HASH分区**
+
+LINEAR HASH分区是HASH分区的一种特殊类型，与HASH分区是基于MOD函数不同的是，它基于的是另外一种算法。
+
+格式如下：
+
+```sql
+drop table if exists employees;
+CREATE TABLE employees (
+    id INT NOT NULL,
+    fname VARCHAR(30),
+    lname VARCHAR(30),
+    hired DATE NOT NULL DEFAULT '1970-01-01',
+    separated DATE NOT NULL DEFAULT '9999-12-31',
+    job_code INT,
+    store_id INT
+)
+PARTITION BY LINEAR HASH(YEAR(hired)) PARTITIONS 4;
+```
+
+说明：
+
+- 它的优点是在数据量大的场景，譬如TB级，增加、删除、合并和拆分分区会更快，缺点是，相对于HASH分区，它数据分布不均匀的概率更大。
+- 具体算法，可参考MySQL的官方文档
+
+### key分区
+
+KEY分区其实跟HASH分区差不多，不同点如下：
+
+- KEY分区允许多列，而HASH分区只允许一列。
+- 如果在有主键或者唯一键的情况下，key中分区列可不指定，默认为主键或者唯一键，如果没有，则必须显性指定列。
+- KEY分区对象必须为列，而不能是基于列的表达式。
+- KEY分区和HASH分区的算法不一样，PARTITION BY HASH (expr)，MOD取值的对象是expr返回的值，而PARTITION BY KEY (column_list)，基于的是列的MD5值。
+
+```sql
+CREATE TABLE k1 (
+   id INT NOT NULL PRIMARY KEY,
+   name VARCHAR(20)
+)
+PARTITION BY KEY() PARTITIONS 2;
+-- 在没有主键或者唯一键的情况下，格式如下：
+CREATE TABLE tm1 (
+s1 CHAR(32)
+)
+PARTITION BY KEY(s1) PARTITIONS 10;
+```
+
+**LINEAR KEY分区**
+
+同LINEAR HASH分区类似。
+
+格式如下：
+
+```sql
+CREATE TABLE tk (
+   col1 INT NOT NULL,
+   col2 CHAR(5),
+   col3 DATE
+)
+PARTITION BY LINEAR KEY (col1) PARTITIONS 3;
+```
 
 
--- 更新分区表数据（更新了 orders 表中指定订单的金额。）：
-UPDATE orders SET total_amount = 150.00 WHERE order_id = 1 AND order_date = '2021-01-01';
-
-
--- 删除分区表数据（删除了 orders 表中 2022 年及之后的订单数据。）：
-DELETE FROM orders WHERE order_date >= '2022-01-01';
-~~~
-
-这些示例涵盖了分区表的设计和基本操作。但请注意，在实际使用分区表时，还需要根据具体需求和数据特征进行细致的设计和调整。同时，还应考虑性能优化、索引策略和维护操作等因素。
 
 ## 普通表转换分区表
 
@@ -225,6 +413,41 @@ alter table test_new rename test;
 - 方式三适合能使用数据同步工具的场景。
 
 ## 常见分区案例
+
+### date字段按年分区
+
+```sql
+CREATE TABLE orders (
+    order_id INT NOT NULL AUTO_INCREMENT,
+    order_date DATE,
+    customer_id INT,
+    total_amount DECIMAL(10, 2),
+    PRIMARY KEY (order_id, order_date)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='这是一个分区表，按月份分区'
+PARTITION BY RANGE (YEAR(order_date)) (
+    PARTITION p0 VALUES LESS THAN (2020),
+    PARTITION p1 VALUES LESS THAN (2021),
+    PARTITION p2 VALUES LESS THAN (2022),
+    PARTITION p3 VALUES LESS THAN MAXVALUE
+);
+
+-- 插入数据到分区表（向分区表插入了三条订单数据，分别属于不同的分区。）：
+INSERT INTO orders (order_date, customer_id, total_amount) VALUES
+    ('2021-01-01', 1001, 50.00),
+    ('2021-02-15', 1002, 100.00),
+    ('2022-03-10', 1003, 200.00);
+
+-- 查询分区表数据（查询了 orders 表中 2021 年的订单数据。）：
+SELECT * FROM orders WHERE order_date >= '2021-01-01' AND order_date < '2022-01-01';
+
+-- 更新分区表数据（更新了 orders 表中指定订单的金额。）：
+UPDATE orders SET total_amount = 150.00 WHERE order_id = 1 AND order_date = '2021-01-01';
+
+-- 删除分区表数据（删除了 orders 表中 2022 年及之后的订单数据。）：
+DELETE FROM orders WHERE order_date >= '2022-01-01';
+```
+
+
 
 ### datetime字段按月分区
 

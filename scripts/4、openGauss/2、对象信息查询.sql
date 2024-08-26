@@ -8,6 +8,11 @@ select t3.relname as tablename,t1.relname as index_name from pg_class t1
 -- 查看表上有哪些索引（除去全局索引，其他的都是本地索引）
 select schemaname,tablename,indexname from pg_indexes where tablename = 'test_range_t';
 
--- 查看某个库下模糊匹配表或视图名
-select table_catalog,table_schema,table_name,table_type from information_schema.tables
-where table_type in ('BASE TABLE','VIEW') and table_name ~ 'name' and table_catalog= '';
+
+-- 查看分区表信息
+SELECT relname, boundaries, spcname FROM pg_partition p 
+JOIN pg_tablespace t 
+ON p.reltablespace=t.oid 
+and p.parentid='test.web_returns_p1'::regclass 
+ORDER BY 1;
+

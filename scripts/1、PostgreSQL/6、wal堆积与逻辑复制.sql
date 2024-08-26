@@ -46,6 +46,8 @@ drop subscription pub1;
 
 ----------------------------------------复制槽-----------------------------------------
 select * from pg_replication_slots;
+-- 创建物理复制槽
+SELECT * FROM pg_create_physical_replication_slot('replica_slot_name');
 
 -- 获取复制槽的确认位置和延迟大小
 SELECT slot_name, active, pg_current_wal_lsn() - restart_lsn AS replication_lag
@@ -68,7 +70,7 @@ select database,
        pg_size_pretty(replication_lag_bytes) as lag_size,
        active,
        active_pid
-from (select pg_wal_lsn_diff(pg_current_wal_lsn() - restart_lsn) as replication_lag_bytes,
+from (select pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn) as replication_lag_bytes,
              slot_name,
              slot_type,
              database,

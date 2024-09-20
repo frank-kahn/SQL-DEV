@@ -47,9 +47,6 @@ from pg_class t1
 join pg_partitioned_table t2 on t1.oid=t2.partrelid
 join pg_namespace t3 on t1.relnamespace=t3.oid
 where t1.relname ~ 'tbp';
-
-
-
 -- 查询普通表和分区表的主表（不查询分区表子表）
 select t2.nspname as schema,
        t1.relname as tablename,

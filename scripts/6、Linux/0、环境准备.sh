@@ -71,22 +71,12 @@ yum install -y htop
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#ssh直连慢
+grep -i "usedns" /etc/ssh/sshd_config
+sed -ir '/^#UseDNS/s/#UseDNS yes/UseDNS no/' /etc/ssh/sshd_config
+grep -i "usedns" /etc/ssh/sshd_config
+service sshd restart
+systemctl restart sshd
 
 
 

@@ -2,7 +2,7 @@
 # DATE:2021-2-7 20:14
 # VERSION: V1.0
 # BY:多哥
-# 随机造数据。数据字段包括:cus_id cus_name cus_data cus_loc cus_hp(handphone number)
+# 随机造数据。数据字段包括:cus_id cus_name cus_date cus_loc cus_hp(handphone number)
 
 #删除上一次执行该脚本时产生的数据文件
 rm -rf m_data.dat 

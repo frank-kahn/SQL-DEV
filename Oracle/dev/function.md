@@ -46,6 +46,27 @@ http://blog.itpub.net/267265/viewspace-2135044/
 
 
 
+## 解析Linux时间戳
+
+~~~sql
+CREATE OR REPLACE FUNCTION convert_unix_timestamp(unix_ts IN NUMBER) RETURN TIMESTAMP IS
+BEGIN
+    RETURN TO_TIMESTAMP('1970-01-01', 'YYYY-MM-DD') + NUMTODSINTERVAL(unix_ts, 'SECOND');
+END;
+/
+
+-- 使用自定义函数
+SELECT convert_unix_timestamp(1633046400) AS converted_date FROM dual;   -- 2021年10月1日
+~~~
+
+
+
+
+
+
+
+
+
 
 
 ## 测试案例

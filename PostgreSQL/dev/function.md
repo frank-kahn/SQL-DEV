@@ -95,96 +95,6 @@ LANGUAGE 'plpgsql';
 
 
 
-## 查看表的创建时间、修改时间、vacuum、analyze时间
-
-~~~sql
--- 创建记录DDL语句的表
-CREATE TABLE pg_stat_last_operation (
-    id serial PRIMARY KEY,
-    object_type text,
-    schema_name VARCHAR(50),
-    action_name name NOT NULL,
-    object_identity text,
-    statime timestamp with time zone
-);
-
--- 创建记录DDL语句的函数get_object_time_func
-CREATE OR REPLACE FUNCTION get_object_time_func()
-RETURNS event_trigger
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    obj record;
-BEGIN
-    FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands  () 
-    LOOP
-        INSERT INTO public.pg_stat_last_operation (object_type, schema_name,action_name,object_identity,statime) SELECT obj.object_type, obj.schema_name, obj.command_tag,obj.object_identity,now();
-    END LOOP;
-END;
-$$;
-
--- 创建触发器，在执行DDL语句时将记录写到函数中的表中
-CREATE EVENT TRIGGER get_object__history_trigger ON ddl_command_end
-EXECUTE PROCEDURE get_object_time_func();
-
-
-CREATE FUNCTION get_object_for_drops()
-        RETURNS event_trigger LANGUAGE plpgsql AS $$
-DECLARE
-    obj record;
-BEGIN
-    FOR obj IN SELECT * FROM pg_event_trigger_dropped_objects()
-    LOOP
-    INSERT INTO public.pg_stat_last_operation (object_type, schema_name,action_name,object_identity,statime) SELECT obj.object_type, obj.schema_name,tg_tag,obj.object_identity,now();
-    END LOOP;
-END;
-$$;
-
-
-CREATE EVENT TRIGGER get_object_trigger_for_drops
-   ON sql_drop
-   EXECUTE PROCEDURE get_object_for_drops();
-~~~
-
-参考：
-
-https://pgfans.cn/a/2063
-
-https://stackoverflow.com/questions/2577168/how-to-find-table-creation-time
-
-
-
-## 查看用户的schema权限
-
-~~~shell
-#创建函数查看用户的schema权限
-CREATE OR REPLACE FUNCTION schema_privs(text)
-RETURNS table(username text, schemaname name, privileges text[])
-AS
-$$
-SELECT $1,
-       c.nspname,
-	   array(select privs from unnest(ARRAY[(CASE WHEN has_schema_privilege($1,c.oid,'CREATE') 
-	                                              THEN 'CREATE' ELSE NULL END),
-                                             (CASE WHEN has_schema_privilege($1,c.oid,'USAGE')
-											      THEN 'USAGE' ELSE NULL END)])foo(privs) WHERE privs IS NOT NULL)
-FROM pg_namespace c 
-where has_schema_privilege($1,c.oid,'CREATE,USAGE');
-$$ language sql;
-
-
-#使用案例，如下test为用户名
-testdb=> select schema_privs('test');
-           schema_privs            
------------------------------------
- (test,pg_catalog,{USAGE})
- (test,information_schema,{USAGE})
- (test,test,"{CREATE,USAGE}")
-(3 rows)
-~~~
-
-
-
 ## 获取当前库所有schema下非索引对象的记录数
 
 ~~~sql
@@ -718,5 +628,32 @@ postgres=# select random_string(20);
 ----------------------
  ZpAqfLyZV5qC0B5rN9Dd
 (1 row)
+~~~
+
+
+
+## 普通用户可以kill会话
+
+适用于pg9.6之前的版本
+
+~~~sql
+CREATE OR REPLACE FUNCTION kill_process(userpid integer)
+RETURNS boolean AS $body$
+DECLARE
+    qry boolean;
+BEGIN
+    qry := (SELECT pg_catalog.pg_cancel_backend(pid)
+            FROM pg_stat_activity
+            WHERE usename=(select session_user)
+            AND pid=userpid);
+    RETURN qry;
+END;
+$body$
+LANGUAGE plpgsql
+SECURITY DEFINER
+VOLATILE
+RETURNS NULL ON NULL INPUT;
+
+GRANT EXECUTE ON FUNCTION kill_process(pid integer) TO username;
 ~~~
 

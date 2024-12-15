@@ -147,3 +147,64 @@ INSERT INTO orders (order_date, amount, customer_name) VALUES ('2024-10-15', 800
 SELECT * FROM audit_log;
 ```
 
+
+
+
+
+## 查看表的创建时间、修改时间、vacuum、analyze时间
+
+~~~sql
+-- 创建记录DDL语句的表
+CREATE TABLE pg_stat_last_operation (
+    id serial PRIMARY KEY,
+    object_type text,
+    schema_name VARCHAR(50),
+    action_name name NOT NULL,
+    object_identity text,
+    statime timestamp with time zone
+);
+
+-- 创建记录DDL语句的函数get_object_time_func
+CREATE OR REPLACE FUNCTION get_object_time_func()
+RETURNS event_trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    obj record;
+BEGIN
+    FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands  () 
+    LOOP
+        INSERT INTO public.pg_stat_last_operation (object_type, schema_name,action_name,object_identity,statime) SELECT obj.object_type, obj.schema_name, obj.command_tag,obj.object_identity,now();
+    END LOOP;
+END;
+$$;
+
+-- 创建触发器，在执行DDL语句时将记录写到函数中的表中
+CREATE EVENT TRIGGER get_object__history_trigger ON ddl_command_end
+EXECUTE PROCEDURE get_object_time_func();
+
+
+CREATE FUNCTION get_object_for_drops()
+        RETURNS event_trigger LANGUAGE plpgsql AS $$
+DECLARE
+    obj record;
+BEGIN
+    FOR obj IN SELECT * FROM pg_event_trigger_dropped_objects()
+    LOOP
+    INSERT INTO public.pg_stat_last_operation (object_type, schema_name,action_name,object_identity,statime) SELECT obj.object_type, obj.schema_name,tg_tag,obj.object_identity,now();
+    END LOOP;
+END;
+$$;
+
+
+CREATE EVENT TRIGGER get_object_trigger_for_drops
+   ON sql_drop
+   EXECUTE PROCEDURE get_object_for_drops();
+~~~
+
+参考：
+
+https://pgfans.cn/a/2063
+
+https://stackoverflow.com/questions/2577168/how-to-find-table-creation-time
+

@@ -657,3 +657,26 @@ RETURNS NULL ON NULL INPUT;
 GRANT EXECUTE ON FUNCTION kill_process(pid integer) TO username;
 ~~~
 
+
+
+## 动态拼接SQL
+
+~~~sql
+create or replace function dynamic_query(
+  in table_name text,
+  in column_name text,
+  in search_value text
+) returns table(
+  id integer,
+  name text,
+  email text
+) as $$
+DECLARE
+  query text,
+BEGIN
+  query :='select id,name,email from '||table_name||'where '||column_name||' =$1';
+  return query execute query using search_value;
+end;
+$$ language plpgsql;
+~~~
+

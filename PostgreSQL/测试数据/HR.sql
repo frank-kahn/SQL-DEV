@@ -1,28 +1,27 @@
 create database testdb;
-create user test with password 'test@123';
-grant all privileges to test;
-alter database testdb owner to test;
-\c testdb test
-create schema hr;
+create user hr with password 'hr@123';
+grant all privileges on database testdb to hr;
+\c testdb hr
+create schema authorization hr;
 set search_path='hr';
 -- ----------------------------
 -- Table structure for COUNTRIES
 -- ----------------------------
-DROP TABLE if exists HR.COUNTRIES;
-CREATE TABLE HR.COUNTRIES (
+DROP TABLE if exists COUNTRIES;
+CREATE TABLE COUNTRIES (
   COUNTRY_ID CHAR(2)  NOT NULL,
   COUNTRY_NAME VARCHAR(40) ,
   REGION_ID numeric 
 );
-COMMENT ON COLUMN HR.COUNTRIES.COUNTRY_ID IS 'Primary key of countries table.';
-COMMENT ON COLUMN HR.COUNTRIES.COUNTRY_NAME IS 'Country name';
-COMMENT ON COLUMN HR.COUNTRIES.REGION_ID IS 'Region ID for the country. Foreign key to region_id column in the departments table.';
-COMMENT ON TABLE HR.COUNTRIES IS 'country table. Contains 25 rows. References with locations table.';
+COMMENT ON COLUMN COUNTRIES.COUNTRY_ID IS 'Primary key of countries table.';
+COMMENT ON COLUMN COUNTRIES.COUNTRY_NAME IS 'Country name';
+COMMENT ON COLUMN COUNTRIES.REGION_ID IS 'Region ID for the country. Foreign key to region_id column in the departments table.';
+COMMENT ON TABLE COUNTRIES IS 'country table. Contains 25 rows. References with locations table.';
 
 -- ----------------------------
 -- Records of COUNTRIES
 -- ----------------------------
-INSERT INTO HR.COUNTRIES VALUES ('AR', 'Argentina', '2'),
+INSERT INTO COUNTRIES VALUES ('AR', 'Argentina', '2'),
 								('AU', 'Australia', '3'),
 								('BE', 'Belgium', '1'),
 								('BR', 'Brazil', '2'),
@@ -51,23 +50,23 @@ INSERT INTO HR.COUNTRIES VALUES ('AR', 'Argentina', '2'),
 -- ----------------------------
 -- Table structure for DEPARTMENTS
 -- ----------------------------
-DROP TABLE if exists HR.DEPARTMENTS;
-CREATE TABLE HR.DEPARTMENTS (
+DROP TABLE if exists DEPARTMENTS;
+CREATE TABLE DEPARTMENTS (
   DEPARTMENT_ID numeric(4,0)  NOT NULL,
   DEPARTMENT_NAME VARCHAR(30)  NOT NULL,
   MANAGER_ID numeric(6,0) ,
   LOCATION_ID numeric(4,0) 
 );
-COMMENT ON COLUMN HR.DEPARTMENTS.DEPARTMENT_ID IS 'Primary key column of departments table.';
-COMMENT ON COLUMN HR.DEPARTMENTS.DEPARTMENT_NAME IS 'A not null column that shows name of a department. Administration,Marketing, Purchasing, Human Resources, Shipping, IT, Executive, Public Relations, Sales, Finance, and Accounting. ';
-COMMENT ON COLUMN HR.DEPARTMENTS.MANAGER_ID IS 'Manager_id of a department. Foreign key to employee_id column of employees table. The manager_id column of the employee table references this column.';
-COMMENT ON COLUMN HR.DEPARTMENTS.LOCATION_ID IS 'Location id where a department is located. Foreign key to location_id column of locations table.';
-COMMENT ON TABLE HR.DEPARTMENTS IS 'Departments table that shows details of departments where employees work. Contains 27 rows; references with locations, employees, and job_history tables.';
+COMMENT ON COLUMN DEPARTMENTS.DEPARTMENT_ID IS 'Primary key column of departments table.';
+COMMENT ON COLUMN DEPARTMENTS.DEPARTMENT_NAME IS 'A not null column that shows name of a department. Administration,Marketing, Purchasing, Human Resources, Shipping, IT, Executive, Public Relations, Sales, Finance, and Accounting. ';
+COMMENT ON COLUMN DEPARTMENTS.MANAGER_ID IS 'Manager_id of a department. Foreign key to employee_id column of employees table. The manager_id column of the employee table references this column.';
+COMMENT ON COLUMN DEPARTMENTS.LOCATION_ID IS 'Location id where a department is located. Foreign key to location_id column of locations table.';
+COMMENT ON TABLE DEPARTMENTS IS 'Departments table that shows details of departments where employees work. Contains 27 rows; references with locations, employees, and job_history tables.';
 
 -- ----------------------------
 -- Records of DEPARTMENTS
 -- ----------------------------
-INSERT INTO HR.DEPARTMENTS VALUES ('10', 'Administration', '200', '1700'),
+INSERT INTO DEPARTMENTS VALUES ('10', 'Administration', '200', '1700'),
                                    ('20', 'Marketing', '201', '1800'),
                                    ('30', 'Purchasing', '114', '1700'),
                                    ('40', 'Human Resources', '203', '2400'),
@@ -98,8 +97,8 @@ INSERT INTO HR.DEPARTMENTS VALUES ('10', 'Administration', '200', '1700'),
 -- ----------------------------
 -- Table structure for EMPLOYEES
 -- ----------------------------
-DROP TABLE if exists HR.EMPLOYEES;
-CREATE TABLE HR.EMPLOYEES (
+DROP TABLE if exists EMPLOYEES;
+CREATE TABLE EMPLOYEES (
   EMPLOYEE_ID numeric(6,0)  NOT NULL,
   FIRST_NAME VARCHAR(20) ,
   LAST_NAME VARCHAR(25)  NOT NULL,
@@ -113,23 +112,23 @@ CREATE TABLE HR.EMPLOYEES (
   DEPARTMENT_ID numeric(4,0) 
 );
 
-COMMENT ON COLUMN HR.EMPLOYEES.EMPLOYEE_ID IS 'Primary key of employees table.';
-COMMENT ON COLUMN HR.EMPLOYEES.FIRST_NAME IS 'First name of the employee. A not null column.';
-COMMENT ON COLUMN HR.EMPLOYEES.LAST_NAME IS 'Last name of the employee. A not null column.';
-COMMENT ON COLUMN HR.EMPLOYEES.EMAIL IS 'Email id of the employee';
-COMMENT ON COLUMN HR.EMPLOYEES.PHONE_numeric IS 'Phone numeric of the employee; includes country code and area code';
-COMMENT ON COLUMN HR.EMPLOYEES.HIRE_DATE IS 'Date when the employee started on this job. A not null column.';
-COMMENT ON COLUMN HR.EMPLOYEES.JOB_ID IS 'Current job of the employee; foreign key to job_id column of the jobs table. A not null column.';
-COMMENT ON COLUMN HR.EMPLOYEES.SALARY IS 'Monthly salary of the employee. Must be greater than zero (enforced by constraint emp_salary_min)';
-COMMENT ON COLUMN HR.EMPLOYEES.COMMISSION_PCT IS 'Commission percentage of the employee; Only employees in sales department elgible for commission percentage';
-COMMENT ON COLUMN HR.EMPLOYEES.MANAGER_ID IS 'Manager id of the employee; has same domain as manager_id in departments table. Foreign key to employee_id column of employees table. (useful for reflexive joins and CONNECT BY query)';
-COMMENT ON COLUMN HR.EMPLOYEES.DEPARTMENT_ID IS 'Department id where employee works; foreign key to department_id column of the departments table';
-COMMENT ON TABLE HR.EMPLOYEES IS 'employees table. Contains 107 rows. References with departments,jobs, job_history tables. Contains a self reference.';
+COMMENT ON COLUMN EMPLOYEES.EMPLOYEE_ID IS 'Primary key of employees table.';
+COMMENT ON COLUMN EMPLOYEES.FIRST_NAME IS 'First name of the employee. A not null column.';
+COMMENT ON COLUMN EMPLOYEES.LAST_NAME IS 'Last name of the employee. A not null column.';
+COMMENT ON COLUMN EMPLOYEES.EMAIL IS 'Email id of the employee';
+COMMENT ON COLUMN EMPLOYEES.PHONE_numeric IS 'Phone numeric of the employee; includes country code and area code';
+COMMENT ON COLUMN EMPLOYEES.HIRE_DATE IS 'Date when the employee started on this job. A not null column.';
+COMMENT ON COLUMN EMPLOYEES.JOB_ID IS 'Current job of the employee; foreign key to job_id column of the jobs table. A not null column.';
+COMMENT ON COLUMN EMPLOYEES.SALARY IS 'Monthly salary of the employee. Must be greater than zero (enforced by constraint emp_salary_min)';
+COMMENT ON COLUMN EMPLOYEES.COMMISSION_PCT IS 'Commission percentage of the employee; Only employees in sales department elgible for commission percentage';
+COMMENT ON COLUMN EMPLOYEES.MANAGER_ID IS 'Manager id of the employee; has same domain as manager_id in departments table. Foreign key to employee_id column of employees table. (useful for reflexive joins and CONNECT BY query)';
+COMMENT ON COLUMN EMPLOYEES.DEPARTMENT_ID IS 'Department id where employee works; foreign key to department_id column of the departments table';
+COMMENT ON TABLE EMPLOYEES IS 'employees table. Contains 107 rows. References with departments,jobs, job_history tables. Contains a self reference.';
 
 -- ----------------------------
 -- Records of EMPLOYEES
 -- ----------------------------
-INSERT INTO HR.EMPLOYEES VALUES ('100', 'Steven', 'King', 'SKING', '515.123.4567', TO_DATE('1987-06-17 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), 'AD_PRES', '24000', NULL, NULL, '90'),
+INSERT INTO EMPLOYEES VALUES ('100', 'Steven', 'King', 'SKING', '515.123.4567', TO_DATE('1987-06-17 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), 'AD_PRES', '24000', NULL, NULL, '90'),
 ('101', 'Neena', 'Kochhar', 'NKOCHHAR', '515.123.4568', TO_DATE('1989-09-21 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), 'AD_VP', '17000', NULL, '100', '90'),
 ('102', 'Lex', 'De Haan', 'LDEHAAN', '515.123.4569', TO_DATE('1993-01-13 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), 'AD_VP', '17000', NULL, '100', '90'),
 ('103', 'Alexander', 'Hunold', 'AHUNOLD', '590.423.4567', TO_DATE('1990-01-03 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), 'IT_PROG', '9000', NULL, '102', '60'),
@@ -240,8 +239,8 @@ INSERT INTO HR.EMPLOYEES VALUES ('100', 'Steven', 'King', 'SKING', '515.123.4567
 -- ----------------------------
 -- Table structure for JOBS
 -- ----------------------------
-DROP TABLE if exists HR.JOBS;
-CREATE TABLE HR.JOBS (
+DROP TABLE if exists JOBS;
+CREATE TABLE JOBS (
   JOB_ID VARCHAR(10)  NOT NULL,
   JOB_TITLE VARCHAR(35)  NOT NULL,
   MIN_SALARY numeric(6,0) ,
@@ -249,16 +248,16 @@ CREATE TABLE HR.JOBS (
 )
 
 ;
-COMMENT ON COLUMN HR.JOBS.JOB_ID IS 'Primary key of jobs table.';
-COMMENT ON COLUMN HR.JOBS.JOB_TITLE IS 'A not null column that shows job title, e.g. AD_VP, FI_ACCOUNTANT';
-COMMENT ON COLUMN HR.JOBS.MIN_SALARY IS 'Minimum salary for a job title.';
-COMMENT ON COLUMN HR.JOBS.MAX_SALARY IS 'Maximum salary for a job title';
-COMMENT ON TABLE HR.JOBS IS 'jobs table with job titles and salary ranges. Contains 19 rows.References with employees and job_history table.';
+COMMENT ON COLUMN JOBS.JOB_ID IS 'Primary key of jobs table.';
+COMMENT ON COLUMN JOBS.JOB_TITLE IS 'A not null column that shows job title, e.g. AD_VP, FI_ACCOUNTANT';
+COMMENT ON COLUMN JOBS.MIN_SALARY IS 'Minimum salary for a job title.';
+COMMENT ON COLUMN JOBS.MAX_SALARY IS 'Maximum salary for a job title';
+COMMENT ON TABLE JOBS IS 'jobs table with job titles and salary ranges. Contains 19 rows.References with employees and job_history table.';
 
 -- ----------------------------
 -- Records of JOBS
 -- ----------------------------
-INSERT INTO HR.JOBS VALUES ('AD_PRES', 'President', '20000', '40000'),
+INSERT INTO JOBS VALUES ('AD_PRES', 'President', '20000', '40000'),
                             ('AD_VP', 'Administration Vice President', '15000', '30000'),
                             ('AD_ASST', 'Administration Assistant', '3000', '6000'),
                             ('FI_MGR', 'Finance Manager', '8200', '16000'),
@@ -281,8 +280,8 @@ INSERT INTO HR.JOBS VALUES ('AD_PRES', 'President', '20000', '40000'),
 -- ----------------------------
 -- Table structure for JOB_HISTORY
 -- ----------------------------
-DROP TABLE if exists HR.JOB_HISTORY;
-CREATE TABLE HR.JOB_HISTORY (
+DROP TABLE if exists JOB_HISTORY;
+CREATE TABLE JOB_HISTORY (
   EMPLOYEE_ID numeric(6,0)  NOT NULL,
   START_DATE DATE  NOT NULL,
   END_DATE DATE  NOT NULL,
@@ -291,17 +290,17 @@ CREATE TABLE HR.JOB_HISTORY (
 )
 
 ;
-COMMENT ON COLUMN HR.JOB_HISTORY.EMPLOYEE_ID IS 'A not null column in the complex primary key employee_id+start_date.Foreign key to employee_id column of the employee table';
-COMMENT ON COLUMN HR.JOB_HISTORY.START_DATE IS 'A not null column in the complex primary key employee_id+start_date.Must be less than the end_date of the job_history table. (enforced byconstraint jhist_date_interval)';
-COMMENT ON COLUMN HR.JOB_HISTORY.END_DATE IS 'Last day of the employee in this job role. A not null column. Must begreater than the start_date of the job_history table.(enforced by constraint jhist_date_interval)';
-COMMENT ON COLUMN HR.JOB_HISTORY.JOB_ID IS 'Job role in which the employee worked in the past; foreign key to job_id column in the jobs table. A not null column.';
-COMMENT ON COLUMN HR.JOB_HISTORY.DEPARTMENT_ID IS 'Department id in which the employee worked in the past; foreign key to deparment_id column in the departments table';
-COMMENT ON TABLE HR.JOB_HISTORY IS 'Table that stores job history of the employees. If an employee changes departments within the job or changes jobs within the department, new rows get inserted into this table with old job information of the employee. Contains a complex primary key: employee_id+start_date.Contains 25 rows. References with jobs, employees, and departments tables.';
+COMMENT ON COLUMN JOB_HISTORY.EMPLOYEE_ID IS 'A not null column in the complex primary key employee_id+start_date.Foreign key to employee_id column of the employee table';
+COMMENT ON COLUMN JOB_HISTORY.START_DATE IS 'A not null column in the complex primary key employee_id+start_date.Must be less than the end_date of the job_history table. (enforced byconstraint jhist_date_interval)';
+COMMENT ON COLUMN JOB_HISTORY.END_DATE IS 'Last day of the employee in this job role. A not null column. Must begreater than the start_date of the job_history table.(enforced by constraint jhist_date_interval)';
+COMMENT ON COLUMN JOB_HISTORY.JOB_ID IS 'Job role in which the employee worked in the past; foreign key to job_id column in the jobs table. A not null column.';
+COMMENT ON COLUMN JOB_HISTORY.DEPARTMENT_ID IS 'Department id in which the employee worked in the past; foreign key to deparment_id column in the departments table';
+COMMENT ON TABLE JOB_HISTORY IS 'Table that stores job history of the employees. If an employee changes departments within the job or changes jobs within the department, new rows get inserted into this table with old job information of the employee. Contains a complex primary key: employee_id+start_date.Contains 25 rows. References with jobs, employees, and departments tables.';
 
 -- ----------------------------
 -- Records of JOB_HISTORY
 -- ----------------------------
-INSERT INTO HR.JOB_HISTORY VALUES ('102', TO_DATE('1993-01-13 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), TO_DATE('1998-07-24 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), 'IT_PROG', '60'),
+INSERT INTO JOB_HISTORY VALUES ('102', TO_DATE('1993-01-13 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), TO_DATE('1998-07-24 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), 'IT_PROG', '60'),
                                    ('101', TO_DATE('1989-09-21 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), TO_DATE('1993-10-27 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), 'AC_ACCOUNT', '110'),
                                    ('101', TO_DATE('1993-10-28 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), TO_DATE('1997-03-15 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), 'AC_MGR', '110'),
                                    ('201', TO_DATE('1996-02-17 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), TO_DATE('1999-12-19 00:00:00', 'YYYY-MM-DD HH24:MI:SS'), 'MK_REP', '20'),
@@ -315,8 +314,8 @@ INSERT INTO HR.JOB_HISTORY VALUES ('102', TO_DATE('1993-01-13 00:00:00', 'YYYY-M
 -- ----------------------------
 -- Table structure for LOCATIONS
 -- ----------------------------
-DROP TABLE if exists HR.LOCATIONS;
-CREATE TABLE HR.LOCATIONS (
+DROP TABLE if exists LOCATIONS;
+CREATE TABLE LOCATIONS (
   LOCATION_ID numeric(4,0)  NOT NULL,
   STREET_ADDRESS VARCHAR(40) ,
   POSTAL_CODE VARCHAR(12) ,
@@ -326,18 +325,18 @@ CREATE TABLE HR.LOCATIONS (
 )
 
 ;
-COMMENT ON COLUMN HR.LOCATIONS.LOCATION_ID IS 'Primary key of locations table';
-COMMENT ON COLUMN HR.LOCATIONS.STREET_ADDRESS IS 'Street address of an office, warehouse, or production site of a company.Contains building numeric and street name';
-COMMENT ON COLUMN HR.LOCATIONS.POSTAL_CODE IS 'Postal code of the location of an office, warehouse, or production site of a company. ';
-COMMENT ON COLUMN HR.LOCATIONS.CITY IS 'A not null column that shows city where an office, warehouse, or production site of a company is located. ';
-COMMENT ON COLUMN HR.LOCATIONS.STATE_PROVINCE IS 'State or Province where an office, warehouse, or production site of a company is located.';
-COMMENT ON COLUMN HR.LOCATIONS.COUNTRY_ID IS 'Country where an office, warehouse, or production site of a company is located. Foreign key to country_id column of the countries table.';
-COMMENT ON TABLE HR.LOCATIONS IS 'Locations table that contains specific address of a specific office,warehouse, and/or production site of a company. Does not store addresses / locations of customers. Contains 23 rows; references with the departments and countries tables. ';
+COMMENT ON COLUMN LOCATIONS.LOCATION_ID IS 'Primary key of locations table';
+COMMENT ON COLUMN LOCATIONS.STREET_ADDRESS IS 'Street address of an office, warehouse, or production site of a company.Contains building numeric and street name';
+COMMENT ON COLUMN LOCATIONS.POSTAL_CODE IS 'Postal code of the location of an office, warehouse, or production site of a company. ';
+COMMENT ON COLUMN LOCATIONS.CITY IS 'A not null column that shows city where an office, warehouse, or production site of a company is located. ';
+COMMENT ON COLUMN LOCATIONS.STATE_PROVINCE IS 'State or Province where an office, warehouse, or production site of a company is located.';
+COMMENT ON COLUMN LOCATIONS.COUNTRY_ID IS 'Country where an office, warehouse, or production site of a company is located. Foreign key to country_id column of the countries table.';
+COMMENT ON TABLE LOCATIONS IS 'Locations table that contains specific address of a specific office,warehouse, and/or production site of a company. Does not store addresses / locations of customers. Contains 23 rows; references with the departments and countries tables. ';
 
 -- ----------------------------
 -- Records of LOCATIONS
 -- ----------------------------
-INSERT INTO HR.LOCATIONS VALUES ('1000', '1297 Via Cola di Rie', '00989', 'Roma', NULL, 'IT'),
+INSERT INTO LOCATIONS VALUES ('1000', '1297 Via Cola di Rie', '00989', 'Roma', NULL, 'IT'),
 ('1100', '93091 Calle della Testa', '10934', 'Venice', NULL, 'IT'),
 ('1200', '2017 Shinjuku-ku', '1689', 'Tokyo', 'Tokyo Prefecture', 'JP'),
 ('1300', '9450 Kamiya-cho', '6823', 'Hiroshima', NULL, 'JP'),
@@ -364,8 +363,8 @@ INSERT INTO HR.LOCATIONS VALUES ('1000', '1297 Via Cola di Rie', '00989', 'Roma'
 -- ----------------------------
 -- Table structure for REGIONS
 -- ----------------------------
-DROP TABLE if exists HR.REGIONS;
-CREATE TABLE HR.REGIONS (
+DROP TABLE if exists REGIONS;
+CREATE TABLE REGIONS (
   REGION_ID numeric  NOT NULL,
   REGION_NAME VARCHAR(25) 
 )
@@ -375,7 +374,7 @@ CREATE TABLE HR.REGIONS (
 -- ----------------------------
 -- Records of REGIONS
 -- ----------------------------
-INSERT INTO HR.REGIONS VALUES ('1', 'Europe'),
+INSERT INTO REGIONS VALUES ('1', 'Europe'),
 ('2', 'Americas'),
 ('3', 'Asia'),
 ('4', 'Middle East and Africa');
@@ -383,7 +382,7 @@ INSERT INTO HR.REGIONS VALUES ('1', 'Europe'),
 -- ----------------------------
 -- View structure for EMP_DETAILS_VIEW
 -- ----------------------------
-CREATE OR REPLACE VIEW HR.EMP_DETAILS_VIEW AS SELECT
+CREATE OR REPLACE VIEW EMP_DETAILS_VIEW AS SELECT
   e.employee_id,
   e.job_id,
   e.manager_id,
@@ -417,13 +416,12 @@ WHERE e.department_id = d.department_id
 -- Function structure for ADD_JOB_HISTORY
 -- ----------------------------
 CREATE OR REPLACE
-PROCEDURE HR.ADD_JOB_HISTORY
+PROCEDURE ADD_JOB_HISTORY()
 LANGUAGE plpgsql
 AS $$
 BEGIN
-  INSERT INTO job_history (employee_id, start_date, end_date,
-                           job_id, department_id)
-    VALUES(p_emp_id, p_start_date, p_end_date, p_job_id, p_department_id);
+  INSERT INTO job_history (employee_id, start_date, end_date,job_id, department_id) 
+   VALUES(p_emp_id, p_start_date, p_end_date, p_job_id, p_department_id);
 END;
 $$;
 
@@ -431,100 +429,96 @@ $$;
 -- Function structure for SECURE_DML
 -- ----------------------------
 CREATE OR REPLACE
-PROCEDURE HR.SECURE_DML AS
+PROCEDURE SECURE_DML()
+LANGUAGE plpgsql
+AS $$
 BEGIN
-  IF TO_CHAR (SYSDATE, 'HH24:MI') NOT BETWEEN '08:00' AND '18:00'
-        OR TO_CHAR (SYSDATE, 'DY') IN ('SAT', 'SUN') THEN
-	RAISE_APPLICATION_ERROR (-20205,
-		'You may only make changes during normal office hours');
+  IF TO_CHAR (SYSDATE, 'HH24:MI') NOT BETWEEN '08:00' AND '18:00' OR TO_CHAR (SYSDATE, 'DY') IN ('SAT', 'SUN') THEN
+	RAISE NOTICE 'You may only make changes during normal office hours' ;
   END IF;
-END secure_dml;
+END;
+$$;
 
 
 -- ----------------------------
 -- Sequence structure for DEPARTMENTS_SEQ
 -- ----------------------------
-DROP SEQUENCE HR.DEPARTMENTS_SEQ;
-CREATE SEQUENCE HR.DEPARTMENTS_SEQ MINVALUE 1 MAXVALUE 9990 INCREMENT BY 10 ;
+DROP SEQUENCE IF EXISTS DEPARTMENTS_SEQ;
+CREATE SEQUENCE DEPARTMENTS_SEQ MINVALUE 1 MAXVALUE 9990 INCREMENT BY 10 ;
 
 -- ----------------------------
 -- Sequence structure for EMPLOYEES_SEQ
 -- ----------------------------
-DROP SEQUENCE HR.EMPLOYEES_SEQ;
-CREATE SEQUENCE HR.EMPLOYEES_SEQ;
+DROP SEQUENCE IF EXISTS EMPLOYEES_SEQ;
+CREATE SEQUENCE EMPLOYEES_SEQ;
 
 -- ----------------------------
 -- Sequence structure for LOCATIONS_SEQ
 -- ----------------------------
-DROP SEQUENCE HR.LOCATIONS_SEQ;
-CREATE SEQUENCE HR.LOCATIONS_SEQ MINVALUE 1 MAXVALUE 9900 INCREMENT BY 100 ;
+DROP SEQUENCE IF EXISTS LOCATIONS_SEQ;
+CREATE SEQUENCE LOCATIONS_SEQ MINVALUE 1 MAXVALUE 9900 INCREMENT BY 100 ;
 
 -- ----------------------------
 -- Primary Key structure for table COUNTRIES
 -- ----------------------------
-ALTER TABLE HR.COUNTRIES ADD CONSTRAINT COUNTRY_C_ID_PK PRIMARY KEY (COUNTRY_ID);
+ALTER TABLE COUNTRIES ADD CONSTRAINT COUNTRY_C_ID_PK PRIMARY KEY (COUNTRY_ID);
 
 -- ----------------------------
 -- Checks structure for table COUNTRIES
 -- ----------------------------
-ALTER TABLE HR.COUNTRIES ADD CONSTRAINT COUNTRY_ID_NN CHECK (COUNTRY_ID IS NOT NULL) ;
+ALTER TABLE COUNTRIES ADD CONSTRAINT COUNTRY_ID_NN CHECK (COUNTRY_ID IS NOT NULL) ;
 
 -- ----------------------------
 -- Primary Key structure for table DEPARTMENTS
 -- ----------------------------
-ALTER TABLE HR.DEPARTMENTS ADD CONSTRAINT DEPT_ID_PK PRIMARY KEY (DEPARTMENT_ID);
+ALTER TABLE DEPARTMENTS ADD CONSTRAINT DEPT_ID_PK PRIMARY KEY (DEPARTMENT_ID);
 
 -- ----------------------------
 -- Checks structure for table DEPARTMENTS
 -- ----------------------------
-ALTER TABLE HR.DEPARTMENTS ADD CONSTRAINT DEPT_NAME_NN CHECK (DEPARTMENT_NAME IS NOT NULL) ;
+ALTER TABLE DEPARTMENTS ADD CONSTRAINT DEPT_NAME_NN CHECK (DEPARTMENT_NAME IS NOT NULL) ;
 
 -- ----------------------------
 -- Indexes structure for table DEPARTMENTS
 -- ----------------------------
-CREATE INDEX HR.DEPT_LOCATION_IX
-  ON HR.DEPARTMENTS (LOCATION_ID ASC);
+CREATE INDEX DEPT_LOCATION_IX ON DEPARTMENTS (LOCATION_ID ASC);
 
 -- ----------------------------
 -- Primary Key structure for table EMPLOYEES
 -- ----------------------------
-ALTER TABLE HR.EMPLOYEES ADD CONSTRAINT EMP_EMP_ID_PK PRIMARY KEY (EMPLOYEE_ID);
+ALTER TABLE EMPLOYEES ADD CONSTRAINT EMP_EMP_ID_PK PRIMARY KEY (EMPLOYEE_ID);
 
 -- ----------------------------
 -- Uniques structure for table EMPLOYEES
 -- ----------------------------
-ALTER TABLE HR.EMPLOYEES ADD CONSTRAINT EMP_EMAIL_UK UNIQUE (EMAIL) ;
+ALTER TABLE EMPLOYEES ADD CONSTRAINT EMP_EMAIL_UK UNIQUE (EMAIL) ;
 
 -- ----------------------------
 -- Checks structure for table EMPLOYEES
 -- ----------------------------
-ALTER TABLE HR.EMPLOYEES ADD CONSTRAINT EMP_EMAIL_NN CHECK (EMAIL IS NOT NULL) ;
-ALTER TABLE HR.EMPLOYEES ADD CONSTRAINT EMP_HIRE_DATE_NN CHECK (HIRE_DATE IS NOT NULL) ;
-ALTER TABLE HR.EMPLOYEES ADD CONSTRAINT EMP_JOB_NN CHECK (JOB_ID IS NOT NULL) ;
-ALTER TABLE HR.EMPLOYEES ADD CONSTRAINT EMP_LAST_NAME_NN CHECK (LAST_NAME IS NOT NULL) ;
-ALTER TABLE HR.EMPLOYEES ADD CONSTRAINT EMP_SALARY_MIN CHECK (salary > 0) ;
+ALTER TABLE EMPLOYEES ADD CONSTRAINT EMP_EMAIL_NN CHECK (EMAIL IS NOT NULL) ;
+ALTER TABLE EMPLOYEES ADD CONSTRAINT EMP_HIRE_DATE_NN CHECK (HIRE_DATE IS NOT NULL) ;
+ALTER TABLE EMPLOYEES ADD CONSTRAINT EMP_JOB_NN CHECK (JOB_ID IS NOT NULL) ;
+ALTER TABLE EMPLOYEES ADD CONSTRAINT EMP_LAST_NAME_NN CHECK (LAST_NAME IS NOT NULL) ;
+ALTER TABLE EMPLOYEES ADD CONSTRAINT EMP_SALARY_MIN CHECK (salary > 0) ;
 
 -- ----------------------------
 -- Indexes structure for table EMPLOYEES
 -- ----------------------------
-CREATE INDEX HR.EMP_DEPARTMENT_IX
-  ON HR.EMPLOYEES (DEPARTMENT_ID ASC);
-CREATE INDEX HR.EMP_JOB_IX
-  ON HR.EMPLOYEES (JOB_ID ASC);
-CREATE INDEX HR.EMP_MANAGER_IX
-  ON HR.EMPLOYEES (MANAGER_ID ASC);
-CREATE INDEX HR.EMP_NAME_IX
-  ON HR.EMPLOYEES (LAST_NAME ASC, FIRST_NAME ASC);
+CREATE INDEX EMP_DEPARTMENT_IX ON EMPLOYEES (DEPARTMENT_ID ASC);
+CREATE INDEX EMP_JOB_IX ON EMPLOYEES (JOB_ID ASC);
+CREATE INDEX EMP_MANAGER_IX ON EMPLOYEES (MANAGER_ID ASC);
+CREATE INDEX EMP_NAME_IX ON EMPLOYEES (LAST_NAME ASC, FIRST_NAME ASC);
 
 -- ----------------------------
 -- Triggers structure for table EMPLOYEES
 -- ----------------------------
-/* CREATE TRIGGER HR.SECURE_EMPLOYEES BEFORE DELETE OR INSERT OR UPDATE ON HR.EMPLOYEES REFERENCING OLD AS OLD NEW AS NEW 
+/* CREATE TRIGGER SECURE_EMPLOYEES BEFORE DELETE OR INSERT OR UPDATE ON EMPLOYEES REFERENCING OLD AS OLD NEW AS NEW 
 BEGIN
   secure_dml;
 END secure_employees;
 /
-CREATE TRIGGER HR.UPDATE_JOB_HISTORY AFTER UPDATE OF DEPARTMENT_ID, JOB_ID ON HR.EMPLOYEES REFERENCING OLD AS OLD NEW AS NEW FOR EACH ROW 
+CREATE TRIGGER UPDATE_JOB_HISTORY AFTER UPDATE OF DEPARTMENT_ID, JOB_ID ON EMPLOYEES REFERENCING OLD AS OLD NEW AS NEW FOR EACH ROW 
 BEGIN
   add_job_history(:old.employee_id, :old.hire_date, sysdate,
                   :old.job_id, :old.department_id);
@@ -534,68 +528,62 @@ END;
 -- ----------------------------
 -- Primary Key structure for table JOBS
 -- ----------------------------
-ALTER TABLE HR.JOBS ADD CONSTRAINT JOB_ID_PK PRIMARY KEY (JOB_ID);
+ALTER TABLE JOBS ADD CONSTRAINT JOB_ID_PK PRIMARY KEY (JOB_ID);
 
 -- ----------------------------
 -- Checks structure for table JOBS
 -- ----------------------------
-ALTER TABLE HR.JOBS ADD CONSTRAINT JOB_TITLE_NN CHECK (JOB_TITLE IS NOT NULL) ;
+ALTER TABLE JOBS ADD CONSTRAINT JOB_TITLE_NN CHECK (JOB_TITLE IS NOT NULL) ;
 
 -- ----------------------------
 -- Primary Key structure for table JOB_HISTORY
 -- ----------------------------
-ALTER TABLE HR.JOB_HISTORY ADD CONSTRAINT JHIST_EMP_ID_ST_DATE_PK PRIMARY KEY (EMPLOYEE_ID, START_DATE);
+ALTER TABLE JOB_HISTORY ADD CONSTRAINT JHIST_EMP_ID_ST_DATE_PK PRIMARY KEY (EMPLOYEE_ID, START_DATE);
 
 -- ----------------------------
 -- Checks structure for table JOB_HISTORY
 -- ----------------------------
-ALTER TABLE HR.JOB_HISTORY ADD CONSTRAINT JHIST_DATE_INTERVAL CHECK (end_date > start_date) ;
-ALTER TABLE HR.JOB_HISTORY ADD CONSTRAINT JHIST_EMPLOYEE_NN CHECK (EMPLOYEE_ID IS NOT NULL) ;
-ALTER TABLE HR.JOB_HISTORY ADD CONSTRAINT JHIST_END_DATE_NN CHECK (END_DATE IS NOT NULL) ;
-ALTER TABLE HR.JOB_HISTORY ADD CONSTRAINT JHIST_JOB_NN CHECK (JOB_ID IS NOT NULL) ;
-ALTER TABLE HR.JOB_HISTORY ADD CONSTRAINT JHIST_START_DATE_NN CHECK (START_DATE IS NOT NULL) ;
+ALTER TABLE JOB_HISTORY ADD CONSTRAINT JHIST_DATE_INTERVAL CHECK (end_date > start_date) ;
+ALTER TABLE JOB_HISTORY ADD CONSTRAINT JHIST_EMPLOYEE_NN CHECK (EMPLOYEE_ID IS NOT NULL) ;
+ALTER TABLE JOB_HISTORY ADD CONSTRAINT JHIST_END_DATE_NN CHECK (END_DATE IS NOT NULL) ;
+ALTER TABLE JOB_HISTORY ADD CONSTRAINT JHIST_JOB_NN CHECK (JOB_ID IS NOT NULL) ;
+ALTER TABLE JOB_HISTORY ADD CONSTRAINT JHIST_START_DATE_NN CHECK (START_DATE IS NOT NULL) ;
 
 -- ----------------------------
 -- Indexes structure for table JOB_HISTORY
 -- ----------------------------
-CREATE INDEX HR.JHIST_DEPARTMENT_IX
-  ON HR.JOB_HISTORY (DEPARTMENT_ID ASC);
-CREATE INDEX HR.JHIST_EMPLOYEE_IX
-  ON HR.JOB_HISTORY (EMPLOYEE_ID ASC);
-CREATE INDEX HR.JHIST_JOB_IX
-  ON HR.JOB_HISTORY (JOB_ID ASC);
+CREATE INDEX JHIST_DEPARTMENT_IX ON JOB_HISTORY (DEPARTMENT_ID ASC);
+CREATE INDEX JHIST_EMPLOYEE_IX ON JOB_HISTORY (EMPLOYEE_ID ASC);
+CREATE INDEX JHIST_JOB_IX ON JOB_HISTORY (JOB_ID ASC);
 
 -- ----------------------------
 -- Primary Key structure for table LOCATIONS
 -- ----------------------------
-ALTER TABLE HR.LOCATIONS ADD CONSTRAINT LOC_ID_PK PRIMARY KEY (LOCATION_ID);
+ALTER TABLE LOCATIONS ADD CONSTRAINT LOC_ID_PK PRIMARY KEY (LOCATION_ID);
 
 -- ----------------------------
 -- Checks structure for table LOCATIONS
 -- ----------------------------
-ALTER TABLE HR.LOCATIONS ADD CONSTRAINT LOC_CITY_NN CHECK (CITY IS NOT NULL) ;
+ALTER TABLE LOCATIONS ADD CONSTRAINT LOC_CITY_NN CHECK (CITY IS NOT NULL) ;
 
 -- ----------------------------
 -- Indexes structure for table LOCATIONS
 -- ----------------------------
-CREATE INDEX HR.LOC_CITY_IX
-  ON HR.LOCATIONS (CITY ASC);
-CREATE INDEX HR.LOC_COUNTRY_IX
-  ON HR.LOCATIONS (COUNTRY_ID ASC);
-CREATE INDEX HR.LOC_STATE_PROVINCE_IX
-  ON HR.LOCATIONS (STATE_PROVINCE ASC);
+CREATE INDEX LOC_CITY_IX ON LOCATIONS (CITY ASC);
+CREATE INDEX LOC_COUNTRY_IX ON LOCATIONS (COUNTRY_ID ASC);
+CREATE INDEX LOC_STATE_PROVINCE_IX ON LOCATIONS (STATE_PROVINCE ASC);
 
 -- ----------------------------
 -- Primary Key structure for table REGIONS
 -- ----------------------------
-ALTER TABLE HR.REGIONS ADD CONSTRAINT REG_ID_PK PRIMARY KEY (REGION_ID);
+ALTER TABLE REGIONS ADD CONSTRAINT REG_ID_PK PRIMARY KEY (REGION_ID);
 
 -- ----------------------------
 -- Checks structure for table REGIONS
 -- ----------------------------
-ALTER TABLE HR.REGIONS ADD CONSTRAINT REGION_ID_NN CHECK (REGION_ID IS NOT NULL) ;
+ALTER TABLE REGIONS ADD CONSTRAINT REGION_ID_NN CHECK (REGION_ID IS NOT NULL) ;
 
 -- ----------------------------
 -- Foreign Keys structure for table COUNTRIES
 -- ----------------------------
-ALTER TABLE HR.COUNTRIES ADD CONSTRAINT COUNTR_REG_FK FOREIGN KEY (REGION_ID) REFERENCES HR.REGIONS (REGION_ID) ;
+ALTER TABLE COUNTRIES ADD CONSTRAINT COUNTR_REG_FK FOREIGN KEY (REGION_ID) REFERENCES REGIONS (REGION_ID) ;

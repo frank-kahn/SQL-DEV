@@ -1,7 +1,6 @@
 create database testdb dbcompatibility 'B' encoding='utf8';
 \c testdb
 create user test identified by 'test@123';
-grant all privileges to test;
 alter database testdb owner to test;
 
 gsql -d testdb -p 15400 -U test -W test@123

@@ -59,9 +59,52 @@ END;
 SELECT convert_unix_timestamp(1633046400) AS converted_date FROM dual;   -- 2021年10月1日
 ~~~
 
+## long 类型转 varchar2
 
+Oracle中的LONG类型有两种：
+LONG文本类型，能存储2GB的文本。与VARCHAR2或CHAR类型一样，存储在LONG类型中的文本要进行字符集转换。
+LONG RAW类型，能存储2GB的原始二进制数据（不用进行字符集转换的数据）。
+在此并不解释如何使用LONG类型，而是会解释为什么你不希望在应用中使用LONG（或LONG RAW）类型。首先要注意的是，Oracle文档在如何处理LONG类型方面描述得很明确。Oracle SQL Reference手册指出：
+不要创建带LONG列的表，而应该使用LOB列（CLOB、NCLOB、BLOB）。支持LONG列只是为了保证向后兼容性。
 
+没有内置的函数做转换，写了个最简的处理方法：
 
+~~~sql
+CREATE OR REPLACE FUNCTION LONG_TO_CHAR(IN_WHERE      VARCHAR,
+                                        IN_TABLE_NAME VARCHAR,
+                                        IN_COLUMN     VARCHAR2)
+  RETURN VARCHAR2 AS
+  V_RET VARCHAR2(32767);
+  V_SQL VARCHAR2(2000);
+ 
+BEGIN
+  V_SQL := 'select ' || UPPER(IN_COLUMN) || ' from
+    ' || UPPER(IN_TABLE_NAME) || ' where ' || IN_WHERE;
+  EXECUTE IMMEDIATE V_SQL
+    INTO V_RET;
+  RETURN V_RET;
+END;
+/
+~~~
+
+使用方法：
+
+~~~sql
+-- 视图应用例子
+ 
+WITH ALLVIEW AS
+ (SELECT UV.*,
+         LONG_TO_CHAR('view_name=''' || VIEW_NAME || '''', 'user_views',
+                       'TEXT') VTEXT
+    FROM USER_VIEWS UV)
+SELECT * FROM ALLVIEW WHERE UPPER(VTEXT) LIKE '%MAP%'
+ 
+ 
+-- 普通表
+SELECT T.*,
+       LONG_TO_CHAR('rowid=''' || ROWID || '''', 'conf_user', 'user_profile') VTEXT
+  FROM CONF_USER T
+~~~
 
 
 

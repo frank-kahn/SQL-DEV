@@ -1,59 +1,5 @@
 # procedure
 
-## MySQL游标
-
-游标（Cursor）是在MySQL中用于遍历结果集的一种机制。以下是一个简单的MySQL游标的使用案例，该案例从一个表中选择数据，并通过游标逐行处理结果集：
-
-~~~sql
--- 创建一个存储过程，使用游标从表中选择数据
-DELIMITER //
-
-CREATE PROCEDURE ProcessData()
-BEGIN
-  -- 声明变量用于存储结果集的字段值
-  DECLARE col1_value INT;
-  DECLARE col2_value VARCHAR(255);
-
-  -- 声明游标
-  DECLARE data_cursor CURSOR FOR
-    SELECT column1, column2
-    FROM your_table; -- 替换为实际的表名
-
-  -- 声明 continue handler 以处理结果集结束的情况
-  DECLARE CONTINUE HANDLER FOR NOT FOUND
-    SET done = TRUE;
-
-  -- 打开游标
-  OPEN data_cursor;
-
-  -- 初始化 done 变量
-  SET done = FALSE;
-
-  -- 使用 repeat 循环，逐行处理结果集
-  data_loop: REPEAT
-    -- 从游标中读取数据到变量
-    FETCH data_cursor INTO col1_value, col2_value;
-
-    -- 判断是否到达结果集末尾
-    IF done THEN
-      LEAVE data_loop;
-    END IF;
-
-    -- 在这里可以进行具体的数据处理操作，例如打印或使用变量的值
-    SELECT CONCAT('Column1: ', col1_value, ', Column2: ', col2_value) AS Result;
-
-  UNTIL done END REPEAT;
-
-  -- 关闭游标
-  CLOSE data_cursor;
-
-END //
-
-DELIMITER ;
-~~~
-
-
-
 ## 自动添加新的分区
 
 ~~~sql
